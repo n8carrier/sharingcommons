@@ -39,4 +39,4 @@ nosetests.xml
 *~
 
 #Config files
-bookout/config.py
+src/config.py

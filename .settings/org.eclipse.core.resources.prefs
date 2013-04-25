@@ -1,0 +1,4 @@
+eclipse.preferences.version=1
+encoding//flask/app.py=utf-8
+encoding//flaskext/login.py=utf-8
+encoding//werkzeug/local.py=utf-8
