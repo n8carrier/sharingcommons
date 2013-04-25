@@ -203,7 +203,7 @@ class UserAccount(ndb.Model):
 		mybook = BookCopy.query(BookCopy.book==book.key,BookCopy.owner==self.key).get()
 		return mybook
 	
-	def add_book(self,inBook):
+	def add_book(self,item_type,inBook):
 		"""add a personal copy of a book to a user's account
 		
 		Arguments:
@@ -213,7 +213,7 @@ class UserAccount(ndb.Model):
 		a BookCopy instance that links the User to the Book; None if the Book could not be linked
 		"""
 		from src.books.models import BookCopy
-		bookcopy = BookCopy(book=inBook.key,owner=self.key,OLKey=inBook.OLKey)
+		bookcopy = BookCopy(book=inBook.key,owner=self.key,OLKey=inBook.OLKey,item_type=item_type)
 		if bookcopy.put():
 			self.book_count = self.book_count + 1
 			self.put()

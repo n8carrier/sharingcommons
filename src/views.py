@@ -101,6 +101,7 @@ def library():
 	useraccount = current_user()
 	for copy in useraccount.get_library():
 		book = Book.query(Book.key == copy.book).get()
+		book.item_type = copy.item_type
 		book.title = book.title
 		book.escapedtitle = re.escape(book.title)
 		if copy.borrower is None:
@@ -284,7 +285,7 @@ def delete_user():
 		return "Success"
 	return ""
 
-def library_requests(OLKey):
+def library_requests(item_type, OLKey):
 	cur_user = current_user()
 	if not cur_user:
 		logging.info("there is not a user logged in")
@@ -310,7 +311,7 @@ def library_requests(OLKey):
 		else:
 			if cur_user.get_book(book):
 				return "This book is already in your library"
-			cur_user.add_book(book)
+			cur_user.add_book(item_type, book)
 			return "Book " + OLKey + " was added to your library"
 	elif request.method == 'DELETE':	
 		#remove the book from the user's library

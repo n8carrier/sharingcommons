@@ -6,8 +6,12 @@
 {% block style %}
 
 <style type="text/css">
-	.in-library-button {
+	.library-button {
 		margin-bottom: 10px;
+	}
+	
+	.library-dropdown {
+		margin-top: -10px;
 	}
 	
 	.notInNetwork {
@@ -72,9 +76,13 @@
 		});
 	});
 
-	function add_book(bookOLKey, button){
+	function add_book_dropdown(book_type, bookOLKey, button){
+		add_book(book_type, bookOLKey, button.parent);
+	}
+	
+	function add_book(book_type, bookOLKey, button){
 		$(button).attr("disabled", "disabled");
-		$.post("/library/" + bookOLKey, function(data) {
+		$.post("/library/" + book_type + "/" + bookOLKey, function(data) {
 			$(button).text("In Library");
 			$(button).attr("onclick", "");
 			$(button).attr("href", "\library");
@@ -206,15 +214,24 @@
 					</td>
 					<td style="width: 150px">
 						{% if books[book].inLibrary == "False" %}
-							<a class="btn btn-inverse tooltip-button in-library-button"
+							<div class="btn-group">
+							  <button class="btn btn-inverse tooltip-button library-button"
 								style="width:120px"
 								{% if user.is_authenticated() == False %}disabled{% endif %} 
-								onclick="{% if user.is_authenticated() %}add_book('{{ books[book].OLKey }}', this){% endif %}" 
-								data-toggle="tooltip" data-placement="right"
+								onclick="{% if user.is_authenticated() %}add_book('book', '{{ books[book].OLKey }}', this){% endif %}" 
 								title="{% if user.is_authenticated() %}Add to library and make available to your network{% 
-								else %}Join or login to add to your library{% endif %}">Add&nbsp;to&nbsp;Library</a><br/>
+								else %}Join or login to add to your library{% endif %}">Add&nbsp;to&nbsp;Library</button>
+							  <button class="btn btn-inverse dropdown-toggle library-button" data-toggle="dropdown">
+								<span class="caret"></span>
+							  </button>
+							  <ul class="dropdown-menu library-dropdown">
+								<li><a onclick="{% if user.is_authenticated() %}add_book('book', '{{ books[book].OLKey }}', this){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>
+								<li><a onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ books[book].OLKey }}', this){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>
+								<li><a onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ books[book].OLKey }}', this){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>
+							  </ul>
+							</div>
 						{% else %}
-							<a class="btn btn-primary tooltip-button in-library-button" 
+							<a class="btn btn-primary tooltip-button library-button" 
 								style="width:120px"
 								data-toggle="tooltip" data-placement="right"
 								title="Book is already in your library. Click to view library." 

@@ -144,6 +144,7 @@
                 <td colspan="4">You don't have any books in your library. To add books, search for the title, author, or ISBN in the search field inside the header. Once you've added books, they'll show up here.</td>
             {% else %}
 				<tr>
+				  <th style="width:26px"></th>
 				  <th>Book Title</th>
 				  <th>Author</th>
 				  <th>Lend Status</th>
@@ -151,6 +152,7 @@
 				</tr>
 				{% for book in myBooks %}
 				  <tr>
+				    <td>{{book.item_type}}</td>
 					<td>{{book.title}}</td>
 					<td>{{book.author}}</td>
 					<td>{% if book.available %}Available
