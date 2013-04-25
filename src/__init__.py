@@ -6,6 +6,7 @@ import config
 from accounts.models import UserAccount,Anonymous
 
 app = Flask('src')
+app.debug = False
 
 import urls
 
