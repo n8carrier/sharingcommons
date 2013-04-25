@@ -5,7 +5,7 @@ from flaskext.login import LoginManager
 import config
 from accounts.models import UserAccount,Anonymous
 
-app = Flask('bookout')
+app = Flask('src')
 
 import urls
 

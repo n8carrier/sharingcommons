@@ -1,4 +1,4 @@
-from bookout import app
+from src import app
 import flaskext
 
 

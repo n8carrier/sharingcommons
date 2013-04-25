@@ -1,4 +1,4 @@
-bookout
+sharingcommons
 =======
 
-A person-to-person library
+A tool for sharing books and movies

@@ -1,7 +1,7 @@
 from google.appengine.ext import ndb
 from datetime import datetime,timedelta
 import logging
-from bookout.accounts.models import UserAccount
+from src.accounts.models import UserAccount
 import urllib
 from google.appengine.api import urlfetch
 import json

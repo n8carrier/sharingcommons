@@ -1,7 +1,7 @@
 # Set up the application. This file is required by
 # google app engine so it can find the app to run
 
-application: bookout
+application: sharingcommons
 version: 1
 runtime: python27
 api_version: 1
@@ -15,15 +15,12 @@ libraries:
   version: "2.6"
 - name: markupsafe
   version: "0.15"
-
+  
 handlers:
+- url: /
+  script: src.app
 - url: /static
-  static_dir: bookout/static
-
-- url: /tasks/book_due_reminders
-  script: bookout.app
-  login: admin
-
+  static_dir: src/static
 - url: .*
-  script: bookout.app
+  script: src.app
 

@@ -25,7 +25,7 @@ class UserAccount(ndb.Model):
 	
 	@property
 	def pending_actions(self):
-		from bookout.activity.models import Action
+		from src.activity.models import Action
 		return Action.query(Action.useraccount == self.key).fetch()
 	
 	@property
@@ -44,7 +44,7 @@ class UserAccount(ndb.Model):
 		an array will all the BookCopy objects belonging to connected users
 
 		"""
-		from bookout.books.models import BookCopy
+		from src.books.models import BookCopy
 		return BookCopy.query(BookCopy.owner.IN(self.get_connections())).fetch()
 	
 	def get_connections(self):
@@ -187,7 +187,7 @@ class UserAccount(ndb.Model):
 		Return value:
 		list of BookCopy objects owned by the user
 		"""
-		from bookout.books.models import BookCopy
+		from src.books.models import BookCopy
 		return BookCopy.query(BookCopy.owner==self.key).fetch()
 	
 	def get_book(self,book):
@@ -199,7 +199,7 @@ class UserAccount(ndb.Model):
 		Return value:
 		the user's BookCOpy object associated with the provided Book; None if the user does not own book
 		"""
-		from bookout.books.models import BookCopy
+		from src.books.models import BookCopy
 		mybook = BookCopy.query(BookCopy.book==book.key,BookCopy.owner==self.key).get()
 		return mybook
 	
@@ -212,7 +212,7 @@ class UserAccount(ndb.Model):
 		Return Value:
 		a BookCopy instance that links the User to the Book; None if the Book could not be linked
 		"""
-		from bookout.books.models import BookCopy
+		from src.books.models import BookCopy
 		bookcopy = BookCopy(book=inBook.key,owner=self.key,OLKey=inBook.OLKey)
 		if bookcopy.put():
 			self.book_count = self.book_count + 1
@@ -228,7 +228,7 @@ class UserAccount(ndb.Model):
 		Return value:
 		the BookCopy instance that was just deleted; None if the BookCopy was not found
 		"""
-		from bookout.books.models import BookCopy
+		from src.books.models import BookCopy
 		bookcopy = BookCopy.query(BookCopy.book==book.key,BookCopy.owner==self.key).get()
 		if bookcopy:
 			bookcopy.key.delete()
@@ -245,7 +245,7 @@ class UserAccount(ndb.Model):
 		Return value:
 		True if successfull, false if not
 		"""
-		from bookout.activity.models import ConnectionRequest
+		from src.activity.models import ConnectionRequest
 		connection = Connection(user=otherUser.key)
 		if(connection in self.connected_accounts):
 			return 1
@@ -318,7 +318,7 @@ class UserAccount(ndb.Model):
 		Return value:
 		A string describing the success or failure of the operation
 		"""
-		from bookout.books.models import BookCopy
+		from src.books.models import BookCopy
 		bookCopy = BookCopy.get_by_id(bookID)
 
 		# check to see if the book copy is valid
@@ -345,7 +345,7 @@ class UserAccount(ndb.Model):
 		Return value:
 		A string describing the success or failure of the operation
 		"""
-		from bookout.books.models import BookCopy
+		from src.books.models import BookCopy
 		bookCopy = BookCopy.get_by_id(bookID)
 
 		# check to see if the book copy is valid
@@ -366,7 +366,7 @@ class UserAccount(ndb.Model):
 		Return Value:
 		A list of BookCopy objects of all the the books the user is currently lending
 		"""
-		from bookout.books.models import BookCopy
+		from src.books.models import BookCopy
 		return BookCopy.query(BookCopy.owner==self.key,BookCopy.borrower!=None).fetch()
 
 	def get_borrowed_books(self):
@@ -375,7 +375,7 @@ class UserAccount(ndb.Model):
 		Return Value:
 		A list of BookCopy objects of all the the books the user is currently borrowing
 		"""
-		from bookout.books.models import BookCopy
+		from src.books.models import BookCopy
 		return BookCopy.query(BookCopy.borrower==self.key).fetch()
 
 	def return_book(self, bookCopyID):
@@ -387,8 +387,8 @@ class UserAccount(ndb.Model):
 		Return Value:
 		A message describing the success or failure or the operation
 		"""
-		from bookout.books.models import BookCopy
-		from bookout.activity.models import ConfirmReturn
+		from src.books.models import BookCopy
+		from src.activity.models import ConfirmReturn
 		bookcopy = BookCopy.get_by_id(int(bookCopyID))
 
 		# verify the bookCopyID was valid
@@ -415,8 +415,8 @@ class UserAccount(ndb.Model):
 		Return Value:
 		A message describing the success or failure or the operation
 		"""
-		from bookout.books.models import BookCopy
-		from bookout.activity.models import DueDateExtension
+		from src.books.models import BookCopy
+		from src.activity.models import DueDateExtension
 		bookcopy = BookCopy.get_by_id(int(bookCopyID))
 		new_date = datetime.datetime.strptime(newDueDate, '%Y-%m-%d')
 

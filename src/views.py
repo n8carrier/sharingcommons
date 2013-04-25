@@ -6,7 +6,7 @@ from books.models import Book,BookCopy
 from activity.models import RequestToBorrow, WaitingToBorrow
 import logging
 from decorators import crossdomain
-from bookout import app
+from src import app
 from utilities.JsonIterable import *
 from accounts import login as login_account, logout as logout_account, join as join_account, delete as delete_account, current_user, login_required
 from accounts.models import UserAccount

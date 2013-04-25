@@ -14,7 +14,7 @@
 # Warmup info: http://stackoverflow.com/questions/8235716/how-does-the-warmup-service-work-in-python-google-app-engine
 
 from flask import Flask
-from bookout import app, views, api
+from src import app, views, api
 from views import render_response
 import accounts.views
 

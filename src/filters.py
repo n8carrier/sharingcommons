@@ -1,4 +1,4 @@
-from bookout import app
+from src import app
 from datetime import datetime
 
 @app.template_filter('timesince')

@@ -1,7 +1,7 @@
 from google.appengine.ext import ndb
 from google.appengine.ext.ndb import polymodel
-from bookout.accounts.models import UserAccount
-from bookout.books.models import BookCopy,Book
+from src.accounts.models import UserAccount
+from src.books.models import BookCopy,Book
 
 
 class Action(polymodel.PolyModel):
