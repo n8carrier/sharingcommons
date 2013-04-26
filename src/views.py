@@ -166,7 +166,7 @@ def searchbooks():
 			#Create a dictionary of the user's books
 			mybooklist = {}
 			for copy in user.get_library():
-				mybooklist[copy.OLKey] = copy
+				mybooklist[(copy.OLKey,copy.item_type)] = copy.to_dict()
 				
 			#Create a dictionary of the books in my network
 			networkbooklist = {}
@@ -180,32 +180,13 @@ def searchbooks():
 			for book in booklist:
 				booklist[book] = booklist[book].to_dict()
 				booklist[book]["escapedtitle"] = re.escape(booklist[book]["title"])
-				if booklist[book]['OLKey'] in mybooklist:
-					#booklist[book]["inLibrary"] = "True"
-					# Check for each item type if it's in the library and pass item types as a list
-					for key, value in mybooklist.items():
-						isBook = False
-						iseBook = False
-						isAudiobook = False
-						booklist[book]["inLibrary"] = []
-						if key == booklist[book]['OLKey']:
-							if mybooklist[key]["item_type"] == "book":
-								isBook = True
-							elif mybooklist[key]["item_type"] == "ebook":
-								iseBook = True
-							elif mybooklist[key]["item_type"] == "audiobook":
-								isAudiobook = True
-							#booklist[book]["inLibrary"] = mybooklist[key]["item_type"]
-					if isBook:
-						booklist[book]["inLibrary"].append('book')
-					if iseBook:
-						booklist[book]["inLibrary"].append('ebook')
-					if isAudiobook:
-						booklist[book]["inLibrary"].append('audiobook')
-				else:
-					# User does not include any of the item types
-					booklist[book]["inLibrary"] = "False"
-					
+				
+				# Check for copies in library, return "inLibrary" list with all item types
+				booklist[book]["inLibrary"] = []
+				for item_type in ['book', 'ebook', 'audiobook']:
+					if (booklist[book]['OLKey'],item_type) in mybooklist:
+						booklist[book]["inLibrary"].append(item_type)
+						
 				if booklist[book]['OLKey'] in networkbooklist:
 					booklist[book]["inNetwork"] = "True"
 				else:

@@ -213,7 +213,7 @@
 						Author: {{ books[book].author }}
 					</td>
 					<td style="width: 150px">
-						{% if books[book].inLibrary == "False" %}
+						{% if books[book].inLibrary == [] %}
 							<div class="btn-group">
 							  <button class="btn btn-inverse tooltip-button library-button"
 								style="width:120px"
@@ -236,7 +236,7 @@
 								style="width:120px"
 								data-toggle="tooltip" data-placement="right"
 								title="Book is already in your library. Click to view library." 
-								href="\library">{{ books[book].inLibrary }}{% if 'book' in books[book].inLibrary %}Book{% elif 'ebook' in books[book].inLibrary %}eBook{% elif 'audiobook' in books[book].inLibrary %}Audiobook{% endif %}&nbsp;In&nbsp;Library</a><br/>
+								href="\library">{% if 'book' in books[book].inLibrary %}Book{% elif 'ebook' in books[book].inLibrary %}eBook{% elif 'audiobook' in books[book].inLibrary %}Audiobook{% endif %}&nbsp;In&nbsp;Library</a><br/>
 						{% endif %}
 						
 						{% if books[book].inNetwork == "False" %}
