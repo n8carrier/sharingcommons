@@ -181,8 +181,29 @@ def searchbooks():
 				booklist[book] = booklist[book].to_dict()
 				booklist[book]["escapedtitle"] = re.escape(booklist[book]["title"])
 				if booklist[book]['OLKey'] in mybooklist:
-					booklist[book]["inLibrary"] = "True"
+					#booklist[book]["inLibrary"] = "True"
+					# Check for each item type if it's in the library and pass item types as a list
+					for key, value in mybooklist.items():
+						isBook = False
+						iseBook = False
+						isAudiobook = False
+						booklist[book]["inLibrary"] = []
+						if key == booklist[book]['OLKey']:
+							if mybooklist[key]["item_type"] == "book":
+								isBook = True
+							elif mybooklist[key]["item_type"] == "ebook":
+								iseBook = True
+							elif mybooklist[key]["item_type"] == "audiobook":
+								isAudiobook = True
+							#booklist[book]["inLibrary"] = mybooklist[key]["item_type"]
+					if isBook:
+						booklist[book]["inLibrary"].append('book')
+					if iseBook:
+						booklist[book]["inLibrary"].append('ebook')
+					if isAudiobook:
+						booklist[book]["inLibrary"].append('audiobook')
 				else:
+					# User does not include any of the item types
 					booklist[book]["inLibrary"] = "False"
 					
 				if booklist[book]['OLKey'] in networkbooklist:
@@ -280,7 +301,7 @@ def delete_user():
 	cur_user = current_user()
 	if not cur_user:
 		logging.info("there is not a user logged in")
-		return "<a href='%s' >Login</a>" %users.create_login_url(dest_url=url_for('library_requests',ISBN=ISBN))
+		#return "<a href='%s' >Login</a>" %users.create_login_url(dest_url=url_for('library_requests',ISBN=ISBN))
 	if delete_account(cur_user):
 		return "Success"
 	return ""
@@ -289,7 +310,7 @@ def library_requests(item_type, OLKey):
 	cur_user = current_user()
 	if not cur_user:
 		logging.info("there is not a user logged in")
-		return "<a href='%s' >Login</a>" %users.create_login_url(dest_url=url_for('library_requests',ISBN=ISBN))
+		#return "<a href='%s' >Login</a>" %users.create_login_url(dest_url=url_for('library_requests',ISBN=ISBN))
 		
 	if request.method == 'GET':
 		#check the database to see if the book is in the user's library
@@ -382,7 +403,7 @@ def manage_connections(otherUserID = None):
 			return jsonify({"Message":"Connection didn't existed"})
 	else:
 		#this should never be reached
-		return jsoningy({"Message":"Error: http request was invalid"})
+		return jsonify({"Message":"Error: http request was invalid"})
 		
 def simple_add_connection(otherUserID):
 	cur_user = current_user()

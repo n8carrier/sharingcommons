@@ -27,10 +27,10 @@
 	var lastRemoveLink;
 	var lastRemoveOLKey;
 
-	function remove_book(bookOLKey, bookTitle, button){
+	function remove_book(item_type, bookOLKey, bookTitle, button){
 		$(button).attr("disabled", "disabled");
 		$.ajax({
-			url:"/library/" + bookOLKey,
+			url:"/library/" + item_type + "/" + bookOLKey,
 			type: 'DELETE',
 			success: function(data) {
 				$(button).parent().parent().hide();
@@ -152,12 +152,12 @@
 				</tr>
 				{% for book in myBooks %}
 				  <tr>
-				    <td><i class="icon-{% if book.item_type == "book" %}book{% elif book.item_type == "ebook" %}tablet{% elif book.item_type == "audiobook" %}volume-up{% endif %} icon-large"></i></td>
+				    <td><i class="icon-{% if book.item_type == "book" %}book{% elif book.item_type == "ebook" %}tablet{% elif book.item_type == "audiobook" %}volume-down{% endif %} icon-large"></i></td>
 					<td>{{book.title}}</td>
 					<td>{{book.author}}</td>
 					<td>{% if book.available %}Available
 						{% else %}On Loan{% endif %}</td>
-					<td style="text-align:center"><a class="btn btn-small" onclick="remove_book('{{book.OLKey}}', '{{ book.escapedtitle }}', this)"><i class="icon-remove"></i>&nbsp;&nbsp;Remove</a></td>
+					<td style="text-align:center"><a class="btn btn-small" onclick="remove_book('{{ book.item_type }}', '{{book.OLKey}}', '{{ book.escapedtitle }}', this)"><i class="icon-remove"></i>&nbsp;&nbsp;Remove</a></td>
 				  </tr>
 				{% endfor %}
 			{% endif %}

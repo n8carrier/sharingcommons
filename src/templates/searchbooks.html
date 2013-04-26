@@ -26,6 +26,7 @@
 <script src="{{ url_for('static', filename='js/jquery.cookie.js') }}"></script>
 
 <script type="text/javascript">
+	
 	$(function() {
 		$(".tooltip-button").tooltip({trigger: "hover"});
 		
@@ -75,21 +76,20 @@
 			$(this).closest("form").submit();
 		});
 	});
-
-	function add_book_dropdown(book_type, bookOLKey, button){
-		add_book(book_type, bookOLKey, button.parent);
-	}
 	
-	function add_book(book_type, bookOLKey, button){
-		$(button).attr("disabled", "disabled");
+	function add_book(book_type, bookOLKey, book_key){
+		$("#add_button" + book_key).attr("disabled", "disabled");
+		$("#caret_button" + book_key).attr("disabled", "disabled");
 		$.post("/library/" + book_type + "/" + bookOLKey, function(data) {
-			$(button).text("In Library");
-			$(button).attr("onclick", "");
-			$(button).attr("href", "\library");
-			$(button).removeClass("btn-inverse").addClass("btn-primary");
-			$(button).tooltip("destroy").attr("title", "Book is already in your library. Click to view library.").tooltip({trigger: "hover"});
+			$("#add_button" + book_key).text("In Library");
+			$("#add_button" + book_key).removeAttr("onclick");
+			$("#add_button" + book_key).attr("href", "\library");
+			$("#add_button" + book_key).removeClass("btn-inverse").addClass("btn-primary");
+			$("#caret_button" + book_key).removeClass("btn-inverse").addClass("btn-primary");
+			$("#add_button" + book_key).tooltip("destroy").attr("title", "Book is already in your library. Click to view library.").tooltip({trigger: "hover"});
+			$("#add_button" + book_key).removeAttr("disabled");
 		}).error(function() {
-			$(button).removeAttr("disabled");
+			$("#add_button" + book_key).removeAttr("disabled");
 		});
 		
 		return false;
@@ -218,16 +218,17 @@
 							  <button class="btn btn-inverse tooltip-button library-button"
 								style="width:120px"
 								{% if user.is_authenticated() == False %}disabled{% endif %} 
-								onclick="{% if user.is_authenticated() %}add_book('book', '{{ books[book].OLKey }}', this){% endif %}" 
+								onclick="{% if user.is_authenticated() %}add_book('book', '{{ books[book].OLKey }}', 'book{{ book }}'){% endif %}" 
 								title="{% if user.is_authenticated() %}Add to library and make available to your network{% 
-								else %}Join or login to add to your library{% endif %}">Add&nbsp;to&nbsp;Library</button>
-							  <button class="btn btn-inverse dropdown-toggle library-button" data-toggle="dropdown">
+								else %}Join or login to add to your library{% endif %}"
+								id="add_button{{ book }}">Add&nbsp;to&nbsp;Library</button>
+							  <button class="btn btn-inverse dropdown-toggle library-button" data-toggle="dropdown" id="caret_button{{ book }}">
 								<span class="caret"></span>
 							  </button>
 							  <ul class="dropdown-menu library-dropdown">
-								<li><a onclick="{% if user.is_authenticated() %}add_book('book', '{{ books[book].OLKey }}', this){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>
-								<li><a onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ books[book].OLKey }}', this){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>
-								<li><a onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ books[book].OLKey }}', this){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>
+								<li><a onclick="{% if user.is_authenticated() %}add_book('book', '{{ books[book].OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>
+								<li><a onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ books[book].OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>
+								<li><a onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ books[book].OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>
 							  </ul>
 							</div>
 						{% else %}
@@ -235,7 +236,7 @@
 								style="width:120px"
 								data-toggle="tooltip" data-placement="right"
 								title="Book is already in your library. Click to view library." 
-								href="\library">In&nbsp;Library</a><br/>
+								href="\library">{{ books[book].inLibrary }}{% if 'book' in books[book].inLibrary %}Book{% elif 'ebook' in books[book].inLibrary %}eBook{% elif 'audiobook' in books[book].inLibrary %}Audiobook{% endif %}&nbsp;In&nbsp;Library</a><br/>
 						{% endif %}
 						
 						{% if books[book].inNetwork == "False" %}
