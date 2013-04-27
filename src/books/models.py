@@ -65,7 +65,7 @@ class Book(ndb.Model):
 	def search_books_by_attribute(self, value, attribute = None, cache = False):
 		# Search with 'attribute = None' when searching for an OLID
 		value = urllib.quote(value)
-		books = {}
+		books = []
 		if(attribute == None):
 			query = "q=" + value
 		elif(attribute == "ISBN"):
@@ -107,7 +107,7 @@ class Book(ndb.Model):
 					curBook.last_update = datetime.now()
 					if cache == True:
 						curBook.put()
-					books[counter] = curBook
+					books.append(curBook.to_dict())
 					counter += 1
 		except:
 			pass

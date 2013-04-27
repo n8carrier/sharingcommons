@@ -91,50 +91,72 @@ def index():
 			connectionType = 3 #Own self
 			
 		# Don't let a user connect with an existing connection
-		# if int(otherUserID) matches something in current_user().connected_accounts
+		#if otherUserObj in current_user().connected_accounts:
 		#	connectionType = 4 #Existing Connection
 			
 	return render_response('home.html',connectUserID=otherUserID,connectUserName=otherUserName,connectType=connectionType)
 	
 def library():
-	booklist = []
+	# Create a list of items (as dicts) within the user's library
+	itemlist = []
 	useraccount = current_user()
 	for copy in useraccount.get_library():
-		#TODO A bug causes multiple types of the same book to come out as the same item_type
-		# the book object gets built correctly, but once the second receives its item_type,
-		# the previous one in booklist gets changed... weird!
-		book = Book.query(Book.key == copy.book).get()
-		book.item_type = copy.item_type
-		book.title = book.title
-		book.escapedtitle = re.escape(book.title)
+		item = Book.query(Book.key == copy.book).get().to_dict()
+		item["item_type"] = copy.item_type
+		item["escapedtitle"] = re.escape(item["title"])
 		if copy.borrower is None:
-			book.available = True
+			item["available"] = True
 		else:
-			book.available = False
-		booklist.append(book)
-	#Sort booklist alphabetically, with title as the primary sort key and author as secondary
-	booklist.sort(key=lambda book: book.author.lower())
-	booklist.sort(key=lambda book: book.title.lower())
+			item["available"] = False
+		itemlist.append(item)
+	# Sort itemlist alphabetically, with title as the primary sort key,
+	# author as secondary, and item_type as tertiary
+	itemlist.sort(key=lambda item: item["item_type"].lower())
+	itemlist.sort(key=lambda item: item["author"].lower())
+	itemlist.sort(key=lambda item: item["title"].lower())
 		
-	return render_response('managelibrary.html', myBooks=booklist)
+	return render_response('managelibrary.html', itemlist=itemlist)
 	
 def network():
 	return render_response('network.html')
 	
 def discover():
+	# Start by creating a list of items (as dicts) within the user's library
+	# This is necessary prep to be able to show that the item is in the user's library
+	librarylist = []
+	useraccount = current_user()
+	for copy in useraccount.get_library():
+		item = Book.query(Book.key == copy.book).get().to_dict()
+		item["item_type"] = copy.item_type
+		item["escapedtitle"] = re.escape(item["title"])
+		librarylist.append(item)
+	
+	# Create a list of all items (as dicts) in the user's network
 	user = current_user()
-	booklist = []
-	string = ""
+	itemlist = []
 	for connection in user.get_connections():
 		u = UserAccount.getuser(connection.id())
 		for copy in u.get_library():
-			book = Book.query(Book.key == copy.book).get()
-			booklist.append(book)
-	#Sort booklist alphabetically, with title as the primary sort key and author as secondary
-	booklist.sort(key=lambda book: book.author.lower())
-	booklist.sort(key=lambda book: book.title.lower())
+			item = Book.query(Book.key == copy.book).get().to_dict()
+			item["item_type"] = copy.item_type
+			item["escapedtitle"] = re.escape(item["title"])
+			if copy.borrower is None:
+				item["available"] = True
+			else:
+				item["available"] = False
+			# Check to see if book is in the user's library
+			item["inLibrary"] = []
+			for item_type in ['book', 'ebook', 'audiobook']:
+				if (item["OLKey"],item_type) in librarylist:
+					item["inLibrary"].append(item_type)
+			itemlist.append(item)
 	
-	return render_response('discover.html',books=booklist)
+	#Sort booklist alphabetically, with title as the primary sort key and author as secondary
+	itemlist.sort(key=lambda item: item["item_type"].lower())
+	itemlist.sort(key=lambda item: item["author"].lower())
+	itemlist.sort(key=lambda item: item["title"].lower())
+	
+	return render_response('discover.html',itemlist=itemlist)
 	
 def searchbooks():
 	booklist = {}
@@ -156,12 +178,11 @@ def searchbooks():
 		logging.info(cur_user)
 		if not cur_user.is_authenticated():
 			#Assume no books in library or network, return results only
-			booklist = Book.search_books_by_attribute(searchterm,attr)
-			for book in booklist:
-				booklist[book] = booklist[book].to_dict()
+			itemlist = Book.search_books_by_attribute(searchterm,attr)
+			for item in itemlist:
 				#Assume not in booklist or networkbooklist
-				booklist[book]["inLibrary"] = "False"
-				booklist[book]["inNetwork"] = "False"
+				item["inLibrary"] = "False"
+				item["inNetwork"] = "False"
 		
 		else:
 			user = current_user()
@@ -173,29 +194,27 @@ def searchbooks():
 				
 			#Create a dictionary of the books in my network
 			networkbooklist = {}
-			string = ""
 			for connection in user.get_connections():
 				u = UserAccount.getuser(connection.id())
 				for copy in u.get_library():
 					networkbooklist[copy.OLKey] = copy
 
-			booklist = Book.search_books_by_attribute(searchterm,attr)
-			for book in booklist:
-				booklist[book] = booklist[book].to_dict()
-				booklist[book]["escapedtitle"] = re.escape(booklist[book]["title"])
+			itemlist = Book.search_books_by_attribute(searchterm,attr)
+			for item in itemlist:
+				item["escapedtitle"] = re.escape(item["title"])
 				
 				# Check for copies in library, return "inLibrary" list with all item types
-				booklist[book]["inLibrary"] = []
+				item["inLibrary"] = []
 				for item_type in ['book', 'ebook', 'audiobook']:
-					if (booklist[book]['OLKey'],item_type) in mybooklist:
-						booklist[book]["inLibrary"].append(item_type)
+					if (item["OLKey"],item_type) in mybooklist:
+						item["inLibrary"].append(item_type)
 						
-				if booklist[book]['OLKey'] in networkbooklist:
-					booklist[book]["inNetwork"] = "True"
+				if item["OLKey"] in networkbooklist:
+					item["inNetwork"] = "True"
 				else:
-					booklist[book]["inNetwork"] = "False"
+					item["inNetwork"] = "False"
 				
-	return render_response('searchbooks.html', books=booklist, search=searchterm, attribute=attr)
+	return render_response('searchbooks.html', itemlist=itemlist, search=searchterm, attribute=attr)
 	
 def settings():
 	if request.method == 'POST' and "displayName" in request.form and "lendingLength" in request.form and "notifications" in request.form and "additionalInfo" in request.form:
@@ -240,10 +259,6 @@ def profile(userID):
 	
 def book_info():
 	return render_response('bookinfo.html')
-
-def send_connection_request(otherUserID):
-	#otherUserName = UserAccount.get_by_id(otherUserID)
-	return render_response('connectionrequest.html',connectUserID=otherUserID)
 	
 def join():
 	return render_response('join.html')
@@ -346,6 +361,7 @@ def get_my_book_list():
 	return jsonify(JsonIterable.dict_of_dict(books))
 
 def search_for_book(value, attribute=None):
+	# This is broken because search_books_by_attribute now returns a list of dicts
 	books = Book.search_books_by_attribute(value,attribute)
 	if len(books) == 0:
 		return jsonify({"Message":"No books found"})

@@ -3,6 +3,24 @@
 
 {% block title %}Discover{% endblock %}
 
+{% block style %}
+
+<style type="text/css">
+	.library-button {
+		margin-bottom: 10px;
+	}
+	
+	.library-dropdown {
+		margin-top: -10px;
+	}
+	
+	.notInNetwork {
+		display: none;
+	}
+</style>
+
+{% endblock %}
+
 {% block script %}
 
 <script src="{{ url_for('static', filename='js/jquery.cookie.js') }}"></script>
@@ -13,16 +31,28 @@
 		$(".tooltip-button").tooltip({trigger: "hover"});
 	});
 	
-	function add_book(bookOLKey, button){
-		$(button).attr("disabled", "disabled");
-		$.post("/library/" + bookOLKey, function(data) {
-			$(button).text("In Library");
-			$(button).attr("onclick", "");
-			$(button).attr("href", "\library");
-			$(button).removeClass("btn-inverse").addClass("btn-primary");
-			$(button).tooltip("destroy").attr("title", "Book is already in your library. Click to view library.").tooltip({trigger: "hover"});
+	function add_book(book_type, bookOLKey, book_key){
+		//disable button and caret
+		$("#add_button" + book_key).attr("disabled", "disabled");
+		$("#caret_button" + book_key).attr("disabled", "disabled");
+		$.post("/library/" + book_type + "/" + bookOLKey, function(data) {
+			//update text to In Library and update link to library
+			//the link doesn't work as a href because it's a button, not an "a"
+			$("#add_button" + book_key).text("In Library");
+			$("#add_button" + book_key).removeAttr("onclick");
+			$("#add_button" + book_key).attr("href", "\library");
+			//update color to primary
+			$("#add_button" + book_key).removeClass("btn-inverse").addClass("btn-primary");
+			$("#caret_button" + book_key).removeClass("btn-inverse").addClass("btn-primary");
+			//update tooltip
+			$("#add_button" + book_key).tooltip("destroy").attr("title", "Book is already in your library. Click to view library.").tooltip({trigger: "hover"});
+			//remove entry of item type clicked
+			$("#add_" + book_type + book_key).hide();
+			//enable button and caret
+			$("#add_button" + book_key).removeAttr("disabled");
+			$("#caret_button" + book_key).removeAttr("disabled");
 		}).error(function() {
-			$(button).removeAttr("disabled");
+			$("#add_button" + book_key).removeAttr("disabled");
 		});
 		
 		return false;
@@ -123,30 +153,45 @@
 	<div class="span10">
 		
 		<table class="table">
-			{% if books | length < 1 %}
+			{% if itemlist | length < 1 %}
 				<tr><td>There are no books available in your network.</td></tr>
 			{% else %}
-				{% for book in books %}
+				{% for item in itemlist %}
 				<tr>
-					<td style="width:100px"><img {% if book.thumbnail_link == "" %}src="{{ url_for('static', filename='img/nocoverart.png') }}"
-								{% else %}src="{{ book.thumbnail_link }}"{% endif %} 
+					<td style="width:100px"><img {% if item.thumbnail_link == "" %}src="{{ url_for('static', filename='img/nocoverart.png') }}"
+								{% else %}src="{{ item.thumbnail_link }}"{% endif %} 
 								style="height:auto;width:100px;"/></td>
 					<td>
-							Title: {{ book.title }}<br/>
-							Author: {{ book.author }}
+							Title: {{ item.title }}<br/>
+							Author: {{ item.author }}
 					</td>
 					<td style="width: 150px">
-						<a class="btn btn-inverse tooltip-button in-library-button"
-							style="width:120px;margin-bottom:10px"
-							onclick="add_book('{{ book.OLKey }}', this)" 
-							data-toggle="tooltip" data-placement="right"
-							title="Add to library and make available to your network">Add&nbsp;to&nbsp;Library</a>
-						<br/>
+						<div class="btn-group">
+						  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} tooltip-button library-button"
+							style="width:120px"
+							{% if user.is_authenticated() == False %}disabled{% endif %} 
+							onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_book('book', '{{ item.OLKey }}', 'book{{ book }}'){% endif %}" 
+							title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
+							else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}"
+							id="add_button{{ book }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</button>
+						  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle library-button" data-toggle="dropdown" id="caret_button{{ book }}">
+							<span class="caret"></span>
+						  </button>
+						  {% if item.inLibrary != ['book', 'ebook', 'audiobook'] %}
+						  <ul class="dropdown-menu library-dropdown">
+							{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ book }}" onclick="{% if user.is_authenticated() %}add_book('book', '{{ item.OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
+							{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ book }}" onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ item.OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
+							{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ book }}" onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ item.OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
+						  </ul>
+						  {% endif %}
+						</div>
 						<a class="btn tooltip-button"
 							style="width:120px" 
-							onclick="request_book('{{ book.OLKey }}', '{{ book.title }}', this)"
+							{% if user.is_authenticated() == False %}disabled{% endif %}
+							onclick="{% if user.is_authenticated() %}request_book('{{ item.OLKey }}', '{{ item.escapedtitle }}', this){% endif %}"
 							data-toggle="tooltip" data-placement="right"
-							title="Request to borrow book from one of your connections">Request&nbsp;to&nbsp;Borrow</a>
+							title="{% if user.is_authenticated() %}Request to borrow book from one of your connections{% 
+							else %}Join or login to request to borrow books{% endif %}">Request&nbsp;to&nbsp;Borrow</a>
 					</td>
 				</tr>
 				{% endfor %}
