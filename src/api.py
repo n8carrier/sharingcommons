@@ -5,7 +5,7 @@ from books.models import Book
 from accounts.models import UserAccount
 from utilities.JsonIterable import *
 import flaskext
-
+"""
 def get_book(ISBN):
 	book = Book.get_by_isbn(ISBN)
 	if not book:
@@ -25,7 +25,7 @@ def view_library():
 		books[i] = book.to_dict()
 		i += 1
 	return jsonify(JsonIterable.dict_of_dict(books))
-	
+
 def library_book(ISBN):
 	useraccount = flaskext.login.current_user
 	if not useraccount:
@@ -35,7 +35,7 @@ def library_book(ISBN):
 		#check the database to see if the book is in the user's library
 		book = Book.get_by_isbn(ISBN)
 		if book:
-			if useraccount.get_book(book):
+			if useraccount.get_book(item_type,book):
 				return jsonify(JsonIterable.dictionary(book.to_dict()))
 			else:
 				return jsonify({"Message":"This book is not in your library"})
@@ -49,9 +49,9 @@ def library_book(ISBN):
 		if not book:
 			return jsonify({"Message":"Book not found"})
 		else:
-			if useraccount.get_book(book):
+			if useraccount.get_book(item_type,book):
 				return jsonify({"Message":"This book is already in your library"})
-			useraccount.add_book(book)
+			useraccount.add_book(item_type,book)
 			return jsonify({"Message":"Book " + ISBN + " was added to your library"})
 	elif request.method == 'DELETE':	
 		#remove the book from the user's library
@@ -59,11 +59,11 @@ def library_book(ISBN):
 		if not book:
 			return jsonify({"Message":"Book not found"})
 		else:
-			if useraccount.get_book(book):
-				useraccount.remove_book(book)
+			if useraccount.get_book(item_type,book):
+				useraccount.remove_book(item_type,book)
 			return jsonify({"Message":"Successfully deleted " + ISBN + " from your library"})
 	else:
 		#this should never be reached
 		return jsonify({"Error":"Invalid http request"})
-
+"""
 

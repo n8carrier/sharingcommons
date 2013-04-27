@@ -185,16 +185,16 @@ app.add_url_rule('/setup_book_borrow/<lenderID>/<bookCopyID>',view_func=views.se
 
 ################################### Web service calls ###################################
 # Lookup a book from app
-app.add_url_rule('/api/v1/book/<ISBN>', view_func=api.get_book)
+#app.add_url_rule('/api/v1/book/<ISBN>', view_func=api.get_book)
 
 # Returns all the books in a person's library
-app.add_url_rule('/api/v1/library', view_func=api.view_library)
+#.add_url_rule('/api/v1/library', view_func=api.view_library)
 
 # Alters books in a person's library
 #		GET - Get a particular book
 #		POST - Add a book to the library
 #		DELETE - Deletes a book from a person's library
-app.add_url_rule('/api/v1/library/<ISBN>', methods = ['GET','POST','DELETE'], view_func=api.library_book)
+#app.add_url_rule('/api/v1/library/<ISBN>', methods = ['GET','POST','DELETE'], view_func=api.library_book)
 
 ##################################### Error Handling ####################################
 ## Error Handlers

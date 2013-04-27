@@ -100,6 +100,9 @@ def library():
 	booklist = []
 	useraccount = current_user()
 	for copy in useraccount.get_library():
+		#TODO A bug causes multiple types of the same book to come out as the same item_type
+		# the book object gets built correctly, but once the second receives its item_type,
+		# the previous one in booklist gets changed... weird!
 		book = Book.query(Book.key == copy.book).get()
 		book.item_type = copy.item_type
 		book.title = book.title
@@ -297,7 +300,7 @@ def library_requests(item_type, OLKey):
 		#check the database to see if the book is in the user's library
 		book = Book.get_by_key(OLKey)
 		if book:
-			if cur_user.get_book(book):
+			if cur_user.get_book(item_type,book):
 				return book.title
 			else:
 				return "You do not have this book in your library"
@@ -311,7 +314,7 @@ def library_requests(item_type, OLKey):
 		if not book:
 			return "Book " + OLKey + " was not found"
 		else:
-			if cur_user.get_book(book):
+			if cur_user.get_book(item_type,book):
 				return "This book is already in your library"
 			cur_user.add_book(item_type, book)
 			return "Book " + OLKey + " was added to your library"
@@ -321,8 +324,8 @@ def library_requests(item_type, OLKey):
 		if not book:
 			return "Book not found"
 		else:
-			if cur_user.get_book(book):
-				cur_user.remove_book(book)
+			if cur_user.get_book(item_type,book):
+				cur_user.remove_book(item_type,book)
 			return "Successfully deleted " + OLKey + " from your library"
 	else:
 		#this should never be reached

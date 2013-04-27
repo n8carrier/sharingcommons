@@ -78,16 +78,25 @@
 	});
 	
 	function add_book(book_type, bookOLKey, book_key){
+		//disable button and caret
 		$("#add_button" + book_key).attr("disabled", "disabled");
 		$("#caret_button" + book_key).attr("disabled", "disabled");
 		$.post("/library/" + book_type + "/" + bookOLKey, function(data) {
+			//update text to In Library and update link to library
+			//the link doesn't work as a href because it's a button, not an "a"
 			$("#add_button" + book_key).text("In Library");
 			$("#add_button" + book_key).removeAttr("onclick");
 			$("#add_button" + book_key).attr("href", "\library");
+			//update color to primary
 			$("#add_button" + book_key).removeClass("btn-inverse").addClass("btn-primary");
 			$("#caret_button" + book_key).removeClass("btn-inverse").addClass("btn-primary");
+			//update tooltip
 			$("#add_button" + book_key).tooltip("destroy").attr("title", "Book is already in your library. Click to view library.").tooltip({trigger: "hover"});
+			//remove entry of item type clicked
+			$("#add_" + book_type + book_key).hide();
+			//enable button and caret
 			$("#add_button" + book_key).removeAttr("disabled");
+			$("#caret_button" + book_key).removeAttr("disabled");
 		}).error(function() {
 			$("#add_button" + book_key).removeAttr("disabled");
 		});
@@ -213,32 +222,25 @@
 						Author: {{ books[book].author }}
 					</td>
 					<td style="width: 150px">
-						{% if books[book].inLibrary == [] %}
-							<div class="btn-group">
-							  <button class="btn btn-inverse tooltip-button library-button"
-								style="width:120px"
-								{% if user.is_authenticated() == False %}disabled{% endif %} 
-								onclick="{% if user.is_authenticated() %}add_book('book', '{{ books[book].OLKey }}', 'book{{ book }}'){% endif %}" 
-								title="{% if user.is_authenticated() %}Add to library and make available to your network{% 
-								else %}Join or login to add to your library{% endif %}"
-								id="add_button{{ book }}">Add&nbsp;to&nbsp;Library</button>
-							  <button class="btn btn-inverse dropdown-toggle library-button" data-toggle="dropdown" id="caret_button{{ book }}">
-								<span class="caret"></span>
-							  </button>
-							  <ul class="dropdown-menu library-dropdown">
-								<li><a onclick="{% if user.is_authenticated() %}add_book('book', '{{ books[book].OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>
-								<li><a onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ books[book].OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>
-								<li><a onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ books[book].OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>
-							  </ul>
-							</div>
-						{% else %}
-							<a class="btn btn-primary tooltip-button library-button" 
-								style="width:120px"
-								data-toggle="tooltip" data-placement="right"
-								title="Book is already in your library. Click to view library." 
-								href="\library">{% if 'book' in books[book].inLibrary %}Book{% elif 'ebook' in books[book].inLibrary %}eBook{% elif 'audiobook' in books[book].inLibrary %}Audiobook{% endif %}&nbsp;In&nbsp;Library</a><br/>
-						{% endif %}
-						
+						<div class="btn-group">
+						  <button class="btn btn-{% if books[book].inLibrary == [] %}inverse{% else %}primary{% endif %} tooltip-button library-button"
+							style="width:120px"
+							{% if user.is_authenticated() == False %}disabled{% endif %} 
+							onclick="{% if user.is_authenticated() and books[book].inLibrary == [] %}add_book('book', '{{ books[book].OLKey }}', 'book{{ book }}'){% endif %}" 
+							title="{% if books[book].inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
+							else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}"
+							id="add_button{{ book }}">{% if books[book].inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</button>
+						  <button class="btn btn-{% if books[book].inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle library-button" data-toggle="dropdown" id="caret_button{{ book }}">
+							<span class="caret"></span>
+						  </button>
+						  {% if books[book].inLibrary != ['book', 'ebook', 'audiobook'] %}
+						  <ul class="dropdown-menu library-dropdown">
+							{% if 'book' not in books[book].inLibrary %}<li><a id="add_book{{ book }}" onclick="{% if user.is_authenticated() %}add_book('book', '{{ books[book].OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
+							{% if 'ebook' not in books[book].inLibrary %}<li><a id="add_ebook{{ book }}" onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ books[book].OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
+							{% if 'audiobook' not in books[book].inLibrary %}<li><a id="add_audiobook{{ book }}" onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ books[book].OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
+						  </ul>
+						  {% endif %}
+						</div>
 						{% if books[book].inNetwork == "False" %}
 							<a class="btn tooltip-button" 
 								style="width:120px"

@@ -190,17 +190,17 @@ class UserAccount(ndb.Model):
 		from src.books.models import BookCopy
 		return BookCopy.query(BookCopy.owner==self.key).fetch()
 	
-	def get_book(self,book):
+	def get_book(self,item_type,book):
 		"""retrieve the user's copy of a particular book
 		
 		Arguments:
 		book - the Book being retrieved
 
 		Return value:
-		the user's BookCOpy object associated with the provided Book; None if the user does not own book
+		the user's BookCopy object associated with the provided Book; None if the user does not own book
 		"""
 		from src.books.models import BookCopy
-		mybook = BookCopy.query(BookCopy.book==book.key,BookCopy.owner==self.key).get()
+		mybook = BookCopy.query(BookCopy.book==book.key,BookCopy.owner==self.key,BookCopy.item_type==item_type).get()
 		return mybook
 	
 	def add_book(self,item_type,inBook):
@@ -219,7 +219,7 @@ class UserAccount(ndb.Model):
 			self.put()
 		return bookcopy
 		
-	def remove_book(self,book):
+	def remove_book(self,item_type,book):
 		"""delete a user's copy of a book
 		
 		Arguments:
@@ -229,7 +229,7 @@ class UserAccount(ndb.Model):
 		the BookCopy instance that was just deleted; None if the BookCopy was not found
 		"""
 		from src.books.models import BookCopy
-		bookcopy = BookCopy.query(BookCopy.book==book.key,BookCopy.owner==self.key).get()
+		bookcopy = BookCopy.query(BookCopy.book==book.key,BookCopy.owner==self.key,BookCopy.item_type==item_type).get()
 		if bookcopy:
 			bookcopy.key.delete()
 			self.book_count = self.book_count - 1
