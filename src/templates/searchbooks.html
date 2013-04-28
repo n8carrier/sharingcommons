@@ -224,18 +224,18 @@
 						  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} tooltip-button library-button"
 							style="width:120px"
 							{% if user.is_authenticated() == False %}disabled{% endif %} 
-							onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_book('book', '{{ item.OLKey }}', 'book{{ book }}'){% endif %}" 
+							onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_book('book', '{{ item.OLKey }}', '{{ itemlist.index(item) }}'){% endif %}" 
 							title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
 							else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}"
-							id="add_button{{ book }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</button>
-						  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle library-button" data-toggle="dropdown" id="caret_button{{ book }}">
+							id="add_button{{ itemlist.index(item) }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</button>
+						  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle library-button" data-toggle="dropdown" id="caret_button{{ itemlist.index(item) }}">
 							<span class="caret"></span>
 						  </button>
 						  {% if item.inLibrary != ['book', 'ebook', 'audiobook'] %}
 						  <ul class="dropdown-menu library-dropdown">
-							{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ book }}" onclick="{% if user.is_authenticated() %}add_book('book', '{{ item.OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
-							{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ book }}" onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ item.OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
-							{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ book }}" onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ item.OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
+							{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_book('book', '{{ item.OLKey }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
+							{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ item.OLKey }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
+							{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ item.OLKey }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
 						  </ul>
 						  {% endif %}
 						</div>

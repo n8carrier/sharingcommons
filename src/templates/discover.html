@@ -112,6 +112,73 @@
 		return false;
 	}
 	
+	function display_content(spanID) {
+		var replaceID
+		
+		// Find span with content
+		if(document.getElementById("all-books-content").innerHTML.length > 1) {
+			replaceID = "all-books-content";
+		}else if(document.getElementById("books-content").innerHTML.length > 1) {
+			replaceID = "books-content";
+		}else if(document.getElementById("all-books-content").innerHTML.length > 1) {
+			replaceID = "ebooks-content";
+		}else if(document.getElementById("all-books-content").innerHTML.length > 1) {
+			replaceID = "audiobooks-content";
+		}
+		
+		// Move content
+		document.getElementById(spanID).innerHTML = document.getElementById(replaceID).innerHTML;
+		
+		// Show/hide appropriate items
+		if(spanID=='all-books-content') {
+			$("tr.row-book").show();
+			$("tr.row-ebook").show();
+			$("tr.row-audiobook").show();
+			hide_duplicates(); // Only necessary when showing all, since type-key duplicates SHOULD removed in the backend.
+		}else if(spanID=='books-content') {
+			$("tr.row-book").show();
+			$("tr.row-ebook").hide();
+			$("tr.row-audiobook").hide();
+		}else if(spanID=='ebooks-content') {
+			$("tr.row-book").hide();
+			$("tr.row-ebook").show();
+			$("tr.row-audiobook").hide();
+		}else if(spanID=='audiobooks-content') {
+			$("tr.row-book").hide();
+			$("tr.row-ebook").hide();
+			$("tr.row-audiobook").show();
+		}
+	}
+	
+	function hide_duplicates() {
+		var contentArray=new Array()
+		var numRows = $("#content-table tr").length
+		var className
+		
+		// Create array of book keys
+		for (var i=0;i<numRows;i++) {
+			className=$(".content-row").get(i).className;
+			contentArray[i]=className.substring(0,className.search(" ")); // Book is first word in class name
+		}
+		
+		// Create array of duplicate book keys
+		var duplicatesArray = []
+		for (var i=0;i<contentArray.length - 1;i++) {
+			if (contentArray[i+1]==contentArray[i]) {
+				duplicatesArray.push(contentArray[i]);
+			}
+		}
+		
+		// Show only one of duplicate books
+		for (var i=0;i<duplicatesArray.length;i++) {
+			$("." + duplicatesArray[i]).hide(); // Hide all
+			$("." + duplicatesArray[i]).first().show(); // Show first
+		}
+	}
+	
+	// Hide duplicates on initial load, since showing All Books
+	hide_duplicates();
+		
 </script>
 
 {% endblock %}
@@ -141,62 +208,77 @@
   </div>
 </div>
 
-<div class="row">
-	<div class="span12">
-		<h3>Browse Books in Your Network</h3>
-	</div>
-</div>
 <br>
 <div class="row-fluid">
-	<div class="span1">
+	<div class="tabbable tabs-left span2">
+		<ul class="nav nav-list affix">
+			<li class="active"><a href="#allbooks" data-toggle="tab" onClick="display_content('all-books-content')">Browse All Books</a></li>
+			<li><a href="#books" data-toggle="tab" onClick="display_content('books-content')">&nbsp;&nbsp;&nbsp;Browse Books</a></li>
+			<li><a href="#ebooks" data-toggle="tab" onClick="display_content('ebooks-content')">&nbsp;&nbsp;&nbsp;Browse eBooks</a></li>
+			<li><a href="#audiobooks" data-toggle="tab" onClick="display_content('audiobooks-content')">&nbsp;&nbsp;&nbsp;Browse Audiobooks</a></li>
+		</ul>
 	</div>
-	<div class="span10">
-		
-		<table class="table">
-			{% if itemlist | length < 1 %}
-				<tr><td>There are no books available in your network.</td></tr>
-			{% else %}
-				{% for item in itemlist %}
-				<tr>
-					<td style="width:100px"><img {% if item.thumbnail_link == "" %}src="{{ url_for('static', filename='img/nocoverart.png') }}"
-								{% else %}src="{{ item.thumbnail_link }}"{% endif %} 
-								style="height:auto;width:100px;"/></td>
-					<td>
-							Title: {{ item.title }}<br/>
-							Author: {{ item.author }}
-					</td>
-					<td style="width: 150px">
-						<div class="btn-group">
-						  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} tooltip-button library-button"
-							style="width:120px"
-							{% if user.is_authenticated() == False %}disabled{% endif %} 
-							onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_book('book', '{{ item.OLKey }}', 'book{{ book }}'){% endif %}" 
-							title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
-							else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}"
-							id="add_button{{ book }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</button>
-						  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle library-button" data-toggle="dropdown" id="caret_button{{ book }}">
-							<span class="caret"></span>
-						  </button>
-						  {% if item.inLibrary != ['book', 'ebook', 'audiobook'] %}
-						  <ul class="dropdown-menu library-dropdown">
-							{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ book }}" onclick="{% if user.is_authenticated() %}add_book('book', '{{ item.OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
-							{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ book }}" onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ item.OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
-							{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ book }}" onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ item.OLKey }}', '{{ book }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
-						  </ul>
-						  {% endif %}
-						</div>
-						<a class="btn tooltip-button"
-							style="width:120px" 
-							{% if user.is_authenticated() == False %}disabled{% endif %}
-							onclick="{% if user.is_authenticated() %}request_book('{{ item.OLKey }}', '{{ item.escapedtitle }}', this){% endif %}"
-							data-toggle="tooltip" data-placement="right"
-							title="{% if user.is_authenticated() %}Request to borrow book from one of your connections{% 
-							else %}Join or login to request to borrow books{% endif %}">Request&nbsp;to&nbsp;Borrow</a>
-					</td>
-				</tr>
-				{% endfor %}
-			{% endif %}
-		</table
+	<div class="tab-content span9">
+		<div class="tab-pane active" id="allbooks">
+			<span id="all-books-content">
+				<table class="table" id="content-table">
+					<tbody>
+						{% if itemlist | length < 1 %}
+							<tr><td>There are no books available in your network.</td></tr>
+						{% else %}
+							{% for item in itemlist %}
+							<tr class="{{ item.OLKey }} content-row row-{{ item.item_type }}">
+								<td style="width:100px""><img {% if item.thumbnail_link == "" %}src="{{ url_for('static', filename='img/nocoverart.png') }}"
+											{% else %}src="{{ item.thumbnail_link }}"{% endif %} 
+											style="height:auto;width:100px;"/></td>
+								<td>
+										Title: {{ item.title }}<br/>
+										Author: {{ item.author }}
+								</td>
+								<td style="width: 150px">
+									<div class="btn-group">
+									  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} tooltip-button library-button"
+										style="width:120px"
+										{% if user.is_authenticated() == False %}disabled{% endif %} 
+										onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_book('book', '{{ item.OLKey }}', '{{ itemlist.index(item) }}'){% endif %}" 
+										title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
+										else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}"
+										id="add_button{{ itemlist.index(item) }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</button>
+									  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle library-button" data-toggle="dropdown" id="caret_button{{ itemlist.index(item) }}">
+										<span class="caret"></span>
+									  </button>
+									  {% if item.inLibrary != ['book', 'ebook', 'audiobook'] %}
+									  <ul class="dropdown-menu library-dropdown">
+										{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_book('book', '{{ item.OLKey }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
+										{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ item.OLKey }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
+										{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ item.OLKey }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
+									  </ul>
+									  {% endif %}
+									</div>
+									<a class="btn tooltip-button"
+										style="width:120px" 
+										{% if user.is_authenticated() == False %}disabled{% endif %}
+										onclick="{% if user.is_authenticated() %}request_book('{{ item.OLKey }}', '{{ item.escapedtitle }}', this){% endif %}"
+										data-toggle="tooltip" data-placement="right"
+										title="{% if user.is_authenticated() %}Request to borrow book from one of your connections{% 
+										else %}Join or login to request to borrow books{% endif %}">Request&nbsp;to&nbsp;Borrow</a>
+								</td>
+							</tr>
+							{% endfor %}
+						{% endif %}
+					</tbody>
+				</table>
+			</span>
+		</div>
+		<div class="tab-pane" id="books">
+			<span id="books-content"></span>
+		</div>
+		<div class="tab-pane" id="ebooks">
+			<span id="ebooks-content"></span>
+		</div>
+		<div class="tab-pane" id="audiobooks">
+			<span id="audiobooks-content"></span>
+		</div>
 	</div>
 </div>
 
