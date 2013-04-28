@@ -156,7 +156,13 @@ def discover():
 	itemlist.sort(key=lambda item: item["author"].lower())
 	itemlist.sort(key=lambda item: item["title"].lower())
 	
-	return render_response('discover.html',itemlist=itemlist)
+	#Remove duplicate books (dictionaries) from itemlist (list)
+	dedupeditemlist = []
+	for item in itemlist:
+	  if item not in dedupeditemlist:
+	    dedupeditemlist.append(item)
+	
+	return render_response('discover.html',itemlist=dedupeditemlist)
 	
 def searchbooks():
 	booklist = {}
