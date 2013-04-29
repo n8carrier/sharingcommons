@@ -27,7 +27,7 @@
 			$(button).attr("disabled", "");
 			$(button).attr("onclick", "");
 			$(button).html("Requested");
-			$(button).tooltip("destroy").attr("title", "Book has been requested").tooltip({trigger: "hover"});
+			$(button).tooltip("destroy").attr("title", "Item has been requested").tooltip({trigger: "hover"});
 		});
 	}
 </script>
@@ -73,7 +73,7 @@
 			{% for book in library %}
 			<tr>
 				<td>{{ book.title }}</td>
-				<td>{{ book.author }}</td>
+				<td>{{ book.author_director }}</td>
 				<td style="text-align:center">
 				{% if profile_user.get_id() == user.get_id() %}
 					{% if book.available %}Available

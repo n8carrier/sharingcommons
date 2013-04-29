@@ -75,7 +75,7 @@ app.add_url_rule('/bookinfo',view_func=views.book_info)
 #	Returns:
 #		JSON object with the following info about each book the user owns
 #			last_update, thumbnail_link, OLKey, author, title
-app.add_url_rule('/library/mybooklist',view_func=views.get_my_book_list)
+#app.add_url_rule('/library/mybooklist',view_func=views.get_my_book_list)
 
 # Deletes the current user
 app.add_url_rule('/delete',view_func=views.delete_user,methods=['GET'])
@@ -87,15 +87,15 @@ app.add_url_rule('/delete',view_func=views.delete_user,methods=['GET'])
 #		value - the value that should be used in the search
 #	Returns:
 #		JSON object with each book found
-app.add_url_rule('/search/<value>', view_func=views.search_for_book)
-app.add_url_rule('/search/<attribute>/<value>', view_func=views.search_for_book)
+#app.add_url_rule('/search/<value>', view_func=views.search_for_book)
+#app.add_url_rule('/search/<attribute>/<value>', view_func=views.search_for_book)
 
 # Altering or accessing a user's personal library
 #	the following http types should be sent to do their corresponding functions
 #		GET - check to see if the current user has the given book
 #		POST - add the given book to the user's library
 #		DELETE - remove the book from the user's library
-app.add_url_rule('/library/<item_type>/<OLKey>', methods = ['GET', 'POST', 'DELETE'], view_func=views.library_requests)
+app.add_url_rule('/library/<item_subtype>/<item_key>', methods = ['GET', 'POST', 'DELETE'], view_func=views.library_requests)
 
 # Altering or accessing a user's connections to other users
 #	the following http types should be sent to do their corresponding functions
@@ -136,7 +136,7 @@ app.add_url_rule('/borrowed_books', view_func=views.get_borrowed_books)
 
 # Return the given book to it's owner.  Can be called when either the owner or borrower is logged in
 #	parameters:
-#		bookCopyID: the id of the BookCopy object that is being returned
+#		bookCopyID: the id of the ItemCopy object that is being returned
 #	returns:
 #		JSON array with a message: success or the reason for a failure
 app.add_url_rule('/return_book/<bookCopyID>', view_func=views.return_book)
@@ -145,7 +145,7 @@ app.add_url_rule('/return_book/<bookCopyID>', view_func=views.return_book)
 # If the current user is the owner of the book the date is automaticall changed
 # If the current user is the borrower, a notification is sent to the owner and he/she can accept the new due date
 #	parameters:
-#		bookCopyID: the id of the BookCopy object that is being returned
+#		bookCopyID: the id of the ItemCopy object that is being returned
 #		newDueDate: the new date the book will be due.  Must be in the format year-month-day
 #	returns:
 #		JSON object with a message: success or the reason for the failure
@@ -175,12 +175,12 @@ app.add_url_rule('/reject_notification/<notificationID>', view_func=views.reject
 #		OLKey - the open library key of the book being searched for
 #	returns:
 #		JSON object with these fields for each finding (username, bookCopyID, available)
-app.add_url_rule('/search/inNetwork/<OLKey>',view_func=views.see_who_in_network_has_book)
+#app.add_url_rule('/search/inNetwork/<OLKey>',view_func=views.see_who_in_network_has_book)
 
 # Starts the process for the current user to borrow a book.
 #	parameters:
 #		lenderID - id of the owner of the book
-#		bookCopyID - the id of the BookCopy object being borrowed
+#		bookCopyID - the id of the ItemCopy object being borrowed
 app.add_url_rule('/setup_book_borrow/<lenderID>/<bookCopyID>',view_func=views.setup_book_borrow_actions)
 
 ################################### Web service calls ###################################

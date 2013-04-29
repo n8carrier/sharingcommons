@@ -1,7 +1,7 @@
 from google.appengine.ext import ndb
 from google.appengine.ext.ndb import polymodel
 from src.accounts.models import UserAccount
-from src.books.models import BookCopy,Book
+from src.books.models import ItemCopy,Item
 
 
 class Action(polymodel.PolyModel):
@@ -72,14 +72,14 @@ class ConnectionRequest(Action):
 
 class RequestToBorrow(Action):
 	connection = ndb.KeyProperty(kind=UserAccount)
-	book = ndb.KeyProperty(kind=BookCopy)
+	item = ndb.KeyProperty(kind=ItemCopy)
 	
 	@property
 	def text(self):
 		other = UserAccount.query(UserAccount.key==self.connection).get()
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
-		book = Book.query(Book.key==bookcopy.book).get()
-		return "%s has requested to borrow '%s'" %(other.name,book.title)
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
+		item = Item.query(Item.key==bookcopy.item).get()
+		return "%s has requested to borrow '%s'" %(other.name,item.title)
 		
 	can_accept = True 
 	accept_text = "Confirm Checkout"
@@ -88,8 +88,8 @@ class RequestToBorrow(Action):
 	
 	def confirm(self):
 		other = UserAccount.query(UserAccount.key==self.connection).get()
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
-		book = Book.query(Book.key==bookcopy.book).get()
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
+		item = Item.query(Item.key==bookcopy.item).get()
 		
 		due_date = None
 		cur_user = UserAccount.query(UserAccount.key==self.useraccount).get()
@@ -97,34 +97,34 @@ class RequestToBorrow(Action):
 		
 		self.cleanup()
 		
-		otherAction = WaitingToBorrow.query(WaitingToBorrow.book == bookcopy.key and WaitingToBorrow.useraccount == other.key).get()
+		otherAction = WaitingToBorrow.query(WaitingToBorrow.item == bookcopy.key and WaitingToBorrow.useraccount == other.key).get()
 		otherAction.cleanup()
 		
-		return "You have agreed to lend %s to %s" %(book.title,other.name)
+		return "You have agreed to lend %s to %s" %(item.title,other.name)
 	
 	def reject(self):
 		other = UserAccount.query(UserAccount.key==self.connection).get()
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
-		book = Book.query(Book.key==bookcopy.book).get()
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
+		item = Item.query(Item.key==bookcopy.item).get()
 		self.cleanup()
 
-		otherAction = WaitingToBorrow.query(WaitingToBorrow.book == bookcopy.key and WaitingToBorrow.useraccount == other.key).get()
+		otherAction = WaitingToBorrow.query(WaitingToBorrow.item == bookcopy.key and WaitingToBorrow.useraccount == other.key).get()
 		otherAction.cleanup()
 		
-		return "You have denied %s permission to borrow %s" %(other.name,book.title)
+		return "You have denied %s permission to borrow %s" %(other.name,item.title)
 		
 
 
 class WaitingToBorrow(Action):
 	connection = ndb.KeyProperty(kind=UserAccount)
-	book = ndb.KeyProperty(kind=BookCopy)
+	item = ndb.KeyProperty(kind=ItemCopy)
 	
 	@property
 	def text(self):
 		other = UserAccount.query(UserAccount.key==self.connection).get()
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
-		book = Book.query(Book.key==bookcopy.book).get()
-		return "You have requested to borrow '%s' from %s" %(book.title,other.name)
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
+		item = Item.query(Item.key==bookcopy.item).get()
+		return "You have requested to borrow '%s' from %s" %(item.title,other.name)
 		
 	can_accept = False 
 	accept_text = "Allow"
@@ -133,32 +133,32 @@ class WaitingToBorrow(Action):
 	
 	def confirm(self):
 		other = UserAccount.query(UserAccount.key==self.connection).get()
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
-		book = Book.query(Book.key==bookcopy.book).get()
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
+		item = Item.query(Item.key==bookcopy.item).get()
 		print "You have accepted a connection request from %s" %(other.name)
 		#self.cleanup()
 	
 	def reject(self):
 		other = UserAccount.query(UserAccount.key==self.connection).get()
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
-		book = Book.query(Book.key==bookcopy.book).get()
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
+		item = Item.query(Item.key==bookcopy.item).get()
 		self.cleanup()
 		
-		otherAction = RequestToBorrow.query(RequestToBorrow.book == bookcopy.key and RequestToBorrow.useraccount == other.key).get()
+		otherAction = RequestToBorrow.query(RequestToBorrow.item == bookcopy.key and RequestToBorrow.useraccount == other.key).get()
 		otherAction.cleanup()
 		
 		return "Request cancelled"
 
 
 class ConfirmReturn(Action):
-	book = ndb.KeyProperty(kind=BookCopy)
+	item = ndb.KeyProperty(kind=ItemCopy)
 	
 	@property
 	def text(self):
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
 		other = UserAccount.query(UserAccount.key==bookcopy.borrower).get()
-		book = Book.query(Book.key==bookcopy.book).get()
-		return "%s reported checking in '%s'" %(other.name,book.title)
+		item = Item.query(Item.key==bookcopy.item).get()
+		return "%s reported checking in '%s'" %(other.name,item.title)
 		
 	can_accept = True 
 	accept_text = "Confirm"
@@ -166,32 +166,32 @@ class ConfirmReturn(Action):
 	reject_text = "Deny"
 	
 	def confirm(self):
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
 		other = UserAccount.query(UserAccount.key==bookcopy.borrower).get()
-		book = Book.query(Book.key==bookcopy.book).get()
+		item = Item.query(Item.key==bookcopy.item).get()
 		bookcopy.return_book()
 		bookcopy.put()
 		self.cleanup()
-		return "%s has been returned to your library" %(book.title)
+		return "%s has been returned to your library" %(item.title)
 	
 	def reject(self):
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
 		other = UserAccount.query(UserAccount.key==bookcopy.borrower).get()
-		book = Book.query(Book.key==bookcopy.book).get()
+		item = Item.query(Item.key==bookcopy.item).get()
 		self.cleanup()
-		return "Recorded that %s didn't return %s" %(other.name,book.title)
+		return "Recorded that %s didn't return %s" %(other.name,item.title)
 
 
 class DueDateExtension(Action):
-	book = ndb.KeyProperty(kind=BookCopy)
+	item = ndb.KeyProperty(kind=ItemCopy)
 	due_date = ndb.DateProperty()
 	
 	@property
 	def text(self):
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
 		other = UserAccount.query(UserAccount.key==bookcopy.borrower).get()
-		book = Book.query(Book.key==bookcopy.book).get()
-		return "%s wants to extend the due date of '%s' to %s?" %(other.name,book.title,str(self.due_date))
+		item = Item.query(Item.key==bookcopy.item).get()
+		return "%s wants to extend the due date of '%s' to %s?" %(other.name,item.title,str(self.due_date))
 		
 	can_accept = True 
 	accept_text = "Allow"
@@ -199,12 +199,12 @@ class DueDateExtension(Action):
 	reject_text = "No" 
 	
 	def confirm(self):
-		bookcopy = BookCopy.query(BookCopy.key==self.book).get()
-		book = Book.query(Book.key==bookcopy.book).get()
+		bookcopy = ItemCopy.query(ItemCopy.key==self.item).get()
+		item = Item.query(Item.key==bookcopy.item).get()
 		bookcopy.update_due_date(self.due_date)
 		bookcopy.put()
 		self.cleanup()
-		return "%s has been extended to %s" %(book.title,str(self.due_date))
+		return "%s has been extended to %s" %(item.title,str(self.due_date))
 	
 	def reject(self):
 		self.cleanup()

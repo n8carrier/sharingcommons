@@ -14,3 +14,8 @@ indexes:
   properties:
   - name: owner
   - name: borrower
+
+- kind: ItemCopy
+  properties:
+  - name: owner
+  - name: borrower

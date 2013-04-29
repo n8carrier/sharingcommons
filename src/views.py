@@ -2,7 +2,7 @@
 from google.appengine.api import users
 from flask import Response, jsonify, render_template, request, url_for, redirect, flash
 from flaskext.login import login_required, login_user, logout_user
-from books.models import Book,BookCopy
+from books.models import Item,ItemCopy
 from activity.models import RequestToBorrow, WaitingToBorrow
 import logging
 from decorators import crossdomain
@@ -32,17 +32,17 @@ def warmup():
 def book_due_reminders():
 	count = 0
 	"""find all the books due tomorrow and send reminder emails"""
-	books = BookCopy.query(BookCopy.due_date==date.today() + timedelta(days=1)).fetch()
-	for book in books:
+	items = ItemCopy.query(ItemCopy.due_date==date.today() + timedelta(days=1)).fetch()
+	for item in items:
 		count += 1
-		owner = UserAccount.query(UserAccount.key==book.owner).get()
+		owner = UserAccount.query(UserAccount.key==item.owner).get()
 		mail.send_mail(sender=owner.email,
-			to=UserAccount.query(UserAccount.key==book.borrower).get().email,
-			subject="Book Due Soon",
+			to=UserAccount.query(UserAccount.key==item.borrower).get().email,
+			subject="Item Due Soon",
 			body="""Hey, remember that book you borrowed on Bookout from me, '%s'? Please get it back to me by tomorrow.
 			
 Thanks!
-%s"""%(Book.query(Book.key==book.book).get().title,owner.name))
+%s"""%(Item.query(Item.key==item.item).get().title,owner.name))
 	return "%s reminders were sent out" %count
 
 @app.route("/crossdomain")
@@ -101,8 +101,8 @@ def library():
 	itemlist = []
 	useraccount = current_user()
 	for copy in useraccount.get_library():
-		item = Book.query(Book.key == copy.book).get().to_dict()
-		item["item_type"] = copy.item_type
+		item = Item.query(Item.key == copy.item).get().to_dict()
+		item["item_subtype"] = copy.item_subtype
 		item["escapedtitle"] = re.escape(item["title"])
 		if copy.borrower is None:
 			item["available"] = True
@@ -110,9 +110,9 @@ def library():
 			item["available"] = False
 		itemlist.append(item)
 	# Sort itemlist alphabetically, with title as the primary sort key,
-	# author as secondary, and item_type as tertiary
-	itemlist.sort(key=lambda item: item["item_type"].lower())
-	itemlist.sort(key=lambda item: item["author"].lower())
+	# author as secondary, and item_subtype as tertiary
+	itemlist.sort(key=lambda item: item["item_subtype"].lower())
+	itemlist.sort(key=lambda item: item["author_director"].lower())
 	itemlist.sort(key=lambda item: item["title"].lower())
 		
 	return render_response('managelibrary.html', itemlist=itemlist)
@@ -126,8 +126,8 @@ def discover():
 	librarylist = []
 	useraccount = current_user()
 	for copy in useraccount.get_library():
-		item = Book.query(Book.key == copy.book).get().to_dict()
-		item["item_type"] = copy.item_type
+		item = Item.query(Item.key == copy.item).get().to_dict()
+		item["item_subtype"] = copy.item_subtype
 		item["escapedtitle"] = re.escape(item["title"])
 		librarylist.append(item)
 	
@@ -137,8 +137,8 @@ def discover():
 	for connection in user.get_connections():
 		u = UserAccount.getuser(connection.id())
 		for copy in u.get_library():
-			item = Book.query(Book.key == copy.book).get().to_dict()
-			item["item_type"] = copy.item_type
+			item = Item.query(Item.key == copy.item).get().to_dict()
+			item["item_subtype"] = copy.item_subtype
 			item["escapedtitle"] = re.escape(item["title"])
 			if copy.borrower is None:
 				item["available"] = True
@@ -146,14 +146,14 @@ def discover():
 				item["available"] = False
 			# Check to see if book is in the user's library
 			item["inLibrary"] = []
-			for item_type in ['book', 'ebook', 'audiobook']:
-				if (item["OLKey"],item_type) in librarylist:
-					item["inLibrary"].append(item_type)
+			for item_subtype in ['book', 'ebook', 'audiobook']:
+				if (item["item_key"],item_subtype) in librarylist:
+					item["inLibrary"].append(item_subtype)
 			itemlist.append(item)
 	
 	#Sort booklist alphabetically, with title as the primary sort key and author as secondary
-	itemlist.sort(key=lambda item: item["item_type"].lower())
-	itemlist.sort(key=lambda item: item["author"].lower())
+	itemlist.sort(key=lambda item: item["item_subtype"].lower())
+	itemlist.sort(key=lambda item: item["author_director"].lower())
 	itemlist.sort(key=lambda item: item["title"].lower())
 	
 	#Remove duplicate books (dictionaries) from itemlist (list)
@@ -184,7 +184,7 @@ def searchbooks():
 		logging.info(cur_user)
 		if not cur_user.is_authenticated():
 			#Assume no books in library or network, return results only
-			itemlist = Book.search_books_by_attribute(searchterm,attr)
+			itemlist = Item.search_by_attribute("book",searchterm,attr)
 			for item in itemlist:
 				#Assume not in booklist or networkbooklist
 				item["inLibrary"] = "False"
@@ -196,26 +196,28 @@ def searchbooks():
 			#Create a dictionary of the user's books
 			mybooklist = {}
 			for copy in user.get_library():
-				mybooklist[(copy.OLKey,copy.item_type)] = copy.to_dict()
+				copyItemKey = Item.query(Item.key == copy.item).get().item_key
+				copyItemSubtype = copy.item_subtype
+				mybooklist[(copyItemKey,copyItemSubtype)] = copy.to_dict()
 				
 			#Create a dictionary of the books in my network
 			networkbooklist = {}
 			for connection in user.get_connections():
 				u = UserAccount.getuser(connection.id())
 				for copy in u.get_library():
-					networkbooklist[copy.OLKey] = copy
+					networkbooklist[copy.item_key] = copy
 
-			itemlist = Book.search_books_by_attribute(searchterm,attr)
+			itemlist = Item.search_by_attribute("book",searchterm,attr)
 			for item in itemlist:
 				item["escapedtitle"] = re.escape(item["title"])
 				
 				# Check for copies in library, return "inLibrary" list with all item types
 				item["inLibrary"] = []
-				for item_type in ['book', 'ebook', 'audiobook']:
-					if (item["OLKey"],item_type) in mybooklist:
-						item["inLibrary"].append(item_type)
+				for item_subtype in ['book', 'ebook', 'audiobook']:
+					if (item["item_key"],item_subtype) in mybooklist:
+						item["inLibrary"].append(item_subtype)
 						
-				if item["OLKey"] in networkbooklist:
+				if item["item_key"] in networkbooklist:
 					item["inNetwork"] = "True"
 				else:
 					item["inNetwork"] = "False"
@@ -253,7 +255,7 @@ def profile(userID):
 	if user.is_connected(profile_user):
 		library = []
 		for copy in profile_user.get_library():
-			book = Book.query(Book.key == copy.book).get()
+			book = Item.query(Item.key == copy.item).get()
 			library.append(book)
 			if copy.borrower is None:
 				book.available = True
@@ -311,7 +313,7 @@ def delete_user():
 		return "Success"
 	return ""
 
-def library_requests(item_type, OLKey):
+def library_requests(item_subtype, item_key):
 	cur_user = current_user()
 	if not cur_user:
 		logging.info("there is not a user logged in")
@@ -319,9 +321,9 @@ def library_requests(item_type, OLKey):
 		
 	if request.method == 'GET':
 		#check the database to see if the book is in the user's library
-		book = Book.get_by_key(OLKey)
+		book = Item.get_by_key(item_key)
 		if book:
-			if cur_user.get_book(item_type,book):
+			if cur_user.get_book(item_subtype,book):
 				return book.title
 			else:
 				return "You do not have this book in your library"
@@ -330,24 +332,24 @@ def library_requests(item_type, OLKey):
 	elif request.method == 'POST':
 		#add the book to the user's library
 		#If not found, add it to the cache, then to the user's library
-		book = Book.get_by_key(OLKey)
+		book = Item.get_by_key(item_key)
 
 		if not book:
-			return "Book " + OLKey + " was not found"
+			return "Book " + item_key + " was not found"
 		else:
-			if cur_user.get_book(item_type,book):
+			if cur_user.get_book(item_subtype,book):
 				return "This book is already in your library"
-			cur_user.add_book(item_type, book)
-			return "Book " + OLKey + " was added to your library"
+			cur_user.add_book(item_subtype, book)
+			return "Book " + item_key + " was added to your library"
 	elif request.method == 'DELETE':	
 		#remove the book from the user's library
-		book = Book.get_by_key(OLKey)
+		book = Item.get_by_key(item_key)
 		if not book:
 			return "Book not found"
 		else:
-			if cur_user.get_book(item_type,book):
-				cur_user.remove_book(item_type,book)
-			return "Successfully deleted " + OLKey + " from your library"
+			if cur_user.get_book(item_subtype,book):
+				cur_user.remove_book(item_subtype,book)
+			return "Successfully deleted " + item_key + " from your library"
 	else:
 		#this should never be reached
 		return "Error: http request was invalid"
@@ -361,14 +363,14 @@ def get_my_book_list():
 	books = {}
 	counter = 0
 	for copy in cur_user.get_library():
-		book = Book.query(Book.key == copy.book).get()
+		book = Item.query(Item.key == copy.item).get()
 		books[counter] = book.to_dict()
 		counter += 1
 	return jsonify(JsonIterable.dict_of_dict(books))
 
 def search_for_book(value, attribute=None):
 	# This is broken because search_books_by_attribute now returns a list of dicts
-	books = Book.search_books_by_attribute(value,attribute)
+	books = Item.search_by_attribute("book",value,attribute)
 	if len(books) == 0:
 		return jsonify({"Message":"No books found"})
 	else:
@@ -431,11 +433,11 @@ def get_lent_books():
 	cur_user = current_user()
 	lentBooks = []
 	for bookcopy in cur_user.get_lent_books():
-		book = Book.get_by_id(bookcopy.book.id())
+		book = Item.get_by_id(bookcopy.item.id())
 		borrower = UserAccount.get_by_id(bookcopy.borrower.id())
 		bookInfo = dict()
 		bookInfo["title"] = book.title
-		bookInfo["author"] = book.author
+		bookInfo["author_director"] = book.author_director
 		bookInfo["copyID"] = bookcopy.key.id()
 		bookInfo["borrowerId"] = bookcopy.borrower.id()
 		bookInfo["borrower"] = borrower.name
@@ -447,11 +449,11 @@ def get_borrowed_books():
 	cur_user = current_user()
 	borrowedBooks = []
 	for bookcopy in cur_user.get_borrowed_books():
-		book = Book.get_by_id(bookcopy.book.id())
+		book = Item.get_by_id(bookcopy.item.id())
 		owner = UserAccount.get_by_id(bookcopy.owner.id())
 		bookInfo = dict()
 		bookInfo["title"] = book.title
-		bookInfo["author"] = book.author
+		bookInfo["author_director"] = book.author_director
 		bookInfo["copyID"] = bookcopy.key.id()
 		bookInfo["ownerId"] = bookcopy.owner.id()
 		bookInfo["owner"] = owner.name
@@ -469,7 +471,7 @@ def change_due_date(bookCopyID, newDueDate):
 	result = cur_user.change_due_date(bookCopyID, newDueDate)
 	return jsonify({"Message":result})	
 	
-def see_who_in_network_has_book(OLKey):
+def see_who_in_network_has_book(item_key):
 	user = current_user()
 
 	networkuserlist = {}
@@ -477,7 +479,7 @@ def see_who_in_network_has_book(OLKey):
 	for connection in user.get_connections():
 		u = UserAccount.getuser(connection.id())
 		for copy in u.get_library():
-			if copy.OLKey == OLKey:
+			if copy.item_key == item_key:
 				user = {}
 				user["username"] = u.name
 				user["bookCopyID"] = copy.key.id()
@@ -492,7 +494,7 @@ def see_who_in_network_has_book(OLKey):
 def setup_book_borrow_actions(lenderID, bookCopyID):
 	borrower = current_user()
 	lender = UserAccount.getuser(int(lenderID))
-	bookCopy = BookCopy.get_by_id(int(bookCopyID))
+	bookCopy = ItemCopy.get_by_id(int(bookCopyID))
 	
 	rtb1 = RequestToBorrow()
 	rtb1.useraccount = lender.key

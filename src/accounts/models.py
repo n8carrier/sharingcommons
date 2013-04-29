@@ -16,7 +16,7 @@ class UserAccount(ndb.Model):
 	
 	name = ndb.StringProperty(required=True)
 	email = ndb.StringProperty(required=True)
-	book_count = ndb.IntegerProperty(default=0)
+	item_count = ndb.IntegerProperty(default=0)
 	lending_length = ndb.StringProperty(default="14")
 	notification = ndb.StringProperty(default="email")
 	info = ndb.StringProperty(default="")
@@ -41,11 +41,11 @@ class UserAccount(ndb.Model):
 		"""Get all the books owned by users connected to this owned
 
 		Return value:
-		an array will all the BookCopy objects belonging to connected users
+		an array will all the ItemCopy objects belonging to connected users
 
 		"""
-		from src.books.models import BookCopy
-		return BookCopy.query(BookCopy.owner.IN(self.get_connections())).fetch()
+		from src.books.models import ItemCopy
+		return ItemCopy.query(ItemCopy.owner.IN(self.get_connections())).fetch()
 	
 	def get_connections(self):
 		"""Get all the users this user is connected to
@@ -185,54 +185,54 @@ class UserAccount(ndb.Model):
 		"""retrieve the user's library
 		
 		Return value:
-		list of BookCopy objects owned by the user
+		list of ItemCopy objects owned by the user
 		"""
-		from src.books.models import BookCopy
-		return BookCopy.query(BookCopy.owner==self.key).fetch()
+		from src.books.models import ItemCopy
+		return ItemCopy.query(ItemCopy.owner==self.key).fetch()
 	
-	def get_book(self,item_type,book):
+	def get_book(self,item_subtype,item):
 		"""retrieve the user's copy of a particular book
 		
 		Arguments:
 		book - the Book being retrieved
 
 		Return value:
-		the user's BookCopy object associated with the provided Book; None if the user does not own book
+		the user's ItemCopy object associated with the provided Item; None if the user does not own item
 		"""
-		from src.books.models import BookCopy
-		mybook = BookCopy.query(BookCopy.book==book.key,BookCopy.owner==self.key,BookCopy.item_type==item_type).get()
+		from src.books.models import ItemCopy
+		mybook = ItemCopy.query(ItemCopy.item==item.key,ItemCopy.owner==self.key,ItemCopy.item_subtype==item_subtype).get()
 		return mybook
 	
-	def add_book(self,item_type,inBook):
+	def add_book(self,item_subtype,item):
 		"""add a personal copy of a book to a user's account
 		
 		Arguments:
 		book - Book object being attached to the User
 
 		Return Value:
-		a BookCopy instance that links the User to the Book; None if the Book could not be linked
+		a ItemCopy instance that links the User to the Book; None if the Book could not be linked
 		"""
-		from src.books.models import BookCopy
-		bookcopy = BookCopy(book=inBook.key,owner=self.key,OLKey=inBook.OLKey,item_type=item_type)
-		if bookcopy.put():
-			self.book_count = self.book_count + 1
+		from src.books.models import ItemCopy
+		itemcopy = ItemCopy(item=item.key,owner=self.key,item_subtype=item_subtype)
+		if itemcopy.put():
+			self.item_count = self.item_count + 1
 			self.put()
-		return bookcopy
+		return itemcopy
 		
-	def remove_book(self,item_type,book):
+	def remove_book(self,item_subtype,item):
 		"""delete a user's copy of a book
 		
 		Arguments:
 		book - Book object that is to be removed
 
 		Return value:
-		the BookCopy instance that was just deleted; None if the BookCopy was not found
+		the ItemCopy instance that was just deleted; None if the ItemCopy was not found
 		"""
-		from src.books.models import BookCopy
-		bookcopy = BookCopy.query(BookCopy.book==book.key,BookCopy.owner==self.key,BookCopy.item_type==item_type).get()
+		from src.books.models import ItemCopy
+		bookcopy = ItemCopy.query(ItemCopy.item==item.key,ItemCopy.owner==self.key,ItemCopy.item_subtype==item_subtype).get()
 		if bookcopy:
 			bookcopy.key.delete()
-			self.book_count = self.book_count - 1
+			self.item_count = self.item_count - 1
 			self.put()
 		return bookcopy
 	
@@ -318,8 +318,8 @@ class UserAccount(ndb.Model):
 		Return value:
 		A string describing the success or failure of the operation
 		"""
-		from src.books.models import BookCopy
-		bookCopy = BookCopy.get_by_id(bookID)
+		from src.books.models import ItemCopy
+		bookCopy = ItemCopy.get_by_id(bookID)
 
 		# check to see if the book copy is valid
 		if(bookCopy == None):
@@ -345,8 +345,8 @@ class UserAccount(ndb.Model):
 		Return value:
 		A string describing the success or failure of the operation
 		"""
-		from src.books.models import BookCopy
-		bookCopy = BookCopy.get_by_id(bookID)
+		from src.books.models import ItemCopy
+		bookCopy = ItemCopy.get_by_id(bookID)
 
 		# check to see if the book copy is valid
 		if(bookCopy == None):
@@ -364,32 +364,32 @@ class UserAccount(ndb.Model):
 		"""Get all the books that the user is currently lending to anther user
 
 		Return Value:
-		A list of BookCopy objects of all the the books the user is currently lending
+		A list of ItemCopy objects of all the the books the user is currently lending
 		"""
-		from src.books.models import BookCopy
-		return BookCopy.query(BookCopy.owner==self.key,BookCopy.borrower!=None).fetch()
+		from src.books.models import ItemCopy
+		return ItemCopy.query(ItemCopy.owner==self.key,ItemCopy.borrower!=None).fetch()
 
 	def get_borrowed_books(self):
 		"""Get all the books that the user is currently borrowing from anther user
 
 		Return Value:
-		A list of BookCopy objects of all the the books the user is currently borrowing
+		A list of ItemCopy objects of all the the books the user is currently borrowing
 		"""
-		from src.books.models import BookCopy
-		return BookCopy.query(BookCopy.borrower==self.key).fetch()
+		from src.books.models import ItemCopy
+		return ItemCopy.query(ItemCopy.borrower==self.key).fetch()
 
 	def return_book(self, bookCopyID):
 		"""Return the given book to it's owner
 
 		Arguments:
-		bookCopyID: an ID representing a BookCopy object, the book to be returned
+		bookCopyID: an ID representing a ItemCopy object, the book to be returned
 
 		Return Value:
 		A message describing the success or failure or the operation
 		"""
-		from src.books.models import BookCopy
+		from src.books.models import ItemCopy
 		from src.activity.models import ConfirmReturn
-		bookcopy = BookCopy.get_by_id(int(bookCopyID))
+		bookcopy = ItemCopy.get_by_id(int(bookCopyID))
 
 		# verify the bookCopyID was valid
 		if(bookcopy == None):
@@ -409,15 +409,15 @@ class UserAccount(ndb.Model):
 		"""Update the date that a book is due
 
 		Arguments:
-		bookCopyID: an ID representing a BookCopy object, the book to be returned
+		bookCopyID: an ID representing a ItemCopy object, the book to be returned
 		newDueDate: a string representing the new due date of the book
 
 		Return Value:
 		A message describing the success or failure or the operation
 		"""
-		from src.books.models import BookCopy
+		from src.books.models import ItemCopy
 		from src.activity.models import DueDateExtension
-		bookcopy = BookCopy.get_by_id(int(bookCopyID))
+		bookcopy = ItemCopy.get_by_id(int(bookCopyID))
 		new_date = datetime.datetime.strptime(newDueDate, '%Y-%m-%d')
 
 		if(bookcopy == None):
