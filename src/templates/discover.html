@@ -134,7 +134,7 @@
 			$("tr.row-book").show();
 			$("tr.row-ebook").show();
 			$("tr.row-audiobook").show();
-			hide_duplicates(); // Only necessary when showing all, since type-key duplicates SHOULD removed in the backend.
+			hide_duplicates(); // Only necessary when showing all, since (type,key) duplicates are removed in the backend.
 		}else if(spanID=='books-content') {
 			$("tr.row-book").show();
 			$("tr.row-ebook").hide();

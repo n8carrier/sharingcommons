@@ -22,6 +22,7 @@
 {% block script %}
 
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui-1.10.2.custom.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.tablesorter.min.js') }}"></script>
 
 <script type="text/javascript">
 	var lastRemoveLink;
@@ -108,6 +109,11 @@
 		$(".tooltip-button").tooltip({trigger: "hover"});
 	});
 	
+	// Not sure why this doesn't work--haven't tried to figure it out yet.
+	$(function() {
+		$("#MyBooksTable").tablesorter({ sortList: [[1,0]] });
+	});
+	
 </script>
 
 {% endblock %}
@@ -140,17 +146,17 @@
       <div class="tab-content">
         <div class="tab-pane active" id="MyBooks">
           <h3 style="margin-top:-4px">Books I Own</h3>
-          <table class="table table-striped table-bordered">
+          <table class="table table-striped table-bordered" id="MyBooksTable">
             {% if itemlist|length < 1 %}
               <tr>
                 <td colspan="4">You don't have any books in your library. To add books, search for the title, author, or ISBN in the search field inside the header. Once you've added books, they'll show up here.</td>
             {% else %}
 				<tr>
-				  <th style="width:26px;text-align:center"></th>
-				  <th>Book Title</th>
-				  <th>Author</th>
-				  <th>Lend Status</th>
-				  <th style="width:100px"></th>
+				  <th class="header" style="width:26px;text-align:center"></th>
+				  <th class="header">Book Title</th>
+				  <th class="header">Author</th>
+				  <th class="header">Lend Status</th>
+				  <th class="header" style="width:100px"></th>
 				</tr>
 				{% for item in itemlist %}
 				  <tr>
