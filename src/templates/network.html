@@ -40,7 +40,7 @@
 	}
 	
 	function gmailCompose() {
-		composeSubject = "Invitation to Join BookOut"
+		composeSubject = "Invitation to Join Sharing Commons"
 		composeTo = $("#EmailTo").val()
 		composeBody = $("#EmailBody").val()
 		composeJoinLink = "{{ request.host_url }}?connect={{ user.get_id() }}"
@@ -49,7 +49,7 @@
 			+ "&su=" + encodeURIComponent(composeSubject) 
 			+ "&body=" + encodeURIComponent(composeBody)
 			//+ "%0A%0A"
-			+ encodeURIComponent("\n\nJoin Bookout and Connect with {{ user.name }}: " + composeJoinLink)
+			+ encodeURIComponent("\n\nJoin Sharing Commons and Connect with {{ user.name }}: " + composeJoinLink)
 			,'_blank');
 	}
 
@@ -117,7 +117,7 @@
 				{% for connection in user.get_all_connections() %}
 				  <tr>
 					<td><a class="tooltip-link" data-toggle="tooltip" data-placement="right" title="View user's profile and library" href="/user/{{ connection.get_id() }}">{{ connection.name }}</a></td>
-					<td style="text-align:center;">{{ connection.item_count }} book{% if connection.item_count != 1 %}s{% endif %}</td>
+					<td style="text-align:center;">{{ connection.item_count }} item{% if connection.item_count != 1 %}s{% endif %}</td>
 					<td style="text-align:center"><a class="btn btn-small" onclick="confirmRemove('{{connection.get_id()}}', '{{connection.name}}', this)"><i class="icon-remove"></i>&nbsp;&nbsp;Remove</a></td>
 				  </tr>
 				{% endfor %}
@@ -134,7 +134,7 @@
           <h3 style="margin-top:-4px">Invite your Friends by Gmail</h3>
           <div class="row-fluid">
             <div class="span9">
-              <p>Send your friends an email invitation to join BookOut and automatically connect with you. Clicking the "Send with Gmail" button will open Gmail Compose in a new window with your message included. The email will include your BookOut invitation link following your message.</p>
+              <p>Send your friends an email invitation to join Sharing Commons and automatically connect with you. Clicking the "Send with Gmail" button will open Gmail Compose in a new window with your message included. The email will include your Sharing Commons invitation link following your message.</p>
             </div>
           </div>
           <br>
@@ -153,7 +153,7 @@
             <div class="span8">
               <textarea class="input-xxlarge" id="EmailBody" rows="10">Hey friend!
 
-I've discovered an awesome new app, called BookOut, that lets you build a library network between friends. You can input the books you own and find books within your friends' libraries. You can request to borrow books, check them out through the app, and receive notifications when they're due. I've added books from my personal library already and want to connect so we can share books. I hope you join!
+I've discovered an awesome new app, called Sharing Commons, that lets you build a library network between friends. You can input the books you own and find books within your friends' libraries. You can request to borrow books, check them out through the app, and receive notifications when they're due. I've added books from my personal library already and want to connect so we can share books. I hope you join!
 
 - {{ user.name }}</textarea>
               <br>
@@ -164,7 +164,7 @@ I've discovered an awesome new app, called BookOut, that lets you build a librar
         </div>
         <div class="tab-pane" id="Link">
           <h3 style="margin-top:-4px">Connect with Friends by Sending a Link</h3>
-          <p>Use your personal invitation link to invite your friends to join BookOut and automatically connect with you.</p>
+          <p>Use your personal invitation link to invite your friends to join Sharing Commons and automatically connect with you.</p>
           <br>
           <p>
             Invitation Link:

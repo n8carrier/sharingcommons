@@ -21,7 +21,7 @@
 				$("#connectModalSend").hide();
 				$("#connectModalCancel").text("Close");
 			} else if ({{ connectType }} == 2) { // valid user
-				connectModalMessage = "Please confirm your intention to send a connection request to {{ connectUserName }}. Once {{ connectUserName }} accepts your request, {{ connectUserName }}'s books will appear in your network and within applicable search results.";
+				connectModalMessage = "Please confirm your intention to send a connection request to {{ connectUserName }}. Once {{ connectUserName }} accepts your request, {{ connectUserName }}'s library will appear in your network and within applicable search results.";
 			} else if ({{ connectType }} == 3) { // own self
 				connectModalMessage = "You cannot connect with yourself. Please use the link you provided as an invitation to others to connect with you.";
 				$("#connectModalSend").hide();
@@ -91,11 +91,11 @@
 		return false;
 	}
 	
-	function requestCheckIn(bookCopyID, button) {
-		// Request to check in book user is borrowing
+	function requestCheckIn(itemCopyID, button) {
+		// Request to check in item user is borrowing
 		$(button).attr("disabled", "disabled");
 		$.ajax({
-			url: "/return_book/" + bookCopyID,
+			url: "/return_item/" + itemCopyID,
 			type: 'GET',
 			success: function(data) {
 				$(button).attr("disabled", "");
@@ -110,19 +110,19 @@
 		return false;
 	}
 	
-	function checkIn(bookCopyID, button) {
-		// Check in book user is lending
+	function checkIn(itemCopyID, button) {
+		// Check in item user is lending
 		$(button).attr("disabled", "disabled");
 		$.ajax({
-			url: "/return_book/" + bookCopyID,
+			url: "/return_item/" + itemCopyID,
 			type: 'GET',
 			success: function(data) {
 				$(button).parent().parent().siblings(":nth-child(6)").show();
 				$(button).parent().parent().remove();
-				if($("#books_lending tr:visible").length == 1) {
-					$("#books_lending").html("<tr><td colspan='3'>You are not lending any books.");
+				if($("#items_lending tr:visible").length == 1) {
+					$("#items_lending").html("<tr><td colspan='3'>You are not lending any books.");
 				}
-				if($("#books_lending tbody tr:hidden").length == 0) {
+				if($("#items_lending tbody tr:hidden").length == 0) {
 					$("#extraitems_lend").remove();
 				}
 			},
@@ -165,9 +165,9 @@
 				<p>Search to find books available within your network or to add books to your library that you own and are willing to share.</p>
 
 				<div id="searchBar">
-					<form id="searchForm" action="/searchbooks">
+					<form id="searchForm" action="/search">
 					<input name="value" type="text" class="input-xxlarge search-query" placeholder="Enter Title, Author, or ISBN...">
-					<button type="submit" class="btn" onclick="search_books()">Search</button>
+					<button type="submit" class="btn"">Search</button>
 					</form>
 				</div>
 			
@@ -219,8 +219,8 @@
 
 				<h3>Books I'm Borrowing</h3>
 				
-				<table class="table table-striped table-bordered" id="books_borrowing">
-					{% if user.get_borrowed_books()|length < 1 %}
+				<table class="table table-striped table-bordered" id="items_borrowing">
+					{% if user.get_borrowed_items()|length < 1 %}
 						<tr>
 							<td colspan="3">You are not borrowing any books.</td>
 						</tr>
@@ -228,10 +228,10 @@
 					<thead>
 						<tr>
 							<th>
-								Book
+								Title
 							</th>
 							<th>
-								Book Owner
+								Owner
 							</th>
 							<th style="text-align:center;width:200px">
 								Due Date
@@ -240,28 +240,28 @@
 						</tr>
 					</thead>
 					<tbody>
-						{% for book in user.get_borrowed_books() %}
+						{% for item in user.get_borrowed_items() %}
 							<tr {% if loop.index > 5 %}style="display: none;"{% endif %}>
 								<td>
-									{{ book.display() }}
+									{{ item.display() }}
 								</td>
 								<td>
-									{{ book.get_owner() }}
+									{{ item.get_owner() }}
 								</td>
 								<td style="text-align:center;">
-									{{ book.due_date }}
+									{{ item.due_date }}
 								</td>
 								<td style="text-align:center;">
 									<a class="btn btn-inverse tooltip-button" 
 										style="width:140px" 
-										onclick="requestCheckIn('{{ book.key.id() }}', this)"
+										onclick="requestCheckIn('{{ item.key.id() }}', this)"
 										data-toggle="tooltip" data-placement="right"
-										title="Report book as checked in. Requires lender verification.">Check In</a>
+										title="Report item as checked in. Requires lender verification.">Check In</a>
 								</td>
 							</tr>
 							{% if loop.last and loop.index > 5 %}
 								<tr>
-									<td colspan="4" style="text-align:center; background-color: white;"><b>Only the first five results are shown here. <a href="/library#BorrowedBooks">View all books you are borrowing</a>.</b></td>
+									<td colspan="4" style="text-align:center; background-color: white;"><b>Only the first five results are shown here. <a href="/library#BorrowedItems">View all books you are borrowing</a>.</b></td>
 								</tr>
 							{% endif %}
 						{% endfor %}
@@ -275,19 +275,19 @@
 
 				<h3>Books I'm Lending</h3>
 				
-				<table class="table table-striped table-bordered" id="books_lending">
-					{% if user.get_lent_books()|length < 1 %}
+				<table class="table table-striped table-bordered" id="items_lending">
+					{% if user.get_lent_items()|length < 1 %}
 						<tr>
-							<td colspan="3">You are not lending any books.</td>
+							<td colspan="3">You are not lending any items.</td>
 						</tr>
 					{% else %}
 					<thead>
 						<tr>
 							<th>
-								Book
+								Title
 							</th>
 							<th>
-								Book Borrower
+								Borrower
 							</th>
 							<th style="text-align:center;width:200px">
 								Due Date
@@ -298,29 +298,29 @@
 						</tr>
 					</thead>
 					<tbody>
-						{% for book in user.get_lent_books() %}
+						{% for item in user.get_lent_items() %}
 							<tr {% if loop.index > 5 %}style="display: none;"{% endif %}>
 								<td>
-									{{ book.display() }}
+									{{ item.display() }}
 								</td>
 								<td>
-									{{ book.get_borrower() }}
+									{{ item.get_borrower() }}
 								</td>
 								<td style="text-align:center;">
-									{{ book.due_date }}
-									<!--<input class="span2 datepicker" size="16" type="text" value="{{ book.due_date }}">-->
+									{{ item.due_date }}
+									<!--<input class="span2 datepicker" size="16" type="text" value="{{ item.due_date }}">-->
 								</td>
 								<td style="text-align:center;">
 									<a class="btn btn-inverse tooltip-button" 
 										style="width:140px" 
-										onclick="checkIn('{{ book.key.id() }}', this)"
+										onclick="checkIn('{{ item.key.id() }}', this)"
 										data-toggle="tooltip" data-placement="right"
-										title="Report book as checked in.">Check In</a>
+										title="Report item as checked in.">Check In</a>
 								</td>
 							</tr>
 							{% if loop.last and loop.index > 5 %}
 								<tr id="extraitems_lend">
-									<td colspan="4" style="text-align:center; background-color: white;"><b>Only the first five results are shown here. <a href="/library#LendedBooks">View all books you are lending</a>.</b></td>
+									<td colspan="4" style="text-align:center; background-color: white;"><b>Only the first five results are shown here. <a href="/library#LendedItems">View all books you are lending</a>.</b></td>
 								</tr>
 							{% endif %}
 						{% endfor %}
@@ -363,9 +363,9 @@
 				<h3>Discover items already on Sharing Commons</h3>
 				
 				<div id="searchBar">
-					<form id="searchForm" action="/searchbooks">
+					<form id="searchForm" action="/search">
 					<input name="value" type="text" class="input-xxlarge search-query" placeholder="Enter Title, Author, or ISBN...">
-					<button type="submit" class="btn" onclick="search_books()">Search</button>
+					<button type="submit" class="btn">Search</button>
 					</form>
 				</div>
 

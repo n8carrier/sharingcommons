@@ -1,7 +1,7 @@
 
 {% extends "maintemplate.html" %}
 
-{% block title %}Search Books{% endblock %}
+{% block title %}Search{% endblock %}
 
 {% block style %}
 
@@ -48,7 +48,7 @@
 		}
 		
 		if ($.cookie("{{ user.get_id() }}")) {
-			$("#show_out_of_network_books_checkbox").removeAttr("checked");
+			$("#show_out_of_network_items_checkbox").removeAttr("checked");
 			
 			$("tr.notInNetwork").hide();
 		}
@@ -56,7 +56,7 @@
 			$("tr.notInNetwork").show();
 		}
 		
-		$("#show_out_of_network_books_checkbox").change(function(){
+		$("#show_out_of_network_items_checkbox").change(function(){
 			if($.cookie("{{ user.get_id() }}")) {
 				$.removeCookie("{{ user.get_id() }}");
 			}
@@ -77,34 +77,34 @@
 		});
 	});
 	
-	function add_book(book_type, item_key, book_key){
+	function add_item(item_subtype, item_key, item_index){
 		//disable button and caret
-		$("#add_button" + book_key).attr("disabled", "disabled");
-		$("#caret_button" + book_key).attr("disabled", "disabled");
-		$.post("/library/" + book_type + "/" + item_key, function(data) {
+		$("#add_button" + item_index).attr("disabled", "disabled");
+		$("#caret_button" + item_index).attr("disabled", "disabled");
+		$.post("/library/" + item_subtype + "/" + item_key, function(data) {
 			//update text to In Library and update link to library
 			//the link doesn't work as a href because it's a button, not an "a"
-			$("#add_button" + book_key).text("In Library");
-			$("#add_button" + book_key).removeAttr("onclick");
-			$("#add_button" + book_key).attr("href", "\library");
+			$("#add_button" + item_index).text("In Library");
+			$("#add_button" + item_index).removeAttr("onclick");
+			$("#add_button" + item_index).attr("href", "\library");
 			//update color to primary
-			$("#add_button" + book_key).removeClass("btn-inverse").addClass("btn-primary");
-			$("#caret_button" + book_key).removeClass("btn-inverse").addClass("btn-primary");
+			$("#add_button" + item_index).removeClass("btn-inverse").addClass("btn-primary");
+			$("#caret_button" + item_index).removeClass("btn-inverse").addClass("btn-primary");
 			//update tooltip
-			$("#add_button" + book_key).tooltip("destroy").attr("title", "Book is already in your library. Click to view library.").tooltip({trigger: "hover"});
+			$("#add_button" + item_index).tooltip("destroy").attr("title", "Item is already in your library. Click to view library.").tooltip({trigger: "hover"});
 			//remove entry of item type clicked
-			$("#add_" + book_type + book_key).hide();
+			$("#add_" + item_subtype + item_index).hide();
 			//enable button and caret
-			$("#add_button" + book_key).removeAttr("disabled");
-			$("#caret_button" + book_key).removeAttr("disabled");
+			$("#add_button" + item_index).removeAttr("disabled");
+			$("#caret_button" + item_index).removeAttr("disabled");
 		}).error(function() {
-			$("#add_button" + book_key).removeAttr("disabled");
+			$("#add_button" + item_index).removeAttr("disabled");
 		});
 		
 		return false;
 	}
 	
-	function request_book(item_key, title, button){
+	function request_item(item_key, title, button){
 		$(button).attr("disabled", "disabled");
 		$.getJSON("/search/inNetwork/" + item_key, function(data) {
 			$(button).removeAttr("disabled");
@@ -113,7 +113,7 @@
 				
 				var link = $('<a>', {
 					'class': 'btn btn-inverse',
-					onclick: 'borrow_book("' + val.bookCopyID + '", "' + key + '", this, "' + escape(title) + '", "' + val.username + '")',
+					onclick: 'borrow_item("' + val.itemCopyID + '", "' + key + '", this, "' + escape(title) + '", "' + val.username + '")',
 					html: 'Request to Borrow'
 				});
 				if(!val.available) {
@@ -143,11 +143,11 @@
 		return false;
 	}
 	
-	function borrow_book(bookCopyID, lenderID, button, bookTitle, lenderName) {
+	function borrow_item(itemCopyID, lenderID, button, itemTitle, lenderName) {
 		$(button).attr("disabled", "disabled");
-		$.getJSON("/setup_book_borrow/" + lenderID + "/" + bookCopyID, function(data) {
+		$.getJSON("/setup_item_borrow/" + lenderID + "/" + itemCopyID, function(data) {
 			$("#borrowModal").modal('hide');
-			$("#messageBook").text("'" + unescape(bookTitle) + "'");
+			$("#messageItem").text("'" + unescape(itemTitle) + "'");
 			$("#messageUser").text(lenderName);
 			$("#message").show();
 		});
@@ -167,16 +167,16 @@
 	<div class="span6 offset3" style="position: absolute; top: 10px;">
 		<div id="message" class="alert" style="display: none;">
 			<a class="close" onclick="hide_message()">&times;</a>
-			You have requested to borrow <span id="messageBook"></span> from <span id="messageUser"></span>.
+			You have requested to borrow <span id="messageItem"></span> from <span id="messageUser"></span>.
 		</div>
 	</div>
 </div>
 
-<form id="searchForm" action="/searchbooks">
+<form id="searchForm" action="/search">
 <div class="row">
 	<div class="span2">
 		<br/>
-		<h3>Book Search:</h3>
+		<h3>Search:</h3>
 	</div>
 	<div class="span10">
 		<br/>
@@ -194,7 +194,7 @@
 	<div class="span2">
 		<div class="well">
 			<h5>Filter Results:</h5>
-			<label class="checkbox"><input type="checkbox" checked="checked" id="show_out_of_network_books_checkbox">Show out-of-network books</label>
+			<label class="checkbox"><input type="checkbox" checked="checked" id="show_out_of_network_items_checkbox">Show out-of-network items</label>
 		</div>
 		<div class="well">
 			<h5>Refine Search:</h5>
@@ -207,7 +207,7 @@
 	
 	<div class="span10">
 		{% if itemlist|length < 1 %}
-		<h4>No books were found that match your search.  Try using more general search terms.</h4>
+		<h4>No items were found that match your search.  Try using more general search terms.</h4>
 		{% else %}
 			<table class="table">
 			{% for item in itemlist %}
@@ -224,7 +224,7 @@
 						  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} tooltip-button library-button"
 							style="width:120px"
 							{% if user.is_authenticated() == False %}disabled{% endif %} 
-							onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_book('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}" 
+							onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}" 
 							title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
 							else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}"
 							id="add_button{{ itemlist.index(item) }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</button>
@@ -233,9 +233,9 @@
 						  </button>
 						  {% if item.inLibrary != ['book', 'ebook', 'audiobook'] %}
 						  <ul class="dropdown-menu library-dropdown">
-							{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_book('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
-							{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_book('ebook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
-							{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_book('audiobook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
+							{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
+							{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('ebook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
+							{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('audiobook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
 						  </ul>
 						  {% endif %}
 						</div>
@@ -249,10 +249,10 @@
 							<a class="btn tooltip-button"
 								style="width:120px" 
 								{% if user.is_authenticated() == False %}disabled{% endif %}
-								onclick="{% if user.is_authenticated() %}request_book('{{ item.item_key }}', '{{ item.escapedtitle }}', this){% endif %}"
+								onclick="{% if user.is_authenticated() %}request_item('{{ item.item_key }}', '{{ item.escapedtitle }}', this){% endif %}"
 								data-toggle="tooltip" data-placement="right"
-								title="{% if user.is_authenticated() %}Request to borrow book from one of your connections{% 
-								else %}Join or login to request to borrow books{% endif %}">Request&nbsp;to&nbsp;Borrow</a>
+								title="{% if user.is_authenticated() %}Request to borrow item from one of your connections{% 
+								else %}Join or login to request to borrow items{% endif %}">Request&nbsp;to&nbsp;Borrow</a>
 						{% endif %}
 					</td>
 				</tr>
@@ -266,7 +266,7 @@
 <div id="borrowModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="borrowModalLabel" aria-hidden="true">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-    <h3 id="borrowModalLabel">Users Who Have This Book</h3>
+    <h3 id="borrowModalLabel">Users Who Have This Item</h3>
   </div>
   <div class="modal-body">
     <table id="borrowTable" class="table">

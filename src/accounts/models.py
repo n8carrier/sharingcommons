@@ -37,14 +37,14 @@ class UserAccount(ndb.Model):
 		"""
 		return self.connected_accounts
 
-	def get_network_books(self):
-		"""Get all the books owned by users connected to this owned
+	def get_network_items(self):
+		"""Get all the items owned by users connected to this owned
 
 		Return value:
 		an array will all the ItemCopy objects belonging to connected users
 
 		"""
-		from src.books.models import ItemCopy
+		from src.items.models import ItemCopy
 		return ItemCopy.query(ItemCopy.owner.IN(self.get_connections())).fetch()
 	
 	def get_connections(self):
@@ -71,7 +71,7 @@ class UserAccount(ndb.Model):
 
 		Arguments:
 		name - the name the user would like to have displayed
-		lending_length - the default number of days that this user lends out his/her books 
+		lending_length - the default number of days that this user lends out his/her items 
 		notification - a string saying how this user will recieve notifications (email, mobile, both)
 		info - a string, additional information about the user that will be displayed to other users
 		
@@ -144,13 +144,13 @@ class UserAccount(ndb.Model):
 	@classmethod
 	def can_delete_user(cls,user):
 		"""Checks to see if a user can be deleted
-		A user cannot be deleted if it is borrowing or lending books
+		A user cannot be deleted if it is borrowing or lending items
 
 		Return Value:
 		True if it can be deleted, false if not
 		"""
-		borrowed = user.get_borrowed_books()
-		lent = user.get_lent_books()
+		borrowed = user.get_borrowed_items()
+		lent = user.get_lent_items()
 		if borrowed or lent:
 			return None
 		return True
@@ -187,54 +187,54 @@ class UserAccount(ndb.Model):
 		Return value:
 		list of ItemCopy objects owned by the user
 		"""
-		from src.books.models import ItemCopy
+		from src.items.models import ItemCopy
 		return ItemCopy.query(ItemCopy.owner==self.key).fetch()
 	
-	def get_book(self,item_subtype,item):
-		"""retrieve the user's copy of a particular book
+	def get_item(self,item_subtype,item):
+		"""retrieve the user's copy of a particular item
 		
 		Arguments:
-		book - the Book being retrieved
+		item - the Item being retrieved
 
 		Return value:
 		the user's ItemCopy object associated with the provided Item; None if the user does not own item
 		"""
-		from src.books.models import ItemCopy
-		mybook = ItemCopy.query(ItemCopy.item==item.key,ItemCopy.owner==self.key,ItemCopy.item_subtype==item_subtype).get()
-		return mybook
+		from src.items.models import ItemCopy
+		myitem = ItemCopy.query(ItemCopy.item==item.key,ItemCopy.owner==self.key,ItemCopy.item_subtype==item_subtype).get()
+		return myitem
 	
-	def add_book(self,item_subtype,item):
-		"""add a personal copy of a book to a user's account
+	def add_item(self,item_subtype,item):
+		"""add a personal copy of a item to a user's account
 		
 		Arguments:
-		book - Book object being attached to the User
+		item - Item object being attached to the User
 
 		Return Value:
-		a ItemCopy instance that links the User to the Book; None if the Book could not be linked
+		a ItemCopy instance that links the User to the Item; None if the Item could not be linked
 		"""
-		from src.books.models import ItemCopy
+		from src.items.models import ItemCopy
 		itemcopy = ItemCopy(item=item.key,owner=self.key,item_subtype=item_subtype)
 		if itemcopy.put():
 			self.item_count = self.item_count + 1
 			self.put()
 		return itemcopy
 		
-	def remove_book(self,item_subtype,item):
-		"""delete a user's copy of a book
+	def remove_item(self,item_subtype,item):
+		"""delete a user's copy of a item
 		
 		Arguments:
-		book - Book object that is to be removed
+		item - Item object that is to be removed
 
 		Return value:
 		the ItemCopy instance that was just deleted; None if the ItemCopy was not found
 		"""
-		from src.books.models import ItemCopy
-		bookcopy = ItemCopy.query(ItemCopy.item==item.key,ItemCopy.owner==self.key,ItemCopy.item_subtype==item_subtype).get()
-		if bookcopy:
-			bookcopy.key.delete()
+		from src.items.models import ItemCopy
+		itemcopy = ItemCopy.query(ItemCopy.item==item.key,ItemCopy.owner==self.key,ItemCopy.item_subtype==item_subtype).get()
+		if itemcopy:
+			itemcopy.key.delete()
 			self.item_count = self.item_count - 1
 			self.put()
-		return bookcopy
+		return itemcopy
 	
 	def send_invite(self, otherUser):
 		"""sends an invite to another user
@@ -306,133 +306,133 @@ class UserAccount(ndb.Model):
 	def create_invitation_link(self):
 		return "manage_connections/" + str(self.get_id())
 
-	def lend_book(self, bookID, borrowerID, due_date = None):
-		"""Lend a book to another user
+	def lend_item(self, itemID, borrowerID, due_date = None):
+		"""Lend an item to another user
 
 		Arguments:
-		bookID: an ID representing the bookCopy object that will be lent out
-		borrowerID: an ID representing the user that will borrow the book
-		due_date: the date the book should be returned, 
+		itemID: an ID representing the itemCopy object that will be lent out
+		borrowerID: an ID representing the user that will borrow the item
+		due_date: the date the item should be returned, 
 			if none is given the default for the lender is used
 
 		Return value:
 		A string describing the success or failure of the operation
 		"""
-		from src.books.models import ItemCopy
-		bookCopy = ItemCopy.get_by_id(bookID)
+		from src.items.models import ItemCopy
+		itemCopy = ItemCopy.get_by_id(itemID)
 
-		# check to see if the book copy is valid
-		if(bookCopy == None):
-			return "Invalid book ID"
-		if(bookCopy.owner != self.key):
-			return "You do not own that book"
-		if(bookCopy.borrower != None):
-			return "That book is not avaiable to be lent out"
+		# check to see if the item copy is valid
+		if(itemCopy == None):
+			return "Invalid item ID"
+		if(itemCopy.owner != self.key):
+			return "You do not own that item"
+		if(itemCopy.borrower != None):
+			return "That item is not avaiable to be lent out"
 
-		bookCopy.lend(borrowerID, due_date)
-		bookCopy.put()
-		return "Book successfully lent"
+		itemCopy.lend(borrowerID, due_date)
+		itemCopy.put()
+		return "Item successfully lent"
 
-	def borrow_book(self, bookID, lenderID, due_date = None):
-		"""Borrow a book from another user
+	def borrow_item(self, itemID, lenderID, due_date = None):
+		"""Borrow an item from another user
 
 		Arguments:
-		bookID: an ID representing the bookCopy object that will be borrowed
-		lenderID: an ID representing the user that will lend the book
-		due_date: the date the book should be returned, 
+		itemID: an ID representing the itemCopy object that will be borrowed
+		lenderID: an ID representing the user that will lend the item
+		due_date: the date the item should be returned, 
 			if none is given the default for the lender is used
 
 		Return value:
 		A string describing the success or failure of the operation
 		"""
-		from src.books.models import ItemCopy
-		bookCopy = ItemCopy.get_by_id(bookID)
+		from src.items.models import ItemCopy
+		itemCopy = ItemCopy.get_by_id(itemID)
 
-		# check to see if the book copy is valid
-		if(bookCopy == None):
-			return "Invalid book ID"
-		if(bookCopy.owner.id() != lenderID):
-			return "That user does not own this book"
-		if(bookCopy.borrower != None):
-			return "That book is not avaiable to be lent out"
+		# check to see if the item copy is valid
+		if(itemCopy == None):
+			return "Invalid item ID"
+		if(itemCopy.owner.id() != lenderID):
+			return "That user does not own this item"
+		if(itemCopy.borrower != None):
+			return "That item is not avaiable to be lent out"
 
-		bookCopy.lend(self.key.id(), due_date)
-		bookCopy.put()
-		return "Book successfully borrowed"
+		itemCopy.lend(self.key.id(), due_date)
+		itemCopy.put()
+		return "Item successfully borrowed"
 
-	def get_lent_books(self):
-		"""Get all the books that the user is currently lending to anther user
+	def get_lent_items(self):
+		"""Get all the items that the user is currently lending to anther user
 
 		Return Value:
-		A list of ItemCopy objects of all the the books the user is currently lending
+		A list of ItemCopy objects of all the the items the user is currently lending
 		"""
-		from src.books.models import ItemCopy
+		from src.items.models import ItemCopy
 		return ItemCopy.query(ItemCopy.owner==self.key,ItemCopy.borrower!=None).fetch()
 
-	def get_borrowed_books(self):
-		"""Get all the books that the user is currently borrowing from anther user
+	def get_borrowed_items(self):
+		"""Get all the items that the user is currently borrowing from anther user
 
 		Return Value:
-		A list of ItemCopy objects of all the the books the user is currently borrowing
+		A list of ItemCopy objects of all the the items the user is currently borrowing
 		"""
-		from src.books.models import ItemCopy
+		from src.items.models import ItemCopy
 		return ItemCopy.query(ItemCopy.borrower==self.key).fetch()
 
-	def return_book(self, bookCopyID):
-		"""Return the given book to it's owner
+	def return_item(self, itemCopyID):
+		"""Return the given item to it's owner
 
 		Arguments:
-		bookCopyID: an ID representing a ItemCopy object, the book to be returned
+		itemCopyID: an ID representing a ItemCopy object, the item to be returned
 
 		Return Value:
 		A message describing the success or failure or the operation
 		"""
-		from src.books.models import ItemCopy
+		from src.items.models import ItemCopy
 		from src.activity.models import ConfirmReturn
-		bookcopy = ItemCopy.get_by_id(int(bookCopyID))
+		itemcopy = ItemCopy.get_by_id(int(itemCopyID))
 
-		# verify the bookCopyID was valid
-		if(bookcopy == None):
-			return "Invalid book ID"
-		if(bookcopy.owner == self.key):
-			bookcopy.return_book()
-			bookcopy.put()
-			return "Book successfully returned to your library"
-		elif (bookcopy.borrower == self.key):
-			notification = ConfirmReturn(useraccount=bookcopy.owner,book=bookcopy.key)
+		# verify the itemCopyID was valid
+		if(itemcopy == None):
+			return "Invalid item ID"
+		if(itemcopy.owner == self.key):
+			itemcopy.return_item()
+			itemcopy.put()
+			return "Item successfully returned to your library"
+		elif (itemcopy.borrower == self.key):
+			notification = ConfirmReturn(useraccount=itemcopy.owner,item=itemcopy.key)
 			notification.put()
 			return "Notice sent to owner, awaiting their confirmantion"
 		else:
-			return "You are not the owner of this book, nor are you borrowing it"
+			return "You are not the owner of this item, nor are you borrowing it"
 
-	def change_due_date(self, bookCopyID, newDueDate):
-		"""Update the date that a book is due
+	def change_due_date(self, itemCopyID, newDueDate):
+		"""Update the date that a item is due
 
 		Arguments:
-		bookCopyID: an ID representing a ItemCopy object, the book to be returned
-		newDueDate: a string representing the new due date of the book
+		itemCopyID: an ID representing a ItemCopy object, the item to be returned
+		newDueDate: a string representing the new due date of the item
 
 		Return Value:
 		A message describing the success or failure or the operation
 		"""
-		from src.books.models import ItemCopy
+		from src.items.models import ItemCopy
 		from src.activity.models import DueDateExtension
-		bookcopy = ItemCopy.get_by_id(int(bookCopyID))
+		itemcopy = ItemCopy.get_by_id(int(itemCopyID))
 		new_date = datetime.datetime.strptime(newDueDate, '%Y-%m-%d')
 
-		if(bookcopy == None):
-			return "Invalid book ID"
-		if(bookcopy.owner == self.key):
-			bookcopy.update_due_date(new_date)
-			bookcopy.put()
+		if(itemcopy == None):
+			return "Invalid item ID"
+		if(itemcopy.owner == self.key):
+			itemcopy.update_due_date(new_date)
+			itemcopy.put()
 			return "Due date successfully updated"
-		elif (bookcopy.borrower == self.key):
+		elif (itemcopy.borrower == self.key):
 			import datetime
-			notification = DueDateExtension(useraccount=bookcopy.owner,book=bookcopy.key,due_date=new_date)
+			notification = DueDateExtension(useraccount=itemcopy.owner,item=itemcopy.key,due_date=new_date)
 			notification.put()
 			return "Request sent to owner"
 		else:
-			return "You are not the owner of this book, nor are you borrowing it"
+			return "You are not the owner of this item, nor are you borrowing it"
 
 
 class Anonymous(AnonymousUser):

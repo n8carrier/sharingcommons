@@ -16,14 +16,10 @@ class Item(ndb.Model):
 	thumbnail_link = ndb.StringProperty(required=True)
 	
 	def update_cache(self):
-		"""update cached information about the book using the external book apis
-		
-		Book must have an open library key specified or this will always return False
-		
-		"""
+		#update cached information about the item using the external apis
 		if self.item_key:
 			logging.debug("update_cache(%s)" % self.item_key)
-			book_data = Item.search_by_attribute("book",value=self.item_key, attribute=None, cache=True)
+			Item.search_by_attribute("book",value=self.item_key, attribute=None, cache=True)
 
 	def cache_expired(self):
 		"""determine if the cached information in the database needs to be refreshed
@@ -32,34 +28,31 @@ class Item(ndb.Model):
 		return (datetime.now() - self.last_update) > timedelta(minutes=1000)
 	
 	@classmethod
-	def get_by_key(cls,key=None):
-		"""Convert an open library key to a Book object
-		
-		This is a factory method that converts an open library key into a Book object (if possible),
-		abstracting away any caching/external APIs necessary to the Book's use
+	def get_by_key(cls,item_key=None):
+		"""Convert an item_key to an Item object
 		
 		Arguments:
-		key -- the key being searched
+		item_key -- the item_key being searched
 		
 		Return value:
-		An instance of a Book object with the given OL key; if the key could not be resolved
-		to a Book object, returns None
+		An instance of an Item object with the given item_key; if the key could not be resolved
+		to an Item object, returns None
 		
 		"""
-		if not key:
+		if not item_key:
 			logging.error("Item.get_by_key() called without an open library key")
 			return None
-		logging.debug("Item.get_by_key(%s)" % key)
-		item = Item.query(Item.item_key==key).get()
+		logging.debug("Item.get_by_key(%s)" % item_key)
+		item = Item.query(Item.item_key==item_key).get()
 		if item:
-			logging.debug("Key:%s was found in the item cache" % key)
+			logging.debug("item_key:%s was found in the item cache" % item_key)
 			if item.cache_expired():
 				item.update_cache()
 		else:
-			logging.debug("Key:%s not found in cache; performing external search" % key)
-			item = Item(item_key=key)
+			logging.debug("item_key:%s not found in cache; performing external search" % item_key)
+			item = Item(item_key=item_key)
 			item.update_cache()
-			item = Item.query(Item.item_key==key).get()
+			item = Item.query(Item.item_key==item_key).get()
 		return item
 	
 	@classmethod
@@ -119,10 +112,10 @@ class Item(ndb.Model):
 		return itemlist
 
 class ItemCopy(ndb.Model):
-	"""A model for linking User to Books
+	"""A model for linking User to Item
 	
 	This method was chosen over a List object on the User Account because this allows more 
-	flexibility for adding additional information about a particular copy of a Book
+	flexibility for adding additional information about a particular copy of a Item
 	
 	"""
 	
@@ -154,7 +147,7 @@ class ItemCopy(ndb.Model):
 		else:
 			self.due_date = datetime.datetime.now() + datetime.timedelta(days=int(owner.lending_length))
 
-	def return_book(self):
+	def return_item(self):
 		self.borrower = None
 		self.due_date = None
 

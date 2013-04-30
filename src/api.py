@@ -1,7 +1,7 @@
 ################################### Web service calls ###################################
 # Views
 from flask import Response, jsonify, request
-from books.models import Item
+from src.items.models import Item
 from accounts.models import UserAccount
 from utilities.JsonIterable import *
 import flaskext

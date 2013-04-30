@@ -29,7 +29,7 @@
 	var lastRemoveItemKey;
 	var lastRemoveItemType;
 
-	function remove_book(item_subtype, item_key, bookTitle, button){
+	function remove_item(item_subtype, item_key, itemTitle, button){
 		$(button).attr("disabled", "disabled");
 		$.ajax({
 			url:"/library/" + item_subtype + "/" + item_key,
@@ -37,7 +37,7 @@
 			success: function(data) {
 				$(button).parent().parent().hide();
 				$("#undoMessage").show();
-				$("#undoMessageBook").text(bookTitle);
+				$("#undoMessageItem").text(itemTitle);
 				lastRemoveLink = button;
 				lastRemoveItemKey = item_key;
 				lastRemoveItemType = item_subtype;
@@ -63,10 +63,10 @@
 		return false;
 	}
 	
-	function requestCheckIn(bookCopyID, button) {
-	// Request to check in book user is borrowing
+	function requestCheckIn(itemCopyID, button) {
+	// Request to check in item user is borrowing
 		$.ajax({
-			url: "/return_book/" + bookCopyID,
+			url: "/return_item/" + itemCopyID,
 			type: 'GET',
 			success: function(data) {
 				$(button).attr("disabled", "");
@@ -78,15 +78,15 @@
 		return false;
 	}
 	
-	function checkIn(bookCopyID, button) {
-	// Check in book user is lending
+	function checkIn(itemCopyID, button) {
+	// Check in item user is lending
 		$.ajax({
-			url: "/return_book/" + bookCopyID,
+			url: "/return_item/" + itemCopyID,
 			type: 'GET',
 			success: function(data) {
 				$(button).parent().parent().hide();
-				if($("#books_lending tr:visible").length == 1) {
-					$("#books_lending").html("<tr><td colspan='3'>You aren't currently lending any books. When you are, they'll show up here.");
+				if($("#items_lending tr:visible").length == 1) {
+					$("#items_lending").html("<tr><td colspan='3'>You aren't currently lending any items. When you are, they'll show up here.");
 				}
 			}
 		});
@@ -100,8 +100,8 @@
 
 	$(function(){
 		if(window.location.hash){
-			if(window.location.hash == "#LendedBooks") $("#lended_books").click();
-			else if (window.location.hash == "#BorrowedBooks") $("#borrowed_books").click();
+			if(window.location.hash == "#LendedItems") $("#lended_items").click();
+			else if (window.location.hash == "#BorrowedItems") $("#borrowed_items").click();
 		}
 	})
 	
@@ -111,7 +111,7 @@
 	
 	// Not sure why this doesn't work--haven't tried to figure it out yet.
 	$(function() {
-		$("#MyBooksTable").tablesorter({ sortList: [[1,0]] });
+		$("#MyItemsTable").tablesorter({ sortList: [[1,0]] });
 	});
 	
 </script>
@@ -130,7 +130,7 @@
 	<div class="span6 offset3" style="position: absolute; top: 50px;">
 		<div id="undoMessage" class="alert" style="display: none;">
 			<a class="close" onclick="hide_undo_message()">&times;</a>
-			<span id="undoMessageBook"></span> was removed from your library.&nbsp;&nbsp;
+			<span id="undoMessageItem"></span> was removed from your library.&nbsp;&nbsp;
 			<strong><a onclick="undo_remove()" class="alert-link">Undo</a></strong>
 		</div>
 	</div>
@@ -138,23 +138,23 @@
 	
     <div class="tabbable">
       <ul class="nav nav-tabs">
-        <li class="active"><a href="#MyBooks" data-toggle="tab" id="my_books" onclick='add_hash("MyBooks")'>My Books</a></li>
-        <li><a href="#LendedBooks" data-toggle="tab" id="lended_books" onclick='add_hash("LendedBooks")'>Lended Books</a></li>
-        <li><a href="#BorrowedBooks" data-toggle="tab" id="borrowed_books" onclick='add_hash("BorrowedBooks")'>Borrowed Books</a></li>
+        <li class="active"><a href="#MyItems" data-toggle="tab" id="my_items" onclick='add_hash("MyItems")'>My Books</a></li>
+        <li><a href="#LendedItems" data-toggle="tab" id="lended_items" onclick='add_hash("LendedItems")'>Lended Books</a></li>
+        <li><a href="#BorrowedItems" data-toggle="tab" id="borrowed_items" onclick='add_hash("BorrowedItems")'>Borrowed Books</a></li>
       </ul>
     </div>
       <div class="tab-content">
-        <div class="tab-pane active" id="MyBooks">
+        <div class="tab-pane active" id="MyItems">
           <h3 style="margin-top:-4px">Books I Own</h3>
-          <table class="table table-striped table-bordered" id="MyBooksTable">
+          <table class="table table-striped table-bordered" id="MyItemsTable">
             {% if itemlist|length < 1 %}
               <tr>
-                <td colspan="4">You don't have any books in your library. To add books, search for the title, author, or ISBN in the search field inside the header. Once you've added books, they'll show up here.</td>
+                <td colspan="4">You don't have any items in your library. To add items, use the search field inside the header. Once you've added items, they'll show up here.</td>
             {% else %}
 				<tr>
 				  <th class="header" style="width:26px;text-align:center"></th>
-				  <th class="header">Book Title</th>
-				  <th class="header">Author</th>
+				  <th class="header">Title</th>
+				  <th class="header">Author/Director</th>
 				  <th class="header">Lend Status</th>
 				  <th class="header" style="width:100px"></th>
 				</tr>
@@ -165,38 +165,38 @@
 					<td>{{item.author_director}}</td>
 					<td>{% if item.available %}Available
 						{% else %}On Loan{% endif %}</td>
-					<td style="text-align:center"><a class="btn btn-small" onclick="remove_book('{{ item.item_subtype }}', '{{item.item_key}}', '{{ item.escapedtitle }}', this)"><i class="icon-remove"></i>&nbsp;&nbsp;Remove</a></td>
+					<td style="text-align:center"><a class="btn btn-small" onclick="remove_item('{{ item.item_subtype }}', '{{item.item_key}}', '{{ item.escapedtitle }}', this)"><i class="icon-remove"></i>&nbsp;&nbsp;Remove</a></td>
 				  </tr>
 				{% endfor %}
 			{% endif %}
           </table>
         </div>
-        <div class="tab-pane" id="LendedBooks">
+        <div class="tab-pane" id="LendedItems">
 
 		<h3 style="margin-top:-4px">Books I'm Lending</h3>
-		<table class="table table-striped table-bordered" id="books_lending">
-			{% if user.get_lent_books()|length < 1 %}
+		<table class="table table-striped table-bordered" id="items_lending">
+			{% if user.get_lent_items()|length < 1 %}
 			<tr>
-				<td colspan="4">You aren't currently lending any books. When you are, they'll show up here.</td>
+				<td colspan="4">You aren't currently lending any items. When you are, they'll show up here.</td>
 			</tr>
 			{% else %}
 				<tr>
-				  <th>Book Title</th>
-				  <th>Book Borrower</th>
+				  <th>Title</th>
+				  <th>Borrower</th>
 				  <th style="text-align:center;width:200px">Due Date</th>
 				  <th style="text-align:center;width:200px"></th>
 				</tr>
-				{% for book in user.get_lent_books() %}
+				{% for item in user.get_lent_items() %}
 				<tr>
-				  <td>{{ book.display() }}</td>
-				  <td>{{ book.get_borrower() }}</td>
-				  <td style="text-align:center;">{{ book.due_date }}</td>
+				  <td>{{ item.display() }}</td>
+				  <td>{{ item.get_borrower() }}</td>
+				  <td style="text-align:center;">{{ item.due_date }}</td>
 				  <td style="text-align:center;">
 				    <a class="btn btn-inverse tooltip-button" 
 									style="width:140px" 
-									onclick="checkIn('{{ book.key.id() }}', this)"
+									onclick="checkIn('{{ item.key.id() }}', this)"
 									data-toggle="tooltip" data-placement="right"
-									title="Report book as checked in.">Check In</a>
+									title="Report item as checked in.">Check In</a>
 				  </td>
 				</tr>
 				{% endfor %}
@@ -204,31 +204,31 @@
 		</table>
 
         </div>
-        <div class="tab-pane" id="BorrowedBooks">
+        <div class="tab-pane" id="BorrowedItems">
           <h3 style="margin-top:-4px">Books I'm Borrowing</h3>
-          <table class="table table-striped table-bordered" id="books_borrowing">
-            {% if user.get_borrowed_books()|length < 1 %}
+          <table class="table table-striped table-bordered" id="items_borrowing">
+            {% if user.get_borrowed_items()|length < 1 %}
               <tr>
-                <td colspan="4">You aren't currently borrowing any books. To borrow a book, search for the title or author in the search bar in the header. When you're borrowing books, they'll show up here.</td>
+                <td colspan="4">You aren't currently borrowing any items. To borrow an item, search for the item in the search bar in the header. When you're borrowing items, they'll show up here.</td>
 			  </tr>
 			{% else %}
 				<tr>
-				  <th>Book Title</th>
-				  <th>Book Borrower</th>
+				  <th>Item Title</th>
+				  <th>Item Borrower</th>
 				  <th style="text-align:center;width:200px">Due Date</th>
 				  <th style="text-align:center;width:200px"></th>
 				</tr>
-				{% for book in user.get_borrowed_books() %}
+				{% for item in user.get_borrowed_items() %}
 				<tr>
-				  <td>{{ book.display() }}</td>
-				  <td>{{ book.get_owner() }}</td>
-				  <td style="text-align:center">{{ book.due_date }}</td>
+				  <td>{{ item.display() }}</td>
+				  <td>{{ item.get_owner() }}</td>
+				  <td style="text-align:center">{{ item.due_date }}</td>
 				  <td style="text-align:center">
 					<a class="btn btn-inverse tooltip-button" 
 									style="width:140px" 
-									onclick="requestCheckIn('{{ book.key.id() }}', this)"
+									onclick="requestCheckIn('{{ item.key.id() }}', this)"
 									data-toggle="tooltip" data-placement="right"
-									title="Report book as checked in. Requires lender verification.">Check In</a>
+									title="Report item as checked in. Requires lender verification.">Check In</a>
 				  </td>
 				</tr>
 				{% endfor %}

@@ -25,9 +25,6 @@ app.add_url_rule('/_ah/warmup',view_func=views.warmup)
 # Home page
 app.add_url_rule('/',view_func=views.index)
 
-# Manager user's library
-app.add_url_rule('/old-library',view_func=views.manage_library)
-
 # Library
 app.add_url_rule('/library',view_func=views.library)
 
@@ -38,7 +35,7 @@ app.add_url_rule('/network',view_func=views.network)
 app.add_url_rule('/discover',view_func=views.discover)
 
 # Search
-app.add_url_rule('/searchbooks', view_func=views.searchbooks)
+app.add_url_rule('/search', view_func=views.search)
 
 # Settings
 app.add_url_rule('/settings',view_func=views.settings,methods=["GET","POST"])
@@ -68,7 +65,7 @@ app.add_url_rule('/logout',view_func=views.logout)
 app.add_url_rule('/user/<userID>',view_func=views.profile)
 
 # Book Info
-app.add_url_rule('/bookinfo',view_func=views.book_info)
+#app.add_url_rule('/book/<OLKey>',view_func=views.book_info)
 
 ######################## Internal calls (to be called by ajax) ##########################
 # Get book list
@@ -108,48 +105,48 @@ app.add_url_rule('/manage_network/<otherUserID>', methods = ['GET', 'POST', 'DEL
 #	The end goal is to use POST requests to user for manage_connections (that one also deals with invitations)
 app.add_url_rule('/add_connection/<otherUserID>', view_func=views.simple_add_connection)
 
-# Lend a book to another user (will use the user that is currently logged in)
+# Lend an item to another user (will use the user that is currently logged in)
 #	parameters:
-#		bookCopyID: The id that corresponds to the book that will be lent out
-#		userID: The id of the user that the book is being lent to
+#		itemCopyID: The id that corresponds to the item that will be lent out
+#		userID: The id of the user that the item is being lent to
 #	returns:
 #		JSON array with a message: success or the reason for a failure
-app.add_url_rule('/lend_book/<bookCopyID>/<borrowerID>/<due_date>', view_func=views.lend_book)
+app.add_url_rule('/lend_item/<itemCopyID>/<borrowerID>/<due_date>', view_func=views.lend_item)
 
-# Borrow a book from another user (will use the user that is currently logged in)
+# Borrow an item from another user (will use the user that is currently logged in)
 #	parameters:
-#		bookCopyID: The id that corresponds to the book that will be borrowed
+#		itemCopyID: The id that corresponds to the book that will be borrowed
 #		userID: The id of the user that the book is being borrowed from
 #	returns:
 #		JSON array with a message: success or the reason for a failure
-app.add_url_rule('/borrow_book/<bookCopyID>/<lenderID>/<due_date>', view_func=views.borrow_book)
+app.add_url_rule('/borrow_item/<itemCopyID>/<lenderID>/<due_date>', view_func=views.borrow_item)
 
-# Get all the books that the current user is loaning to another user
-#	returns json with the following information for each book:
-#		book's title, book's author, id of the bookcopy, borrower id, and borrower name
-app.add_url_rule('/lent_books', view_func=views.get_lent_books)
+# Get all the items that the current user is loaning to another user
+#	returns json with the following information for each item:
+#		item's title, item's author or director, id of the itemcopy, borrower id, and borrower name
+app.add_url_rule('/lent_items', view_func=views.get_lent_items)
 
-# Get all the books that the current user is borrowing from another user
-#	returns json with the following information for each book:
-#		book's title, book's author, id of the bookcopy, owner id, and owner name
-app.add_url_rule('/borrowed_books', view_func=views.get_borrowed_books)
+# Get all the items that the current user is borrowing from another user
+#	returns json with the following information for each item:
+#		item's title, item's author, id of the itemcopy, owner id, and owner name
+app.add_url_rule('/borrowed_items', view_func=views.get_borrowed_items)
 
-# Return the given book to it's owner.  Can be called when either the owner or borrower is logged in
+# Return the given item to it's owner.  Can be called when either the owner or borrower is logged in
 #	parameters:
-#		bookCopyID: the id of the ItemCopy object that is being returned
+#		itemCopyID: the id of the ItemCopy object that is being returned
 #	returns:
 #		JSON array with a message: success or the reason for a failure
-app.add_url_rule('/return_book/<bookCopyID>', view_func=views.return_book)
+app.add_url_rule('/return_item/<itemCopyID>', view_func=views.return_item)
 
-# Change the due_date of a book that is being borrowed
-# If the current user is the owner of the book the date is automaticall changed
+# Change the due_date of an item that is being borrowed
+# If the current user is the owner of the item the date is automatically changed
 # If the current user is the borrower, a notification is sent to the owner and he/she can accept the new due date
 #	parameters:
-#		bookCopyID: the id of the ItemCopy object that is being returned
+#		itemCopyID: the id of the ItemCopy object that is being returned
 #		newDueDate: the new date the book will be due.  Must be in the format year-month-day
 #	returns:
 #		JSON object with a message: success or the reason for the failure
-app.add_url_rule('/change_due_date/<bookCopyID>/<newDueDate>', view_func=views.change_due_date)
+app.add_url_rule('/change_due_date/<itemCopyID>/<newDueDate>', view_func=views.change_due_date)
 
 # Get all the notifications that the current user has recieved
 #	returns:
@@ -179,9 +176,9 @@ app.add_url_rule('/reject_notification/<notificationID>', view_func=views.reject
 
 # Starts the process for the current user to borrow a book.
 #	parameters:
-#		lenderID - id of the owner of the book
+#		lenderID - id of the owner of the item
 #		bookCopyID - the id of the ItemCopy object being borrowed
-app.add_url_rule('/setup_book_borrow/<lenderID>/<bookCopyID>',view_func=views.setup_book_borrow_actions)
+app.add_url_rule('/setup_book_borrow/<lenderID>/<itemCopyID>',view_func=views.setup_item_borrow_actions)
 
 ################################### Web service calls ###################################
 # Lookup a book from app
