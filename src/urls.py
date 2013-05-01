@@ -55,14 +55,14 @@ app.add_url_rule('/about',view_func=views.about)
 # Mobile App
 app.add_url_rule('/mobileapp',view_func=views.mobile_app)
 
-# Donate
-app.add_url_rule('/donate',view_func=views.donate)
-
 # Logout
 app.add_url_rule('/logout',view_func=views.logout)
 
 # User Profile
 app.add_url_rule('/user/<userID>',view_func=views.profile)
+
+# Report a Bug
+app.add_url_rule('/reportbug',view_func=views.reportbug,methods=["GET","POST"])
 
 # Book Info
 #app.add_url_rule('/book/<OLKey>',view_func=views.book_info)

@@ -61,7 +61,7 @@ def render_response(template, *args, **kwargs):
 ################################ Website landing pages ##################################
 def index():
 	# Each user has an invitation link (in /network) which they send to other users to
-	# invite them to connect on BookOut. Currently, this is the only method of connecting
+	# invite them to connect. Currently, this is the only method of connecting
 	# users. The link adds an argument to the index link (?connect=) with the inviter's
 	# user ID. A modal appears in the view if otherUserID is not 0.
 	
@@ -237,14 +237,35 @@ def settings():
 			return False
 	return render_response('settings.html')
 	
+def reportbug():
+	if request.method == 'POST' and "submitterName" in request.form and "submitterEmail" in request.form and "issueName" in request.form and "issueDescription" in request.form:
+		title = request.form["issueName"]
+		body = "Submitter Name: " + request.form["submitterName"] + "\nSubmitter Email: " + request.form["submitterEmail"] + "\nDescription:\n" + request.form["issueDescription"]
+		labels = request.form["issueType"]
+		import requests
+		import json
+		AUTH = ("sharingcommonsbot", "Sh4r3B0t")
+		GITHUB_URL = "https://api.github.com"
+		HEADERS = {'Content-Type': 'application/json'}
+		repo_owner = "natecarrier"
+		repo = "sharingcommons"
+		issues_url = "{0}/{1}".format(GITHUB_URL, "/".join(
+				["repos", repo_owner, repo, "issues"]))
+		data = {"title": title,
+				"body": body,
+				"labels": labels}
+		requests.post(issues_url,
+							 auth=AUTH,
+							 headers=HEADERS,
+							 data=json.dumps(data))
+	
+	return render_response('reportbug.html')
+	
 def about():
-	return render_response('aboutbookout.html')
+	return render_response('about.html')
 	
 def mobile_app():
 	return render_response('mobileapp.html')
-	
-def donate():
-	return render_response('donate.html')
 
 @login_required
 def profile(userID):

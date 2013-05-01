@@ -3,16 +3,42 @@
 
 {% block title %}Join{% endblock %}
 
+{% block script %}
+
+<script type="text/javascript">
+
+	// Show intro modal
+	$("#introModal").modal('show');
+
+</script>
+
+{% endblock %}
+
 {% block content %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/signin-buttons.css') }}"/>
- 
+
+<div id="introModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="introModalLabel" aria-hidden="true">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h3 id="introModalLabel">Disclaimer</h3>
+	</div>
+	<div class="modal-body">
+		<p>
+			Sharing Commons is currently undergoing private beta testing, by direct invitation from the team. If you have not been invited to use Sharing Commons, your account may be deleted.
+		</p>
+	</div>
+	<div class="modal-footer">
+		<a class="btn" id="introModalCancel" data-dismiss="modal">Continue</a>
+	</div>
+</div>
+
 <div class="row">
 	<div class="span12">
 
 		<h3>Join</h3>
 
-		<p>Rather than requiring you to create yet another username and password, BookOut uses your Google Account as a login. To join BookOut, simply authorize your Google Account to access BookOut by clicking the button below:</p>
+		<p>Rather than requiring you to create yet another username and password, Sharing Commons uses your Google Account as a login. To join Sharing Commons, simply authorize your Google Account by clicking the button below:</p>
 		<br/>
 		<a href="/handle-join" class="zocial google">Sign up with Google</a>
 		<br/><br/>

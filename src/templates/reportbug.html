@@ -1,22 +1,152 @@
-
 {% extends "maintemplate.html" %}
 
-{% block title %}Report Bug{% endblock %}
+{% block title %}Report a Bug{% endblock %}
+
+{% block style %}
+
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/jquery-ui-1.10.2.custom.min.css') }}" />
+
+{% endblock %}
+
+{% block script %}
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui-1.10.2.custom.min.js') }}"></script>
+
+<script type="text/javascript">
+
+	function submit() {
+		if(validate()) {
+			$("#validationError").hide();
+			$("#submitButton").attr("disabled", "disabled");
+			$.ajax({
+				url:"/reportbug",
+				type: 'POST',
+				data: $("#submissionForm").serialize(),
+				success: function(data) {
+					$("#submitSuccess").show();
+					$("#submitError").hide();
+				},
+				error: function() {
+					$("#submitError").show();
+					$("#submitSuccess").hide();
+					$("#submitButton").removeAttr("disabled");
+				}
+			});
+		}
+		else {
+			$("#validationError").show();
+			$("#submitSuccess").hide();
+			$("#submitError").hide();
+		}
+		
+		return false;
+	}
+	
+	function validate() {
+		var validateNames = ["submitterName","submitterEmail","issueName","issueType","issueDescription"]
+		
+		// Test that each field to see if it has at least one letter or number
+		for (var i = 0; i < validateNames.length; i++) {	
+			var validates = true;
+			var reName = /\w/;
+			if(!reName.test($("#" + validateNames[i]).val())) {
+				validates = false;
+				$("#" + validateNames[i]).parent().removeClass("success").addClass("error");
+				$("#" + validateNames[i] + "Help").show();
+			}
+			else {
+				$("#" + validateNames[i]).parent().removeClass("error").addClass("success");
+				$("#" + validateNames[i] + "Help").hide();
+				// Test that the issue description does not exceed 2000 characters
+				if(validateNames[i]=="issueDescription") {
+					if($("#issueDescription").val().length > 2000) {
+						validates = false;
+						$("#issueDescription").parent().removeClass("success").addClass("error");
+						$("#issueDescriptionHelp").show();
+					}
+				}
+			}
+		}
+		
+		return validates;
+	}
+	
+</script>
+
+{% endblock %}
 
 {% block content %}
 
+<form id="submissionForm" method="post" action="/reportbug" style="margin-bottom:0px">
+
+	<div class="row">
+		<div class="span4">
+			
+			<h3>Report a Bug</h3>
+			
+			<div class="control-group">
+				Submitter Name:&nbsp;
+				<input type="text" id="submitterName" name="submitterName" value="{{ user.name }}" style="vertical-align:baseline" />
+				<span id="submitterNameHelp" class="help-inline" style="display: none;">Please enter your name.</span> 
+			</div>
+
+			<div class="control-group">
+				Submitter Email:&nbsp;
+				<input type="text" id="submitterEmail" name="submitterEmail" value="{{ user.email }}" style="vertical-align:baseline" />
+				<span id="submitterEmailHelp" class="help-inline" style="display: none;">Please enter your email address.</span> 
+			</div>
+
+			<div class="control-group">
+				Issue Name:&nbsp;
+				<input type="text" id="issueName" name="issueName" style="vertical-align:baseline" />
+				<span id="issueNameHelp" class="help-inline" style="display: none;">Please enter an issue name.</span> 
+			</div>
+
+			<div class="control-group">
+				Issue Type:&nbsp;
+				<select id="issueType" name="issueType" style="vertical-align:baseline">
+					<option selected="true" value="bug">Bug</option>
+					<option value="enhancement">Enhancement Request</option>
+					<option value="question">Question</option>
+				</select>
+			</div>
+			
+			<div class="control-group">
+				<textarea id="issueDescription" name="issueDescription" style="width:400px;height:125px;"
+				placeholder="Enter a description of the issue."></textarea>
+				<span id="issueDescriptionHelp" class="help-inline" style="display: none;">Please enter a description; description cannot exceed 2000 characters.</span> 
+			</div>
+		</div>
+	</div>
+
+</form>
+
 <div class="row">
 	<div class="span12">
-
-		<h3>Report a Bug</h3>
-		
-		<p><b>Name:</b> ...Textfield to enter name will go here...</p>
-		<p><b>E-mail:</b> ...E-mail will go here...</p>
-		<p><b>Message:</b></p>
-		
-		...The textbox to "Enter message text..." will go here...
-
+		<a id="submitButton" class="btn btn-inverse" onclick="submit();">
+			Submit Issue
+		</a>
 	</div>
 </div>
+<br>
+<div class="row">
+	<div class="span4">
+
+		<div id="validationError" class="alert alert-error" style="display:none;">
+			<strong>Unable to submit issue</strong>&nbsp; Please fix the errors and try again.
+		</div>
+		
+		<div id="submitError" class="alert alert-error" style="display:none;">
+			<strong>Unable to submit issue</strong>&nbsp; Something went wrong. Please send an email to admin<strong></strong>@<strong></strong>sharing<strong></strong>commons.com
+		</div>
+		
+		<div id="submitSuccess" class="alert alert-success" style="display:none;">
+			<strong>Your issue has been submitted.</strong>
+		</div>
+		
+	</div>
+</div>
+
+<div style="margin-bottom:25px;"></div>
 
 {% endblock %}
