@@ -6,12 +6,13 @@
 {% block style %}
 
 <style type="text/css">
-	.library-button {
+	.library-btn-group {
 		margin-bottom: 10px;
+		width: 120px;
 	}
 	
-	.library-dropdown {
-		margin-top: -10px;
+	.library-button {
+		width: 95px;
 	}
 	
 	.notInNetwork {
@@ -78,9 +79,10 @@
 	});
 	
 	function add_item(item_subtype, item_key, item_index){
-		//disable button and caret
+		//disable button and caret and destroy tooltip
 		$("#add_button" + item_index).attr("disabled", "disabled");
 		$("#caret_button" + item_index).attr("disabled", "disabled");
+		$("#add_btn_group" + item_index).tooltip("destroy")
 		$.post("/library/" + item_subtype + "/" + item_key, function(data) {
 			//update text to In Library and update link to library
 			//the link doesn't work as a href because it's a button, not an "a"
@@ -91,7 +93,7 @@
 			$("#add_button" + item_index).removeClass("btn-inverse").addClass("btn-primary");
 			$("#caret_button" + item_index).removeClass("btn-inverse").addClass("btn-primary");
 			//update tooltip
-			$("#add_button" + item_index).tooltip("destroy").attr("title", "Item is already in your library. Click to view library.").tooltip({trigger: "hover"});
+			$("#add_btn_group" + item_index).attr("title", "Item is already in your library. Click to view library.").tooltip({trigger: "hover"});
 			//remove entry of item type clicked
 			$("#add_" + item_subtype + item_index).hide();
 			//enable button and caret
@@ -176,7 +178,7 @@
 <div class="row">
 	<div class="span2">
 		<br/>
-		<h3>Search:</h3>
+		<h3>Book Search:</h3>
 	</div>
 	<div class="span10">
 		<br/>
@@ -220,29 +222,29 @@
 						Author: {{ item.author_director }}
 					</td>
 					<td style="width: 150px">
-						<div class="btn-group">
-						  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} tooltip-button library-button"
-							style="width:120px"
-							{% if user.is_authenticated() == False %}disabled{% endif %} 
-							onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}" 
+						<div class="btn-group library-btn-group tooltip-button" data-toggle="tooltip" data-placement="top" 
 							title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
-							else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}"
-							id="add_button{{ itemlist.index(item) }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</button>
-						  <button class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle library-button" data-toggle="dropdown" id="caret_button{{ itemlist.index(item) }}">
+							else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}" 
+							id="add_btn_group{{ itemlist.index(item) }}">
+						  <a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} library-button"
+							{% if user.is_authenticated() == False %}disabled{% endif %} 
+							{% if item.inLibrary == [] %}onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}"{% else %}href="/library"{% endif %} 
+							id="add_button{{ itemlist.index(item) }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</a>
+						  <a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle" data-toggle="dropdown" id="caret_button{{ itemlist.index(item) }}">
 							<span class="caret"></span>
-						  </button>
+						  </a>
 						  {% if item.inLibrary != ['book', 'ebook', 'audiobook'] %}
-						  <ul class="dropdown-menu library-dropdown">
-							{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
-							{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('ebook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
-							{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('audiobook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
-						  </ul>
+							  <ul class="dropdown-menu">
+								{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
+								{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('ebook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
+								{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('audiobook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
+							  </ul>
 						  {% endif %}
 						</div>
 						{% if item.inNetwork == "False" %}
 							<a class="btn tooltip-button" 
 								style="width:120px"
-								data-toggle="tooltip" data-placement="right"
+								data-toggle="tooltip" data-placement="bottom"
 								title="Not available in your network" 
 								disabled>Request&nbsp;to&nbsp;Borrow</a>
 						{% else %}
@@ -250,7 +252,7 @@
 								style="width:120px" 
 								{% if user.is_authenticated() == False %}disabled{% endif %}
 								onclick="{% if user.is_authenticated() %}request_item('{{ item.item_key }}', '{{ item.escapedtitle }}', this){% endif %}"
-								data-toggle="tooltip" data-placement="right"
+								data-toggle="tooltip" data-placement="bottom"
 								title="{% if user.is_authenticated() %}Request to borrow item from one of your connections{% 
 								else %}Join or login to request to borrow items{% endif %}">Request&nbsp;to&nbsp;Borrow</a>
 						{% endif %}
