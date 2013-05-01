@@ -62,7 +62,7 @@
 	
 	function request_item(item_key, title, button){
 		$(button).attr("disabled", "disabled");
-		$.getJSON("/search/inNetwork/" + item_key, function(data) {
+		$.getJSON("/search/in_network/" + item_key, function(data) {
 			$(button).removeAttr("disabled");
 			$('#borrowTable').empty();
 			$.each(data, function(key, val) {

@@ -65,6 +65,7 @@
 				if($("#pending_requests tr:visible").length == 0) {
 					$("#pending_requests").html("<tr><td colspan='3'>You have no pending requests.</td></tr>");
 				}
+				update_items_lending();
 			}
 		}).error(function () {
 			$(button).removeAttr("disabled");
@@ -89,6 +90,12 @@
 		});
 		
 		return false;
+	}
+	
+	function update_items_lending() {
+		// Update items lending table, which will receive a 
+		// new item after a requested borrow has been approved
+		// TODO
 	}
 	
 	function requestCheckIn(itemCopyID, button) {

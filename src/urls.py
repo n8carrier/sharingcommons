@@ -172,13 +172,13 @@ app.add_url_rule('/reject_notification/<notificationID>', view_func=views.reject
 #		OLKey - the open library key of the book being searched for
 #	returns:
 #		JSON object with these fields for each finding (username, bookCopyID, available)
-#app.add_url_rule('/search/inNetwork/<OLKey>',view_func=views.see_who_in_network_has_book)
+app.add_url_rule('/search/in_network/<item_key>',view_func=views.search_network)
 
 # Starts the process for the current user to borrow a book.
 #	parameters:
 #		lenderID - id of the owner of the item
 #		bookCopyID - the id of the ItemCopy object being borrowed
-app.add_url_rule('/setup_book_borrow/<lenderID>/<itemCopyID>',view_func=views.setup_item_borrow_actions)
+app.add_url_rule('/setup_item_borrow/<lenderID>/<itemCopyID>',view_func=views.setup_item_borrow_actions)
 
 ################################### Web service calls ###################################
 # Lookup a book from app

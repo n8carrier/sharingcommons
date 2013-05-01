@@ -110,7 +110,7 @@ def library():
 		itemlist.append(item)
 	# Sort itemlist alphabetically, with title as the primary sort key,
 	# author as secondary, and item_subtype as tertiary
-	itemlist.sort(key=lambda item: item["item_subtype"].lower())
+	itemlist.sort(key=lambda item: item["item_subtype"])
 	itemlist.sort(key=lambda item: item["author_director"].lower())
 	itemlist.sort(key=lambda item: item["title"].lower())
 		
@@ -150,8 +150,9 @@ def discover():
 					item["inLibrary"].append(item_subtype)
 			itemlist.append(item)
 	
-	#Sort itemlist alphabetically, with title as the primary sort key and author as secondary
-	itemlist.sort(key=lambda item: item["item_subtype"].lower())
+	# Sort itemlist alphabetically, with title as the primary sort key,
+	# author as secondary, and item_subtype as tertiary
+	itemlist.sort(key=lambda item: item["item_subtype"])
 	itemlist.sort(key=lambda item: item["author_director"].lower())
 	itemlist.sort(key=lambda item: item["title"].lower())
 	
@@ -254,13 +255,21 @@ def profile(userID):
 	if user.is_connected(profile_user):
 		library = []
 		for copy in profile_user.get_library():
-			item = Item.query(Item.key == copy.item).get()
-			library.append(item)
+			item = Item.query(Item.key == copy.item).get().to_dict()
+			item["item_subtype"] = copy.item_subtype
+			item["escapedtitle"] = re.escape(item["title"])
 			if copy.borrower is None:
-				item.available = True
+				item["available"] = True
 			else:
-				item.available = False
-			item.copyid = copy.key.id()
+				item["available"] = False
+			item["copyID"] = copy.key.id()
+			library.append(item)
+			
+		# Sort library alphabetically, with title as the primary sort key,
+		# author as secondary, and item_subtype as tertiary
+		library.sort(key=lambda item: item["item_subtype"])
+		library.sort(key=lambda item: item["author_director"].lower())
+		library.sort(key=lambda item: item["title"].lower())
 		return render_response('profile.html',profile_user=profile_user,library=library)
 	return render_response('invalidprofile.html')
 	
@@ -462,7 +471,7 @@ def change_due_date(itemCopyID, newDueDate):
 	result = cur_user.change_due_date(itemCopyID, newDueDate)
 	return jsonify({"Message":result})	
 	
-def see_who_in_network_has_item(item_key):
+def search_network(item_key):
 	user = current_user()
 
 	networkuserlist = {}
