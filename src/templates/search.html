@@ -48,13 +48,28 @@
 				$("#searchAll").attr("checked", "true");
 		}
 		
-		if ($.cookie("{{ user.get_id() }}")) {
+		// Display appropriate rows on load
+		if ("{{subtype_specified}}"=="true") {
+			// User specifically requested at least one subtype, so forget their cookie setting and show in-network only
+			$.removeCookie("{{ user.get_id() }}");
 			$("#show_out_of_network_items_checkbox").removeAttr("checked");
-			
 			$("tr.notInNetwork").hide();
-		}
-		else {
-			$("tr.notInNetwork").show();
+			display_subtype("{{ subtype_book }}", "{{ subtype_ebook }}", "{{ subtype_audiobook }}");
+		} else {
+			// User did not specify subtype, so show out-of-network based on cookie
+			if ($.cookie("{{ user.get_id() }}")) {
+				// Show in network only (requiring display of only the subtypes searched)
+				$("#show_out_of_network_items_checkbox").removeAttr("checked");
+				$("tr.notInNetwork").hide();
+				display_subtype("{{ subtype_book }}", "{{ subtype_ebook }}", "{{ subtype_audiobook }}");
+			}
+			else {
+				// Show out of network, including all subtypes
+				$("tr.notInNetwork").show();
+				// no code necessary to show out-of-network on load, they'll already show up
+				// Hide subtype checkboxes, since they won't do anything when showing out-of-network
+				$("#filter-book-subtype").hide();
+			}
 		}
 		
 		$("#show_out_of_network_items_checkbox").change(function(){
@@ -64,11 +79,34 @@
 			
 			if(!$(this).is(":checked")) {
 				$.cookie("{{ user.get_id() }}", "true", { expires: 365 });
-				
+				// User wants in-network only, hide out-of-network and display subtypes according to what's specified
 				$("tr.notInNetwork").hide();
+				if($("#checkbox-books").is(':checked')) {
+					$("tr.row-book").show();
+				} else {
+					$("tr.row-book").hide();
+				}
+				if($("#checkbox-ebooks").is(':checked')) {
+					$("tr.row-ebook").show();
+				} else {
+					$("tr.row-ebook").hide();
+				}
+				if($("#checkbox-audiobooks").is(':checked')) {
+					$("tr.row-audiobook").show();
+				} else {
+					$("tr.row-audiobook").hide();
+				}
+				// Show subtype filters, since they'll work now
+				$("#filter-book-subtype").show();
 			}
 			else {
+				// User wants out-of-network, show out-of-network and all subtypes and hide subtype filters
 				$("tr.notInNetwork").show();
+				$("tr.row-book").show();
+				$("tr.row-ebook").show();
+				$("tr.row-audiobook").show();
+				$("#filter-book-subtype").hide();
+				
 			}
 			
 		});
@@ -159,6 +197,60 @@
 		$("#message").hide();
 		return false;
 	}
+	
+	function display_subtype(subtype_book, subtype_ebook, subtype_audiobook) {
+		// hide all, then show necessary
+		$("tr.row-book").hide();
+		$("tr.row-ebook").hide();
+		$("tr.row-audiobook").hide();
+		if(subtype_book=="true") {
+			$("tr.row-book").show();
+		} else if(subtype_ebook=="true") {
+			$("tr.row-ebook").show();
+		} else if(subtype_audiobook=="true") {
+			$("tr.row-audiobook").show();
+		}
+	}
+	
+	// React to checking and unchecking "Include" checkboxes, but only if out-of-network is unchecked
+	$(function() {
+		$("input[name='subtype_book']").change(function(){
+			if($("#show_out_of_network_items_checkbox").is(':checked')==false) {
+				if($("#checkbox-books").is(':checked')) {
+					$("#checkbox-books").attr("value", "true")
+					$("tr.row-book").show();
+				} else {
+					$("#checkbox-books").attr("value", "false")
+					$("tr.row-book").hide();
+				}
+			} else {
+			// Alert user that filtering must be set to in-network only for it to work
+			}
+		});
+		$("input[name='subtype_ebook']").change(function(){
+			if($("#show_out_of_network_items_checkbox").is(':checked')==false) {
+				if($("#checkbox-ebooks").is(':checked')) {
+					$("#checkbox-ebooks").attr("value", "true")
+					$("tr.row-ebook").show();
+				} else {
+					$("#checkbox-ebooks").attr("value", "false")
+					$("tr.row-ebook").hide();
+				}
+			}
+		});
+		$("input[name='subtype_audiobook']").change(function(){
+			if($("#show_out_of_network_items_checkbox").is(':checked')==false) {
+				if($("#checkbox-audiobooks").is(':checked')) {
+					$("#checkbox-audiobooks").attr("value", "true")
+					$("tr.row-audiobook").show();
+				} else {
+					$("#checkbox-audiobooks").attr("value", "false")
+					$("tr.row-audiobook").hide();
+				}
+			}
+		});
+	});
+	
 </script>
 
 {% endblock %}
@@ -184,7 +276,7 @@
 		<br/>
 		<h3>
 			
-			<input name="value" type="text" class="input-xxlarge search-query" placeholder="Enter Title, Author, or ISBN..." value="{{ search }}">
+			<input name="query" type="text" class="input-xxlarge search-query" placeholder="Enter Title, Author, or ISBN..." value="{{ search }}">
 			<button type="submit" class="btn">Search</button>
 			
 		</h3>
@@ -194,11 +286,17 @@
 
 <div class="row">
 	<div class="span2">
-		<div class="well">
+		<div class="well" id="filter-results">
 			<h5>Filter Results:</h5>
 			<label class="checkbox"><input type="checkbox" checked="checked" id="show_out_of_network_items_checkbox">Show out-of-network items</label>
 		</div>
-		<div class="well">
+		<div class="well" id="filter-book-subtype">
+			<h5>Include:</h5>
+			<label class="checkbox"><input type="checkbox" {% if subtype_book %}checked{% endif %} id="checkbox-books" name="subtype_book" value="{% if subtype_book %}true{% else %}false{% endif %}">Books</label>
+			<label class="checkbox"><input type="checkbox" {% if subtype_ebook %}checked{% endif %} id="checkbox-ebooks" name="subtype_ebook" value="{% if subtype_ebook %}true{% else %}false{% endif %}">eBooks</label>
+			<label class="checkbox"><input type="checkbox" {% if subtype_audiobook %}checked{% endif %} id="checkbox-audiobooks" name="subtype_audiobook" value="{% if subtype_audiobook %}true{% else %}false{% endif %}">Audiobooks</label>
+		</div>
+		<div class="well" id="refine-search">
 			<h5>Refine Search:</h5>
 			<label class="radio"><input type="radio" id="searchAll" name="refineSearch" value="all">All results</label>
 			<label class="radio"><input type="radio" id="searchTitle" name="refineSearch" value="title">Title only</label>
@@ -213,7 +311,7 @@
 		{% else %}
 			<table class="table">
 			{% for item in itemlist %}
-				<tr {% if item.inNetwork == "False" %} class="notInNetwork" {% endif %}>
+				<tr class="{{ item.item_key }} content-row {% if 'book' in item.inNetwork %}row-book {% endif %}{% if 'ebook' in item.inNetwork %}row-ebook {% endif %}{% if 'audiobook' in item.inNetwork %}row-audiobook {% endif %}{% if item.inNetwork == [] %}notInNetwork{% endif %}">
 					<td style="width: 100px"><img {% if item.thumbnail_link == "" %} src="{{ url_for('static', filename='img/nocoverart.png') }}"
 							{% else %} src="{{ item.thumbnail_link }}" {% endif %} 
 							style="height:auto;width:100px;"/></td>
@@ -241,7 +339,7 @@
 							  </ul>
 						  {% endif %}
 						</div>
-						{% if item.inNetwork == "False" %}
+						{% if item.inNetwork == [] %}
 							<a class="btn tooltip-button" 
 								style="width:120px"
 								data-toggle="tooltip" data-placement="bottom"

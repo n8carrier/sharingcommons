@@ -21,7 +21,96 @@
 		function initiateSearch() {
 			$('#searchBarForm').submit();
 		}
+		
+		function update_search_filter(button) {
+			if(button.id=="filter-all-books") {
+				// Update button name
+				$("#searchFilter").html("All Books <span class='caret'></span>");
+				$("#filter-all-books").addClass("active")
+				$("#filter-books").removeClass("active")
+				$("#filter-ebooks").removeClass("active")
+				$("#filter-audiobooks").removeClass("active")
+				// Set filter attributes
+				$("#filter-item-type").attr("name", "type")
+				$("#filter-item-type").attr("value", "book")
+				$("#filter-subtype-book").removeAttr("name")
+				$("#filter-subtype-book").removeAttr("value")
+				$("#filter-subtype-ebook").removeAttr("name")
+				$("#filter-subtype-ebook").removeAttr("value")
+				$("#filter-subtype-audiobook").removeAttr("name")
+				$("#filter-subtype-audiobook").removeAttr("value")
+				//Update placeholder
+				$("#nav_search_input").attr("placeholder","Search books by title, author, or ISBN")
+			} else if(button.id=="filter-books") {
+				// Update button name
+				$("#searchFilter").html("Books <span class='caret'></span>");
+				$("#filter-all-books").removeClass("active")
+				$("#filter-books").addClass("active")
+				$("#filter-ebooks").removeClass("active")
+				$("#filter-audiobooks").removeClass("active")
+				// Set filter attributes
+				$("#filter-item-type").removeAttr("name")
+				$("#filter-item-type").removeAttr("value")
+				$("#filter-subtype-book").attr("name", "subtype_book")
+				$("#filter-subtype-book").attr("value", "true")
+				$("#filter-subtype-ebook").removeAttr("name")
+				$("#filter-subtype-ebook").removeAttr("value")
+				$("#filter-subtype-audiobook").removeAttr("name")
+				$("#filter-subtype-audiobook").removeAttr("value")
+				//Update placeholder
+				$("#nav_search_input").attr("placeholder","Search books by title, author, or ISBN")
+			} else if(button.id=="filter-ebooks") {
+				// Update button name
+				$("#searchFilter").html("eBooks <span class='caret'></span>");
+				$("#filter-all-books").removeClass("active")
+				$("#filter-books").removeClass("active")
+				$("#filter-ebooks").addClass("active")
+				$("#filter-audiobooks").removeClass("active")
+				// Set filter attributes
+				$("#filter-item-type").removeAttr("name")
+				$("#filter-item-type").removeAttr("value")
+				$("#filter-subtype-book").removeAttr("name")
+				$("#filter-subtype-book").removeAttr("value")
+				$("#filter-subtype-ebook").attr("name", "subtype_ebook")
+				$("#filter-subtype-ebook").attr("value", "true")
+				$("#filter-subtype-audiobook").removeAttr("name")
+				$("#filter-subtype-audiobook").removeAttr("value")
+				//Update placeholder
+				$("#nav_search_input").attr("placeholder","Search ebooks by title, author, or ISBN")
+			} else if(button.id=="filter-audiobooks") {
+				$("#searchFilter").html("Audiobooks <span class='caret'></span>");
+				// Update button name
+				$("#filter-all-books").removeClass("active")
+				$("#filter-books").removeClass("active")
+				$("#filter-ebooks").removeClass("active")
+				$("#filter-audiobooks").addClass("active")
+				// Set filter attributes
+				$("#filter-item-type").removeAttr("name")
+				$("#filter-item-type").removeAttr("value")
+				$("#filter-subtype-book").removeAttr("name")
+				$("#filter-subtype-book").removeAttr("value")
+				$("#filter-subtype-ebook").removeAttr("name")
+				$("#filter-subtype-ebook").removeAttr("value")
+				$("#filter-subtype-audiobook").attr("name", "subtype_audiobook")
+				$("#filter-subtype-audiobook").attr("value", "true")
+				//Update placeholder
+				$("#nav_search_input").attr("placeholder","Search audiobooks by title, author, or ISBN")
+			}			
+		}
 	
+	</script>
+	
+	<script type="text/javascript">
+	
+		// Google Analytics tracking code
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-40614102-1', 'sharingcommons.com');
+		ga('send', 'pageview');
+
 	</script>
 
 </head>
@@ -55,7 +144,23 @@
 						</ul>
 						<form id="searchBarForm" class="navbar-search pull-right" action="/search">
 							<span id="search_input_holder">
-							<input type="text" class="search-query span4" placeholder="Search books by title, author, or ISBN" id="nav_search_input" name="value" />
+							<div class="btn-group" style="display:inline-block;position:absolute;top:-16px;border-bottom-left-radius:15px;border-top-left-radius:15px;">
+								<a id="searchFilter" class="btn dropdown-toggle" data-toggle="dropdown" style="width:80px;background-image:none;background-color:transparent;border-color:transparent;border-bottom-left-radius:15px;border-top-left-radius:15px;border-right-color: #e6e6e6;">
+									All Books
+									<span class="caret"></span>
+								</a>
+								<ul class="dropdown-menu">
+									<li><a id="filter-all-books" onclick="update_search_filter(this);" class="active">All Books</a></li>
+									<li><a id="filter-books" onclick="update_search_filter(this);">-Books</a></li>
+									<li><a id="filter-ebooks" onclick="update_search_filter(this);">-eBooks</a></li>
+									<li><a id="filter-audiobooks" onclick="update_search_filter(this);">-Audiobooks</a></li>
+								</ul>
+							</div>
+							<input type="text" class="search-query span4" placeholder="Search books by title, author, or ISBN" id="nav_search_input" name="query" />
+							<input type="hidden" id="filter-item-type" name="type" value="book">
+							<input type="hidden" id="filter-subtype-book">
+							<input type="hidden" id="filter-subtype-ebook">
+							<input type="hidden" id="filter-subtype-audiobook">
 							<input type="button" value="" onclick="initateSearch()"/>
 							</span>
 						</form>
@@ -91,7 +196,7 @@
 			<div class="links">
 				<a href="{{ url_for('mobile_app') }}">Mobile App</a>
 				<a href="http://github.com/natecarrier/sharingcommons">GitHub Project Page</a>
-				<!--<a href="{{ url_for('terms_of_use') }}">Terms of Use</a>-->
+				<!--<a href="{{""" url_for('terms_of_use') """}}">Terms of Use</a>-->
 			</div>
 		</footer>
 	</div>

@@ -166,8 +166,24 @@ def discover():
 	
 def search():
 	itemlist = {}
-	searchterm = request.args.get('value')
+	item_type = request.args.get('type')
+	subtype_book = request.args.get('subtype_book')
+	subtype_ebook = request.args.get('subtype_ebook')
+	subtype_audiobook = request.args.get('subtype_audiobook')
+	searchterm = request.args.get('query')
 	attr = request.args.get('refineSearch')
+	
+	subtype_specified = "true" # Used in javascript to determine whether out-of-network cookie should be respected or not
+	
+	if subtype_book or subtype_ebook or subtype_audiobook:
+		# If subtype is included, item_type is not, so it must be added
+		item_type = "book"
+	else:
+		# None are included, so only item_type is being pass; set all subtypes to true
+		subtype_specified = "false"
+		subtype_book = "true"
+		subtype_ebook = "true"
+		subtype_audiobook = "true"
 	
 	if attr == "all":
 		attr = None
@@ -205,24 +221,26 @@ def search():
 			for connection in user.get_connections():
 				u = UserAccount.getuser(connection.id())
 				for copy in u.get_library():
-					networkitemlist[Item.query(Item.key == copy.item).get().item_key] = copy
+					copyItemKey = Item.query(Item.key == copy.item).get().item_key
+					copyItemSubtype = copy.item_subtype
+					networkitemlist[(copyItemKey,copyItemSubtype)] = copy.to_dict()
 
 			itemlist = Item.search_by_attribute("book",searchterm,attr)
 			for item in itemlist:
 				item["escapedtitle"] = re.escape(item["title"])
 				
-				# Check for copies in library, return "inLibrary" list with all item types
+				# Check for copies in library and in network, 
+				# return "inLibrary" list with all item types in Library
+				# return "inNetwork" list with all item types in Library
 				item["inLibrary"] = []
+				item["inNetwork"] = []
 				for item_subtype in ['book', 'ebook', 'audiobook']:
 					if (item["item_key"],item_subtype) in librarylist:
 						item["inLibrary"].append(item_subtype)
-						
-				if item["item_key"] in networkitemlist:
-					item["inNetwork"] = "True"
-				else:
-					item["inNetwork"] = "False"
+					if (item["item_key"],item_subtype) in networkitemlist:
+						item["inNetwork"].append(item_subtype)
 				
-	return render_response('search.html', itemlist=itemlist, search=searchterm, attribute=attr)
+	return render_response('search.html', itemlist=itemlist, search=searchterm, attribute=attr, include_type=item_type, subtype_book=subtype_book, subtype_ebook=subtype_ebook, subtype_audiobook=subtype_audiobook, subtype_specified=subtype_specified)
 	
 def settings():
 	if request.method == 'POST' and "displayName" in request.form and "lendingLength" in request.form and "notifications" in request.form and "additionalInfo" in request.form:
