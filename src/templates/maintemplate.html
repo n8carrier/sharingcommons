@@ -30,8 +30,11 @@
 				$("#filter-books").removeClass("active")
 				$("#filter-ebooks").removeClass("active")
 				$("#filter-audiobooks").removeClass("active")
+				$("#filter-all-movies").removeClass("active")
+				$("#filter-dvds").removeClass("active")
+				$("#filter-blurays").removeClass("active")
 				// Set filter attributes
-				$("#filter-item-type").attr("name", "type")
+				$("#filter-item-type").attr("name", "item_type")
 				$("#filter-item-type").attr("value", "book")
 				$("#filter-subtype-book").removeAttr("name")
 				$("#filter-subtype-book").removeAttr("value")
@@ -39,8 +42,12 @@
 				$("#filter-subtype-ebook").removeAttr("value")
 				$("#filter-subtype-audiobook").removeAttr("name")
 				$("#filter-subtype-audiobook").removeAttr("value")
+				$("#filter-subtype-dvds").removeAttr("name")
+				$("#filter-subtype-dvds").removeAttr("value")
+				$("#filter-subtype-blurays").removeAttr("name")
+				$("#filter-subtype-blurays").removeAttr("value")
 				//Update placeholder
-				$("#nav_search_input").attr("placeholder","Search books by title, author, or ISBN")
+				$("#nav_search_input").attr("placeholder","Search for books by title, author, or ISBN")
 			} else if(button.id=="filter-books") {
 				// Update button name
 				$("#searchFilter").html("Books <span class='caret'></span>");
@@ -48,6 +55,9 @@
 				$("#filter-books").addClass("active")
 				$("#filter-ebooks").removeClass("active")
 				$("#filter-audiobooks").removeClass("active")
+				$("#filter-all-movies").removeClass("active")
+				$("#filter-dvds").removeClass("active")
+				$("#filter-blurays").removeClass("active")
 				// Set filter attributes
 				$("#filter-item-type").removeAttr("name")
 				$("#filter-item-type").removeAttr("value")
@@ -57,8 +67,12 @@
 				$("#filter-subtype-ebook").removeAttr("value")
 				$("#filter-subtype-audiobook").removeAttr("name")
 				$("#filter-subtype-audiobook").removeAttr("value")
+				$("#filter-subtype-dvds").removeAttr("name")
+				$("#filter-subtype-dvds").removeAttr("value")
+				$("#filter-subtype-blurays").removeAttr("name")
+				$("#filter-subtype-blurays").removeAttr("value")
 				//Update placeholder
-				$("#nav_search_input").attr("placeholder","Search books by title, author, or ISBN")
+				$("#nav_search_input").attr("placeholder","Search for books by title, author, or ISBN")
 			} else if(button.id=="filter-ebooks") {
 				// Update button name
 				$("#searchFilter").html("eBooks <span class='caret'></span>");
@@ -66,6 +80,9 @@
 				$("#filter-books").removeClass("active")
 				$("#filter-ebooks").addClass("active")
 				$("#filter-audiobooks").removeClass("active")
+				$("#filter-all-movies").removeClass("active")
+				$("#filter-dvds").removeClass("active")
+				$("#filter-blurays").removeClass("active")
 				// Set filter attributes
 				$("#filter-item-type").removeAttr("name")
 				$("#filter-item-type").removeAttr("value")
@@ -75,8 +92,12 @@
 				$("#filter-subtype-ebook").attr("value", "true")
 				$("#filter-subtype-audiobook").removeAttr("name")
 				$("#filter-subtype-audiobook").removeAttr("value")
+				$("#filter-subtype-dvds").removeAttr("name")
+				$("#filter-subtype-dvds").removeAttr("value")
+				$("#filter-subtype-blurays").removeAttr("name")
+				$("#filter-subtype-blurays").removeAttr("value")
 				//Update placeholder
-				$("#nav_search_input").attr("placeholder","Search ebooks by title, author, or ISBN")
+				$("#nav_search_input").attr("placeholder","Search for ebooks by title, author, or ISBN")
 			} else if(button.id=="filter-audiobooks") {
 				$("#searchFilter").html("Audiobooks <span class='caret'></span>");
 				// Update button name
@@ -84,6 +105,9 @@
 				$("#filter-books").removeClass("active")
 				$("#filter-ebooks").removeClass("active")
 				$("#filter-audiobooks").addClass("active")
+				$("#filter-all-movies").removeClass("active")
+				$("#filter-dvds").removeClass("active")
+				$("#filter-blurays").removeClass("active")
 				// Set filter attributes
 				$("#filter-item-type").removeAttr("name")
 				$("#filter-item-type").removeAttr("value")
@@ -93,9 +117,88 @@
 				$("#filter-subtype-ebook").removeAttr("value")
 				$("#filter-subtype-audiobook").attr("name", "subtype_audiobook")
 				$("#filter-subtype-audiobook").attr("value", "true")
+				$("#filter-subtype-dvds").removeAttr("name")
+				$("#filter-subtype-dvds").removeAttr("value")
+				$("#filter-subtype-blurays").removeAttr("name")
+				$("#filter-subtype-blurays").removeAttr("value")
 				//Update placeholder
-				$("#nav_search_input").attr("placeholder","Search audiobooks by title, author, or ISBN")
-			}			
+				$("#nav_search_input").attr("placeholder","Search for audiobooks by title, author, or ISBN")
+			} else if(button.id=="filter-all-movies") {
+				// Update button name
+				$("#searchFilter").html("All Movies <span class='caret'></span>");
+				$("#filter-all-books").removeClass("active")
+				$("#filter-books").removeClass("active")
+				$("#filter-ebooks").removeClass("active")
+				$("#filter-audiobooks").removeClass("active")
+				$("#filter-all-movies").addClass("active")
+				$("#filter-dvds").removeClass("active")
+				$("#filter-blurays").removeClass("active")
+				// Set filter attributes
+				$("#filter-item-type").attr("name", "item_type")
+				$("#filter-item-type").attr("value", "movie")
+				$("#filter-subtype-book").removeAttr("name")
+				$("#filter-subtype-book").removeAttr("value")
+				$("#filter-subtype-ebook").removeAttr("name")
+				$("#filter-subtype-ebook").removeAttr("value")
+				$("#filter-subtype-audiobook").removeAttr("name")
+				$("#filter-subtype-audiobook").removeAttr("value")
+				$("#filter-subtype-dvds").removeAttr("name")
+				$("#filter-subtype-dvds").removeAttr("value")
+				$("#filter-subtype-blurays").removeAttr("name")
+				$("#filter-subtype-blurays").removeAttr("value")
+				//Update placeholder
+				$("#nav_search_input").attr("placeholder","Search for movies by title or keyword")
+			} else if(button.id=="filter-dvds") {
+				$("#searchFilter").html("DVDs <span class='caret'></span>");
+				// Update button name
+				$("#filter-all-books").removeClass("active")
+				$("#filter-books").removeClass("active")
+				$("#filter-ebooks").removeClass("active")
+				$("#filter-audiobooks").removeClass("active")
+				$("#filter-all-movies").removeClass("active")
+				$("#filter-dvds").addClass("active")
+				$("#filter-blurays").removeClass("active")
+				// Set filter attributes
+				$("#filter-item-type").removeAttr("name")
+				$("#filter-item-type").removeAttr("value")
+				$("#filter-subtype-book").removeAttr("name")
+				$("#filter-subtype-book").removeAttr("value")
+				$("#filter-subtype-ebook").removeAttr("name")
+				$("#filter-subtype-ebook").removeAttr("value")
+				$("#filter-subtype-audiobook").removeAttr("name")
+				$("#filter-subtype-audiobook").removeAttr("value")
+				$("#filter-subtype-dvds").attr("name", "subtype_dvd")
+				$("#filter-subtype-dvds").attr("value", "true")
+				$("#filter-subtype-blurays").removeAttr("name")
+				$("#filter-subtype-blurays").removeAttr("value")
+				//Update placeholder
+				$("#nav_search_input").attr("placeholder","Search for DVDs by title or keyword")
+			} else if(button.id=="filter-blurays") {
+				$("#searchFilter").html("Blu-rays <span class='caret'></span>");
+				// Update button name
+				$("#filter-all-books").removeClass("active")
+				$("#filter-books").removeClass("active")
+				$("#filter-ebooks").removeClass("active")
+				$("#filter-audiobooks").removeClass("active")
+				$("#filter-all-movies").removeClass("active")
+				$("#filter-dvds").removeClass("active")
+				$("#filter-blurays").addClass("active")
+				// Set filter attributes
+				$("#filter-item-type").removeAttr("name")
+				$("#filter-item-type").removeAttr("value")
+				$("#filter-subtype-book").removeAttr("name")
+				$("#filter-subtype-book").removeAttr("value")
+				$("#filter-subtype-ebook").removeAttr("name")
+				$("#filter-subtype-ebook").removeAttr("value")
+				$("#filter-subtype-audiobook").removeAttr("name")
+				$("#filter-subtype-audiobook").removeAttr("value")
+				$("#filter-subtype-dvds").removeAttr("name")
+				$("#filter-subtype-dvds").removeAttr("value")
+				$("#filter-subtype-blurays").attr("name", "subtype_bluray")
+				$("#filter-subtype-blurays").attr("value", "true")
+				//Update placeholder
+				$("#nav_search_input").attr("placeholder","Search for Blu-rays by title or keyword")
+			}
 		}
 	
 	</script>
@@ -151,16 +254,22 @@
 								</a>
 								<ul class="dropdown-menu">
 									<li><a id="filter-all-books" onclick="update_search_filter(this);" class="active">All Books</a></li>
-									<li><a id="filter-books" onclick="update_search_filter(this);">-Books</a></li>
-									<li><a id="filter-ebooks" onclick="update_search_filter(this);">-eBooks</a></li>
-									<li><a id="filter-audiobooks" onclick="update_search_filter(this);">-Audiobooks</a></li>
+									<li><a id="filter-books" onclick="update_search_filter(this);">&nbsp;-&nbsp;Books</a></li>
+									<li><a id="filter-ebooks" onclick="update_search_filter(this);">&nbsp;-&nbsp;eBooks</a></li>
+									<li><a id="filter-audiobooks" onclick="update_search_filter(this);">&nbsp;-&nbsp;Audiobooks</a></li>
+									<li class="divider"></li>
+									<li><a id="filter-all-movies" onclick="update_search_filter(this);">All Movies</a></li>
+									<li><a id="filter-dvds" onclick="update_search_filter(this);">&nbsp;-&nbsp;DVDs</a></li>
+									<li><a id="filter-blurays" onclick="update_search_filter(this);">&nbsp;-&nbsp;Blu-rays</a></li>
 								</ul>
 							</div>
-							<input type="text" class="search-query span4" placeholder="Search books by title, author, or ISBN" id="nav_search_input" name="query" />
-							<input type="hidden" id="filter-item-type" name="type" value="book">
+							<input type="text" class="search-query span4" placeholder="Search for books by title, author, or ISBN" id="nav_search_input" name="query" />
+							<input type="hidden" id="filter-item-type" name="item_type" value="book">
 							<input type="hidden" id="filter-subtype-book">
 							<input type="hidden" id="filter-subtype-ebook">
 							<input type="hidden" id="filter-subtype-audiobook">
+							<input type="hidden" id="filter-subtype-dvd">
+							<input type="hidden" id="filter-subtype-bluray">
 							<input type="button" value="" onclick="initateSearch()"/>
 							</span>
 						</form>

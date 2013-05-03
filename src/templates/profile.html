@@ -75,7 +75,7 @@
 			<tr>
 				<td><i class="icon-{% if item.item_subtype == "book" %}book{% elif item.item_subtype == "ebook" %}tablet{% elif item.item_subtype == "audiobook" %}volume-down{% endif %} icon-large"></i></td>
 				<td>{{ item.title }}</td>
-				<td>{{ item.author_director }}</td>
+				<td>{{ item.author }}</td>
 				<td style="text-align:center">
 				{% if profile_user.get_id() == user.get_id() %}
 					{% if item.available %}Available

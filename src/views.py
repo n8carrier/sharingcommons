@@ -111,7 +111,7 @@ def library():
 	# Sort itemlist alphabetically, with title as the primary sort key,
 	# author as secondary, and item_subtype as tertiary
 	itemlist.sort(key=lambda item: item["item_subtype"])
-	itemlist.sort(key=lambda item: item["author_director"].lower())
+	itemlist.sort(key=lambda item: item["author"].lower())
 	itemlist.sort(key=lambda item: item["title"].lower())
 		
 	return render_response('managelibrary.html', itemlist=itemlist)
@@ -153,7 +153,7 @@ def discover():
 	# Sort itemlist alphabetically, with title as the primary sort key,
 	# author as secondary, and item_subtype as tertiary
 	itemlist.sort(key=lambda item: item["item_subtype"])
-	itemlist.sort(key=lambda item: item["author_director"].lower())
+	itemlist.sort(key=lambda item: item["author"].lower())
 	itemlist.sort(key=lambda item: item["title"].lower())
 	
 	#Remove duplicate books (dictionaries) from itemlist (list)
@@ -166,25 +166,36 @@ def discover():
 	
 def search():
 	itemlist = {}
-	item_type = request.args.get('type')
+	item_type = request.args.get('item_type')
 	subtype_book = request.args.get('subtype_book')
 	subtype_ebook = request.args.get('subtype_ebook')
 	subtype_audiobook = request.args.get('subtype_audiobook')
+	subtype_dvd = request.args.get('subtype_dvd')
+	subtype_bluray = request.args.get('subtype_bluray')
 	searchterm = request.args.get('query')
 	attr = request.args.get('refineSearch')
 	
 	subtype_specified = "true" # Used in javascript to determine whether out-of-network cookie should be respected or not
 	
-	if subtype_book or subtype_ebook or subtype_audiobook:
-		# If subtype is included, item_type is not, so it must be added
-		item_type = "book"
+	
+	if subtype_book or subtype_ebook or subtype_audiobook or subtype_dvd or subtype_bluray:
+		# If subtype is included, item_type may not be, so it must be added
+		if subtype_book or subtype_ebook or subtype_audiobook:
+			item_type = "book"
+		if subtype_dvd or subtype_bluray:
+			item_type = "movie"
 	else:
 		# None are included, so only item_type is being pass; set all subtypes to true
-		subtype_specified = "false"
-		subtype_book = "true"
-		subtype_ebook = "true"
-		subtype_audiobook = "true"
-	
+		if item_type == "book":
+			subtype_specified = "false"
+			subtype_book = "true"
+			subtype_ebook = "true"
+			subtype_audiobook = "true"
+		elif item_type == "movie":
+			subtype_specified = "false"
+			subtype_dvd = "true"
+			subtype_bluray = "true"
+			
 	if attr == "all":
 		attr = None
 	
@@ -200,7 +211,7 @@ def search():
 		logging.info(cur_user)
 		if not cur_user.is_authenticated():
 			#Assume no books in library or network, return results only
-			itemlist = Item.search_by_attribute("book",searchterm,attr)
+			itemlist = Item.search_by_attribute(item_type,searchterm,attr)
 			for item in itemlist:
 				item["inLibrary"] = []
 				item["inNetwork"] = "False"
@@ -208,7 +219,7 @@ def search():
 		else:
 			user = current_user()
 			
-			#Create a dictionary of the user's books
+			#Create a dictionary of the user's items
 			librarylist = {}
 			for copy in user.get_library():
 				copyItemKey = Item.query(Item.key == copy.item).get().item_key
@@ -225,7 +236,7 @@ def search():
 					copyItemSubtype = copy.item_subtype
 					networkitemlist[(copyItemKey,copyItemSubtype)] = copy.to_dict()
 
-			itemlist = Item.search_by_attribute("book",searchterm,attr)
+			itemlist = Item.search_by_attribute(item_type,searchterm,attr)
 			for item in itemlist:
 				item["escapedtitle"] = re.escape(item["title"])
 				
@@ -234,7 +245,7 @@ def search():
 				# return "inNetwork" list with all item types in Library
 				item["inLibrary"] = []
 				item["inNetwork"] = []
-				for item_subtype in ['book', 'ebook', 'audiobook']:
+				for item_subtype in ['book', 'ebook', 'audiobook', 'dvd', 'bluray']:
 					if (item["item_key"],item_subtype) in librarylist:
 						item["inLibrary"].append(item_subtype)
 					if (item["item_key"],item_subtype) in networkitemlist:
@@ -307,7 +318,7 @@ def profile(userID):
 		# Sort library alphabetically, with title as the primary sort key,
 		# author as secondary, and item_subtype as tertiary
 		library.sort(key=lambda item: item["item_subtype"])
-		library.sort(key=lambda item: item["author_director"].lower())
+		library.sort(key=lambda item: item["author"].lower())
 		library.sort(key=lambda item: item["title"].lower())
 		return render_response('profile.html',profile_user=profile_user,library=library)
 	return render_response('invalidprofile.html')
@@ -476,7 +487,7 @@ def get_lent_items():
 		borrower = UserAccount.get_by_id(itemcopy.borrower.id())
 		itemInfo = dict()
 		itemInfo["title"] = item.title
-		itemInfo["author_director"] = item.author_director
+		itemInfo["author"] = item.author
 		itemInfo["copyID"] = itemcopy.key.id()
 		itemInfo["borrowerId"] = itemcopy.borrower.id()
 		itemInfo["borrower"] = borrower.name
@@ -492,7 +503,7 @@ def get_borrowed_items():
 		owner = UserAccount.get_by_id(itemcopy.owner.id())
 		itemInfo = dict()
 		itemInfo["title"] = item.title
-		itemInfo["author_director"] = item.author_director
+		itemInfo["author"] = item.author
 		itemInfo["copyID"] = itemcopy.key.id()
 		itemInfo["ownerId"] = itemcopy.owner.id()
 		itemInfo["owner"] = owner.name

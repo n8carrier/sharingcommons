@@ -39,7 +39,7 @@
 				$("#searchTitle").attr("checked", "true");
 				break;
 			case "author":
-				$("#searchAuthor").attr("checked", "true");
+				$("#searchauthor").attr("checked", "true");
 				break;
 			case "isbn":
 				$("#searchISBN").attr("checked", "true");
@@ -54,21 +54,24 @@
 			$.removeCookie("{{ user.get_id() }}");
 			$("#show_out_of_network_items_checkbox").removeAttr("checked");
 			$("tr.notInNetwork").hide();
-			display_subtype("{{ subtype_book }}", "{{ subtype_ebook }}", "{{ subtype_audiobook }}");
+			toggle_checkboxes();
+			display_subtype("{{ subtype_book }}", "{{ subtype_ebook }}", "{{ subtype_audiobook }}", "{{ subtype_dvd }}", "{{ subtype_bluray }}");
 		} else {
 			// User did not specify subtype, so show out-of-network based on cookie
 			if ($.cookie("{{ user.get_id() }}")) {
 				// Show in network only (requiring display of only the subtypes searched)
 				$("#show_out_of_network_items_checkbox").removeAttr("checked");
 				$("tr.notInNetwork").hide();
-				display_subtype("{{ subtype_book }}", "{{ subtype_ebook }}", "{{ subtype_audiobook }}");
+				toggle_checkboxes();
+				display_subtype("{{ subtype_book }}", "{{ subtype_ebook }}", "{{ subtype_audiobook }}", "{{ subtype_dvd }}", "{{ subtype_bluray }}");
 			}
 			else {
 				// Show out of network, including all subtypes
 				$("tr.notInNetwork").show();
 				// no code necessary to show out-of-network on load, they'll already show up
 				// Hide subtype checkboxes, since they won't do anything when showing out-of-network
-				$("#filter-book-subtype").hide();
+				$("#filter-item-subtype").hide();
+				toggle_checkboxes();
 			}
 		}
 		
@@ -97,21 +100,32 @@
 					$("tr.row-audiobook").hide();
 				}
 				// Show subtype filters, since they'll work now
-				$("#filter-book-subtype").show();
+				$("#filter-item-subtype").show();
+				toggle_checkboxes();
+				msg_if_no_results();
 			}
 			else {
 				// User wants out-of-network, show out-of-network and all subtypes and hide subtype filters
 				$("tr.notInNetwork").show();
-				$("tr.row-book").show();
-				$("tr.row-ebook").show();
-				$("tr.row-audiobook").show();
-				$("#filter-book-subtype").hide();
-				
+				if($("#radio-books").is(':checked')) {
+					$("tr.row-book").show();
+					$("tr.row-ebook").show();
+					$("tr.row-audiobook").show();
+				} else if($("#radio-movies").is(':checked')) {
+					$("tr.row-dvd").show();
+					$("tr.row-bluray").show();
+				}
+				$("#filter-item-subtype").hide();
+				msg_if_no_results();
 			}
 			
 		});
 		
 		$("input[name='refineSearch']").change(function(){
+			$(this).closest("form").submit();
+		});
+		
+		$("input[name='item_type']").change(function(){
 			$(this).closest("form").submit();
 		});
 	});
@@ -198,18 +212,25 @@
 		return false;
 	}
 	
-	function display_subtype(subtype_book, subtype_ebook, subtype_audiobook) {
+	function display_subtype(subtype_book, subtype_ebook, subtype_audiobook, subtype_dvd, subtype_bluray) {
 		// hide all, then show necessary
 		$("tr.row-book").hide();
 		$("tr.row-ebook").hide();
 		$("tr.row-audiobook").hide();
+		$("tr.row-dvd").hide();
+		$("tr.row-bluray").hide();
 		if(subtype_book=="true") {
 			$("tr.row-book").show();
 		} else if(subtype_ebook=="true") {
 			$("tr.row-ebook").show();
 		} else if(subtype_audiobook=="true") {
 			$("tr.row-audiobook").show();
+		} else if(subtype_dvd=="true") {
+			$("tr.row-dvd").show();
+		} else if(subtype_bluray=="true") {
+			$("tr.row-bluray").show();
 		}
+		msg_if_no_results();
 	}
 	
 	// React to checking and unchecking "Include" checkboxes, but only if out-of-network is unchecked
@@ -222,9 +243,8 @@
 				} else {
 					$("#checkbox-books").attr("value", "false")
 					$("tr.row-book").hide();
+					msg_if_no_results();
 				}
-			} else {
-			// Alert user that filtering must be set to in-network only for it to work
 			}
 		});
 		$("input[name='subtype_ebook']").change(function(){
@@ -235,6 +255,7 @@
 				} else {
 					$("#checkbox-ebooks").attr("value", "false")
 					$("tr.row-ebook").hide();
+					msg_if_no_results();
 				}
 			}
 		});
@@ -246,10 +267,58 @@
 				} else {
 					$("#checkbox-audiobooks").attr("value", "false")
 					$("tr.row-audiobook").hide();
+					msg_if_no_results();
 				}
 			}
 		});
 	});
+	
+	// Hide inappropriate checkboxes
+	function toggle_checkboxes() {
+		if ($("#radio-books").is(':checked')) {
+			$("#label-checkbox-books").show();
+			$("#label-checkbox-ebooks").show();
+			$("#label-checkbox-audiobooks").show();
+			$("#label-checkbox-dvds").hide();
+			$("#label-checkbox-blurays").hide();
+			$("#refine-book-search").show();
+		} else if ($("#radio-movies").is(':checked')) {
+			$("#label-checkbox-books").hide();
+			$("#label-checkbox-ebooks").hide();
+			$("#label-checkbox-audiobooks").hide();
+			$("#label-checkbox-dvds").show();
+			$("#label-checkbox-blurays").show();
+			$("#refine-book-search").hide();
+		}
+	}
+	
+	// Display message if the results are empty
+	msg_if_no_results();
+	function msg_if_no_results() {
+		// Show message when the query returns no results
+		if ($('#results-table tr').length == 0) {
+			$("#no-results-msg").html("<h4>Your search did not return any results.</h4><p>Try rephrasing your search expression.</p>");
+		} else {
+		
+			// Loop through tr's and check if visible
+			var visibleCount = 0
+			$('tr.content-row').each(function() {
+				if($(this).is(":visible")) {
+					visibleCount = visibleCount + 1;
+				}
+			});
+			
+			if (visibleCount == 0) {
+				$("#no-results-msg").html("<h4>Your current filters yield no results.</h4>");
+				if($("#show_out_of_network_items_checkbox").is(':checked') == false) {
+					$("#no-results-msg").html($("#no-results-msg").html() + '<p>If you are looking for an item so you can add it to your library, try unchecking the box "Show out-of-network items." You\'re currently viewing only the items found within your network.</p>');
+				} else {
+					// This should never be hit (should only happen if no results to query, which is resolved above), but just in case...
+					$("#no-results-msg").html($("#no-results-msg").html() + '<p>Try expanding your critera.</p>');
+				}
+			}
+		}
+	}
 	
 </script>
 
@@ -276,7 +345,7 @@
 		<br/>
 		<h3>
 			
-			<input name="query" type="text" class="input-xxlarge search-query" placeholder="Enter Title, Author, or ISBN..." value="{{ search }}">
+			<input name="query" type="text" class="input-xxlarge search-query" placeholder="Enter Title, author, or ISBN..." value="{{ search }}">
 			<button type="submit" class="btn">Search</button>
 			
 		</h3>
@@ -290,54 +359,61 @@
 			<h5>Filter Results:</h5>
 			<label class="checkbox"><input type="checkbox" checked="checked" id="show_out_of_network_items_checkbox">Show out-of-network items</label>
 		</div>
-		<div class="well" id="filter-book-subtype">
-			<h5>Include:</h5>
-			<label class="checkbox"><input type="checkbox" {% if subtype_book %}checked{% endif %} id="checkbox-books" name="subtype_book" value="{% if subtype_book %}true{% else %}false{% endif %}">Books</label>
-			<label class="checkbox"><input type="checkbox" {% if subtype_ebook %}checked{% endif %} id="checkbox-ebooks" name="subtype_ebook" value="{% if subtype_ebook %}true{% else %}false{% endif %}">eBooks</label>
-			<label class="checkbox"><input type="checkbox" {% if subtype_audiobook %}checked{% endif %} id="checkbox-audiobooks" name="subtype_audiobook" value="{% if subtype_audiobook %}true{% else %}false{% endif %}">Audiobooks</label>
+		<div class="well" id="filter-item-type">
+			<h5>Search:</h5>
+			<label class="radio"><input type="radio" {% if include_type == "book" %}checked{% endif %} id="radio-books" name="item_type" value="book">Books</label>
+			<label class="radio"><input type="radio" {% if include_type == "movie" %}checked{% endif %} id="radio-movies" name="item_type" value="movie">Movies</label>
 		</div>
-		<div class="well" id="refine-search">
+		<div class="well" id="filter-item-subtype">
+			<h5>Include:</h5>
+			<label class="checkbox" id="label-checkbox-books"><input type="checkbox" {% if subtype_book %}checked{% endif %} id="checkbox-books" name="subtype_book" value="{% if subtype_book %}true{% else %}false{% endif %}">Books</label>
+			<label class="checkbox" id="label-checkbox-ebooks"><input type="checkbox" {% if subtype_ebook %}checked{% endif %} id="checkbox-ebooks" name="subtype_ebook" value="{% if subtype_ebook %}true{% else %}false{% endif %}">eBooks</label>
+			<label class="checkbox" id="label-checkbox-audiobooks"><input type="checkbox" {% if subtype_audiobook %}checked{% endif %} id="checkbox-audiobooks" name="subtype_audiobook" value="{% if subtype_audiobook %}true{% else %}false{% endif %}">Audiobooks</label>
+			<label class="checkbox" id="label-checkbox-dvds"><input type="checkbox" {% if subtype_dvd %}checked{% endif %} id="checkbox-dvds" name="subtype_dvd" value="{% if subtype_dvd %}true{% else %}false{% endif %}">DVDs</label>
+			<label class="checkbox" id="label-checkbox-blurays"><input type="checkbox" {% if subtype_bluray %}checked{% endif %} id="checkbox-blurays" name="subtype_bluray" value="{% if subtype_bluray %}true{% else %}false{% endif %}">Blu-rays</label>
+		</div>
+		<div class="well" id="refine-book-search">
 			<h5>Refine Search:</h5>
-			<label class="radio"><input type="radio" id="searchAll" name="refineSearch" value="all">All results</label>
-			<label class="radio"><input type="radio" id="searchTitle" name="refineSearch" value="title">Title only</label>
-			<label class="radio"><input type="radio" id="searchAuthor" name="refineSearch" value="author">Author only</label>
-			<label class="radio"><input type="radio" id="searchISBN" name="refineSearch" value="isbn">ISBN only</label>
+			<label class="radio"><input type="radio" id="searchAll" {% if include_type == "book" %}name="refineSearch" value="all"{% endif %}>All results</label>
+			<label class="radio"><input type="radio" id="searchTitle" {% if include_type == "book" %}name="refineSearch" value="title"{% endif %}>Title only</label>
+			<label class="radio"><input type="radio" id="searchAuthor" {% if include_type == "book" %}name="refineSearch" value="author"{% endif %}>Author only</label>
+			<label class="radio"><input type="radio" id="searchISBN" {% if include_type == "book" %}name="refineSearch" value="isbn"{% endif %}>ISBN only</label>
 		</div>
 	</div>
 	
 	<div class="span10">
-		{% if itemlist|length < 1 %}
-		<h4>No items were found that match your search.  Try using more general search terms.</h4>
-		{% else %}
-			<table class="table">
+			<table class="table" id="results-table">
 			{% for item in itemlist %}
-				<tr class="{{ item.item_key }} content-row {% if 'book' in item.inNetwork %}row-book {% endif %}{% if 'ebook' in item.inNetwork %}row-ebook {% endif %}{% if 'audiobook' in item.inNetwork %}row-audiobook {% endif %}{% if item.inNetwork == [] %}notInNetwork{% endif %}">
+				<tr class="{{ item.item_key }} content-row {% if 'book' in item.inNetwork %}row-book {% endif %}{% if 'ebook' in item.inNetwork %}row-ebook {% endif %}{% if 'audiobook' in item.inNetwork %}row-audiobook {% endif %}{% if 'dvd' in item.inNetwork %}row-dvd {% endif %}{% if 'bluray' in item.inNetwork %}row-bluray {% endif %}{% if item.inNetwork == [] %}notInNetwork{% endif %}">
 					<td style="width: 100px"><img {% if item.thumbnail_link == "" %} src="{{ url_for('static', filename='img/nocoverart.png') }}"
 							{% else %} src="{{ item.thumbnail_link }}" {% endif %} 
 							style="height:auto;width:100px;"/></td>
 					<td>
 						Title: {{ item.title }}<br/>
-						Author: {{ item.author_director }}
+						{% if item.item_type == "book" %}Author: {{ item.author }}{% else %}Rating: {{ item.rating }}{% endif %}
 					</td>
 					<td style="width: 150px">
 						<div class="btn-group library-btn-group tooltip-button" data-toggle="tooltip" data-placement="top" 
-							title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
-							else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}" 
+							title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network
+							{% else %}Join or login to add to your library{% endif %}{% else %}Item is already in your library. Click to view library.{% endif %}" 
 							id="add_btn_group{{ itemlist.index(item) }}">
-						  <a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} library-button"
-							{% if user.is_authenticated() == False %}disabled{% endif %} 
-							{% if item.inLibrary == [] %}onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}"{% else %}href="/library"{% endif %} 
-							id="add_button{{ itemlist.index(item) }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</a>
-						  <a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle" data-toggle="dropdown" id="caret_button{{ itemlist.index(item) }}">
-							<span class="caret"></span>
-						  </a>
-						  {% if item.inLibrary != ['book', 'ebook', 'audiobook'] %}
-							  <ul class="dropdown-menu">
-								{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
-								{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('ebook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
-								{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('audiobook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
-							  </ul>
-						  {% endif %}
+							<a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} library-button"
+								{% if user.is_authenticated() == False %}disabled{% endif %} 
+								{% if item.inLibrary == [] %}onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_item('{% if item.item_type == 'book' %}book{% else %}dvd{% endif %}', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}"{% else %}href="/library"{% endif %} 
+								id="add_button{{ itemlist.index(item) }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</a>
+							<a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle" data-toggle="dropdown" id="caret_button{{ itemlist.index(item) }}">
+								<span class="caret"></span>
+							</a>
+							<ul class="dropdown-menu">
+								{% if item.item_type == 'book'%}
+									{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
+									{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('ebook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
+									{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('audiobook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
+								{% elif item.item_type == 'movie' %}
+									{% if 'dvd' not in item.inLibrary %}<li><a id="add_dvd{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('dvd', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;DVD&nbsp;to&nbsp;Library</a></li>{% endif %}
+									{% if 'bluray' not in item.inLibrary %}<li><a id="add_bluray{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('bluray', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Blu-ray&nbsp;to&nbsp;Library</a></li>{% endif %}
+								{% endif %}
+							</ul>
 						</div>
 						{% if item.inNetwork == [] %}
 							<a class="btn tooltip-button" 
@@ -358,7 +434,7 @@
 				</tr>
 			{% endfor %}
 			</table>
-		{% endif %}
+			<div id="no-results-msg"></div>
 	</div>
 </div>
 </form>
