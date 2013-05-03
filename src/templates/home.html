@@ -125,7 +125,7 @@
 				$(button).parent().parent().siblings(":nth-child(6)").show();
 				$(button).parent().parent().remove();
 				if($("#items_lending tr:visible").length == 1) {
-					$("#items_lending").html("<tr><td colspan='3'>You are not lending any books.");
+					$("#items_lending").html("<tr><td colspan='3'>You are not lending any books or movies.");
 				}
 				if($("#items_lending tbody tr:hidden").length == 0) {
 					$("#extraitems_lend").remove();
@@ -165,13 +165,13 @@
 		<div class="row">
 			<div class="span12">
 
-				<h3>Search to Find or Add Books</h3>
+				<h3>Search to Find or Add Books & Movies</h3>
 
-				<p>Search to find books available within your network or to add books to your library that you own and are willing to share.</p>
+				<p>Whether you are looking for books or movies to borrow, or are searching for items to add to your own library, use the search bar.</p>
 
 				<div id="searchBar">
 					<form id="searchForm" action="/search">
-					<input name="query" type="text" class="input-xxlarge search-query" placeholder="Enter Title, Author, or ISBN...">
+					<input name="query" type="text" class="input-xxlarge search-query" placeholder="Search for books and movies by title or keyword">
 					<button type="submit" class="btn"">Search</button>
 					</form>
 				</div>
@@ -227,7 +227,7 @@
 				<table class="table table-striped table-bordered" id="items_borrowing">
 					{% if user.get_borrowed_items()|length < 1 %}
 						<tr>
-							<td colspan="3">You are not borrowing any books.</td>
+							<td colspan="3">You are not borrowing any books or movies.</td>
 						</tr>
 					{% else %}
 					<thead>
@@ -266,7 +266,7 @@
 							</tr>
 							{% if loop.last and loop.index > 5 %}
 								<tr>
-									<td colspan="4" style="text-align:center; background-color: white;"><b>Only the first five results are shown here. <a href="/library#BorrowedItems">View all books you are borrowing</a>.</b></td>
+									<td colspan="4" style="text-align:center; background-color: white;"><b>Only the first five results are shown here. <a href="/library#BorrowedItems">View all books & movies you are borrowing</a>.</b></td>
 								</tr>
 							{% endif %}
 						{% endfor %}
@@ -283,7 +283,7 @@
 				<table class="table table-striped table-bordered" id="items_lending">
 					{% if user.get_lent_items()|length < 1 %}
 						<tr>
-							<td colspan="3">You are not lending any items.</td>
+							<td colspan="3">You are not lending any books or movies.</td>
 						</tr>
 					{% else %}
 					<thead>
@@ -325,7 +325,7 @@
 							</tr>
 							{% if loop.last and loop.index > 5 %}
 								<tr id="extraitems_lend">
-									<td colspan="4" style="text-align:center; background-color: white;"><b>Only the first five results are shown here. <a href="/library#LendedItems">View all books you are lending</a>.</b></td>
+									<td colspan="4" style="text-align:center; background-color: white;"><b>Only the first five results are shown here. <a href="/library#LendedItems">View all books & movies you are lending</a>.</b></td>
 								</tr>
 							{% endif %}
 						{% endfor %}
@@ -354,8 +354,8 @@
 				<h3>What is Sharing Commons?</h3>
 
 				<p>Sharing Commons is a sharing network, built to help users share books between friends. 
-				With Sharing Commons you can create an index, or library, of all your personal books, browse your friends' 
-				libraries, and request to loan items from your friends. Sharing Commons tracks the items you are loaning 
+				With Sharing Commons you can create an index, or library, of all your personal books and movies, browse your friends' 
+				libraries, and request to loan items from your friends. Sharing Commons tracks the books and movies you are loaning 
 				and borrowing, and notifies you when items are due. <a href="/join">Join today!</a></p>
 
 			</div>
@@ -368,7 +368,7 @@
 				
 				<div id="searchBar">
 					<form id="searchForm" action="/search">
-					<input name="query" type="text" class="input-xxlarge search-query" placeholder="Enter Title, Author, or ISBN...">
+					<input name="query" type="text" class="input-xxlarge search-query" placeholder="Search for books and movies by title or keyword">
 					<button type="submit" class="btn">Search</button>
 					</form>
 				</div>
