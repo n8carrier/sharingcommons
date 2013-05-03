@@ -111,7 +111,6 @@ def library():
 	# Sort itemlist alphabetically, with title as the primary sort key,
 	# author as secondary, and item_subtype as tertiary
 	itemlist.sort(key=lambda item: item["item_subtype"])
-	itemlist.sort(key=lambda item: item["author"].lower())
 	itemlist.sort(key=lambda item: item["title"].lower())
 		
 	return render_response('managelibrary.html', itemlist=itemlist)
@@ -153,7 +152,6 @@ def discover():
 	# Sort itemlist alphabetically, with title as the primary sort key,
 	# author as secondary, and item_subtype as tertiary
 	itemlist.sort(key=lambda item: item["item_subtype"])
-	itemlist.sort(key=lambda item: item["author"].lower())
 	itemlist.sort(key=lambda item: item["title"].lower())
 	
 	#Remove duplicate books (dictionaries) from itemlist (list)
@@ -318,7 +316,6 @@ def profile(userID):
 		# Sort library alphabetically, with title as the primary sort key,
 		# author as secondary, and item_subtype as tertiary
 		library.sort(key=lambda item: item["item_subtype"])
-		library.sort(key=lambda item: item["author"].lower())
 		library.sort(key=lambda item: item["title"].lower())
 		return render_response('profile.html',profile_user=profile_user,library=library)
 	return render_response('invalidprofile.html')
@@ -364,6 +361,13 @@ def delete_user():
 	return ""
 
 def library_requests(item_subtype, item_key):
+	# Infer item_type
+	if item_subtype in ('book', 'ebook', 'audiobook'):
+		item_type = 'book'
+	elif item_subtype in ('dvd', 'bluray'):
+		item_type = 'movie'
+	else:
+		item_type = ''
 	cur_user = current_user()
 	if not cur_user:
 		logging.info("there is not a user logged in")
@@ -371,7 +375,7 @@ def library_requests(item_subtype, item_key):
 		
 	if request.method == 'GET':
 		#check the database to see if the item is in the user's library
-		item = Item.get_by_key(item_key)
+		item = Item.get_by_key(item_type,item_key)
 		if item:
 			if cur_user.get_book(item_subtype,item):
 				return item.title
@@ -382,7 +386,7 @@ def library_requests(item_subtype, item_key):
 	elif request.method == 'POST':
 		#add the item to the user's library
 		#If not found, add it to the cache, then to the user's library
-		item = Item.get_by_key(item_key)
+		item = Item.get_by_key(item_type,item_key)
 
 		if not item:
 			return "Item " + item_key + " was not found"
@@ -393,7 +397,7 @@ def library_requests(item_subtype, item_key):
 			return "Item " + item_key + " was added to your library"
 	elif request.method == 'DELETE':	
 		#remove the item from the user's library
-		item = Item.get_by_key(item_key)
+		item = Item.get_by_key(item_type,item_key)
 		if not item:
 			return "Item not found"
 		else:

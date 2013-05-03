@@ -13,26 +13,31 @@ class Item(ndb.Model):
 	last_update = ndb.DateTimeProperty()
 	title = ndb.StringProperty(required=True)
 	thumbnail_link = ndb.StringProperty(required=True)
-	description = ndb.StringProperty(required=False)
+	description = ndb.TextProperty(required=False)
 	author = ndb.StringProperty(required=False)
 	year = ndb.IntegerProperty(required=False)
 	genre = ndb.StringProperty(required=False)
 	rating = ndb.StringProperty(required=False)
+	direct_link = ndb.StringProperty(required=False)
 	
-	def update_cache(self):
+	def update_cache(self,item_type):
 		#update cached information about the item using the external apis
 		if self.item_key:
 			logging.debug("update_cache(%s)" % self.item_key)
-			Item.search_by_attribute("book",value=self.item_key, attribute=None, cache=True)
+			if item_type == "movie":
+				RT_Key = True #specify that you're searching a rotten tomatoes key, not executing a query
+			else:
+				RT_Key = False
+			Item.search_by_attribute(item_type,self.item_key, None, True, RT_Key)
 
 	def cache_expired(self):
 		"""determine if the cached information in the database needs to be refreshed
 		
 		"""
-		return (datetime.now() - self.last_update) > timedelta(minutes=1000)
+		return (datetime.now() - self.last_update) > timedelta(days=1)
 	
 	@classmethod
-	def get_by_key(cls,item_key=None):
+	def get_by_key(cls,item_type,item_key=None):
 		"""Convert an item_key to an Item object
 		
 		Arguments:
@@ -44,23 +49,23 @@ class Item(ndb.Model):
 		
 		"""
 		if not item_key:
-			logging.error("Item.get_by_key() called without an open library key")
+			logging.error("Item.get_by_key() called without a key")
 			return None
 		logging.debug("Item.get_by_key(%s)" % item_key)
 		item = Item.query(Item.item_key==item_key).get()
 		if item:
 			logging.debug("item_key:%s was found in the item cache" % item_key)
 			if item.cache_expired():
-				item.update_cache()
+				item.update_cache(item_type)
 		else:
 			logging.debug("item_key:%s not found in cache; performing external search" % item_key)
 			item = Item(item_key=item_key)
-			item.update_cache()
+			item.update_cache(item_type)
 			item = Item.query(Item.item_key==item_key).get()
 		return item
 	
 	@classmethod
-	def search_by_attribute(self, item_type, value, attribute = None, cache = False):
+	def search_by_attribute(self, item_type, value, attribute = None, cache = False, RT_Key = False):
 		itemlist = []
 		if item_type == 'book':
 			# Search with 'attribute = None' when searching for an OLID
@@ -77,7 +82,7 @@ class Item(ndb.Model):
 				logging.debug("Item.search_by_attribute() was called with an invalid attribute: %s" %attribute)
 				return itemlist
 			url = "http://openlibrary.org/search.json?" + query
-			response = urlfetch.fetch(url)
+			response = urlfetch.fetch(url=url, deadline=10)
 			counter = 0
 			try:
 				if response.status_code == 200:
@@ -114,17 +119,57 @@ class Item(ndb.Model):
 		elif item_type == 'movie':
 			query = value
 			apikey = "merwdck55zye5swrkrqcqhf8"
-			url = "http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=" + apikey + "&q=" + query + "&page_limit=50"
-			response = urlfetch.fetch(url)
-			try:
-				if response.status_code == 200:
-					json_response = response.content
-					data = json.loads(json_response)
-					for movie in data['movies']:
-						# Build itemlist of movies
+			if not RT_Key:
+				url = "http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=" + apikey + "&q=" + query + "&page_limit=50"
+				response = urlfetch.fetch(url=url, deadline=10)
+				try:
+					if response.status_code == 200:
+						json_response = response.content
+						data = json.loads(json_response)
+						for movie in data['movies']:
+							# Build itemlist of movies
+							curItem = Item(item_key=None)
+							curItem.item_type = "movie"
+							curItem.item_key = movie['id']
+							curItem.title = movie['title']
+							if isinstance(movie.get('year',9999),(int,long)):
+								curItem.year = movie.get('year',9999)
+							else:
+								curItem.year = 9999
+							curItem.rating = movie.get('mpaa_rating',"Rating Not Available")
+							curItem.description = movie.get('synopsis',"Synopsis Not Available")
+							curItem.thumbnail_link = movie['posters'].get('thumbnail','')
+							curItem.direct_link = movie['links'].get('alternate','')
+							# To get genre, open detail page (but only do it when caching since it will be slow with many movies)
+							if cache == True:
+								url = movie['links']['self'] + "?apikey=" + apikey
+								response_detail = urlfetch.fetch(url=url, deadline=10)
+								try:
+									if response_detail.status_code == 200:
+										json_response_detail = response_detail.content
+										data =  json.loads(json_response_detail)
+										curItem.genre = data['genres'][0]
+										for i in range(1, len(data['genres'])):
+											curItem.genre += ", " + data['genres'][i]
+								except:
+									curItem.genre = ""
+								curItem.last_update = datetime.now()
+								if cache == True:
+									curItem.put()
+							itemlist.append(curItem.to_dict())
+				except:
+					pass
+			else:
+				# Searching for a specific Rotten Tomatoes key (Rotten Tomatoes does not send you to the direct movie link with a search query, so it's necessary to access it directly)
+				url = "http://api.rottentomatoes.com/api/public/v1.0/movies/" + value + ".json?apikey=" + apikey
+				response_detail = urlfetch.fetch(url)
+				try:
+					if response_detail.status_code == 200:
+						json_response_detail = response_detail.content
+						movie = json.loads(json_response_detail)
 						curItem = Item(item_key=None)
 						curItem.item_type = "movie"
-						curItem.item_key = movie['id']
+						curItem.item_key = value
 						curItem.title = movie['title']
 						if isinstance(movie.get('year',9999),(int,long)):
 							curItem.year = movie.get('year',9999)
@@ -133,22 +178,15 @@ class Item(ndb.Model):
 						curItem.rating = movie.get('mpaa_rating',"Rating Not Available")
 						curItem.description = movie.get('synopsis',"Synopsis Not Available")
 						curItem.thumbnail_link = movie['posters'].get('thumbnail','')
-						# To get genre, open detail page (but only do it when caching since it will be slow with many movies)
+						curItem.direct_link = movie['links'].get('alternate','')
+						curItem.genre = movie['genres'][0]
+						for i in range(1, len(movie['genres'])):
+							curItem.genre += ", " + movie['genres'][i]
 						if cache == True:
-							url = movie['links']['self'] + "?apikey=" + apikey
-							response_detail = urlfetch.fetch(url)
-							try:
-								if response_detail.status_code == 200:
-									json_response_detail = response_detail.content
-									data =  json.loads(json_response_detail)
-									curItem.genre = data['genres'][0]
-									for i in range(1, len(book['genres'])):
-										curItem.genre += ", " + book['genres'][i]
-							except:
-								curItem.genre = ""
+								curItem.put()
 						itemlist.append(curItem.to_dict())
-			except:
-				pass
+				except:
+					pass
 		return itemlist
 
 class ItemCopy(ndb.Model):

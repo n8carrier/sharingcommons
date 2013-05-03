@@ -126,6 +126,21 @@
 		});
 		
 		$("input[name='item_type']").change(function(){
+			// Swap include checkboxes
+			if($("#radio-books").is(':checked')) {
+				$("#checkbox-books").prop('checked',true)
+				$("#checkbox-ebooks").prop('checked',true)
+				$("#checkbox-audiobooks").prop('checked',true)
+				$("#checkbox-dvds").prop('checked',false)
+				$("#checkbox-blurays").prop('checked',false)
+			} else if ($("#radio-movies").is(':checked')){
+				$("#checkbox-books").prop('checked',false)
+				$("#checkbox-ebooks").prop('checked',false)
+				$("#checkbox-audiobooks").prop('checked',false)
+				$("#checkbox-dvds").prop('checked',true)
+				$("#checkbox-blurays").prop('checked',true)
+				alert("switched to movies");
+			}
 			$(this).closest("form").submit();
 		});
 	});
@@ -293,28 +308,34 @@
 	}
 	
 	// Display message if the results are empty
-	msg_if_no_results();
-	function msg_if_no_results() {
+	msg_if_no_results(true);
+	function msg_if_no_results(initial_load) {
 		// Show message when the query returns no results
 		if ($('#results-table tr').length == 0) {
 			$("#no-results-msg").html("<h4>Your search did not return any results.</h4><p>Try rephrasing your search expression.</p>");
 		} else {
 		
-			// Loop through tr's and check if visible
-			var visibleCount = 0
-			$('tr.content-row').each(function() {
-				if($(this).is(":visible")) {
-					visibleCount = visibleCount + 1;
-				}
-			});
-			
-			if (visibleCount == 0) {
-				$("#no-results-msg").html("<h4>Your current filters yield no results.</h4>");
-				if($("#show_out_of_network_items_checkbox").is(':checked') == false) {
-					$("#no-results-msg").html($("#no-results-msg").html() + '<p>If you are looking for an item so you can add it to your library, try unchecking the box "Show out-of-network items." You\'re currently viewing only the items found within your network.</p>');
+			if(initial_load) {
+				$("#no-results-msg").html("");
+			} else {
+				// Loop through tr's and check if visible
+				var visibleCount = 0
+				$('tr.content-row').each(function() {
+					if($(this).is(":visible")) {
+						visibleCount = visibleCount + 1;
+					}
+				});
+				
+				if (visibleCount == 0) {
+					$("#no-results-msg").html("<h4>Your current filters yield no results.</h4>");
+					if($("#show_out_of_network_items_checkbox").is(':checked') == false) {
+						$("#no-results-msg").html($("#no-results-msg").html() + '<p>If you are looking for an item so you can add it to your library, try unchecking the box "Show out-of-network items." You\'re currently viewing only the items found within your network.</p>');
+					} else {
+						// This should never be hit (should only happen if no results to query, which is resolved above), but just in case...
+						$("#no-results-msg").html($("#no-results-msg").html() + '<p>Try expanding your critera.</p>');
+					}
 				} else {
-					// This should never be hit (should only happen if no results to query, which is resolved above), but just in case...
-					$("#no-results-msg").html($("#no-results-msg").html() + '<p>Try expanding your critera.</p>');
+					$("#no-results-msg").html("");
 				}
 			}
 		}

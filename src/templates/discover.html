@@ -122,33 +122,85 @@
 			replaceID = "all-books-content";
 		}else if(document.getElementById("books-content").innerHTML.length > 1) {
 			replaceID = "books-content";
-		}else if(document.getElementById("all-books-content").innerHTML.length > 1) {
+		}else if(document.getElementById("ebooks-content").innerHTML.length > 1) {
 			replaceID = "ebooks-content";
-		}else if(document.getElementById("all-books-content").innerHTML.length > 1) {
+		}else if(document.getElementById("audiobooks-content").innerHTML.length > 1) {
 			replaceID = "audiobooks-content";
+		}else if(document.getElementById("all-movies-content").innerHTML.length > 1) {
+			replaceID = "all-movies-content";
+		}else if(document.getElementById("dvds-content").innerHTML.length > 1) {
+			replaceID = "dvds-content";
+		}else if(document.getElementById("blurays-content").innerHTML.length > 1) {
+			replaceID = "blurays-content";
 		}
 		
 		// Move content
-		document.getElementById(spanID).innerHTML = document.getElementById(replaceID).innerHTML;
-		
-		// Show/hide appropriate items
-		if(spanID=='all-books-content') {
-			$("tr.row-book").show();
-			$("tr.row-ebook").show();
-			$("tr.row-audiobook").show();
-			hide_duplicates(); // Only necessary when showing all books, since (type,key) duplicates are removed in the backend.
-		}else if(spanID=='books-content') {
-			$("tr.row-book").show();
-			$("tr.row-ebook").hide();
-			$("tr.row-audiobook").hide();
-		}else if(spanID=='ebooks-content') {
-			$("tr.row-book").hide();
-			$("tr.row-ebook").show();
-			$("tr.row-audiobook").hide();
-		}else if(spanID=='audiobooks-content') {
-			$("tr.row-book").hide();
-			$("tr.row-ebook").hide();
-			$("tr.row-audiobook").show();
+		if (spanID != replaceID) {
+			document.getElementById(spanID).innerHTML = document.getElementById(replaceID).innerHTML;
+			document.getElementById(replaceID).innerHTML = ""
+			
+			// Show/hide appropriate items
+			var item_type_subtype
+			var row_class // I'm specifying the rows to count because jquery ends up counting incorrectly if visible rows are counted (perhaps it's a delay issue)
+			if(spanID=='all-books-content') {
+				item_type_subtype = 'books'
+				row_class = ['row-book','row-ebook','row-audiobook']
+				$("tr.row-book").show();
+				$("tr.row-ebook").show();
+				$("tr.row-audiobook").show();
+				$("tr.row-dvd").hide();
+				$("tr.row-bluray").hide();			
+				hide_duplicates(); // Only necessary when showing all books, since (type,key) duplicates are removed in the backend.
+			}else if(spanID=='books-content') {
+				item_type_subtype = 'pysical books'
+				row_class = ['row-book']
+				$("tr.row-book").show();
+				$("tr.row-ebook").hide();
+				$("tr.row-audiobook").hide();
+				$("tr.row-dvd").hide();
+				$("tr.row-bluray").hide();	
+			}else if(spanID=='ebooks-content') {
+				item_type_subtype = 'eBooks'
+				row_class = ['row-ebook']
+				$("tr.row-book").hide();
+				$("tr.row-ebook").show();
+				$("tr.row-audiobook").hide();
+				$("tr.row-dvd").hide();
+				$("tr.row-bluray").hide();	
+			}else if(spanID=='audiobooks-content') {
+				item_type_subtype = 'audiobooks'
+				row_class = ['row-audiobook']
+				$("tr.row-book").hide();
+				$("tr.row-ebook").hide();
+				$("tr.row-audiobook").show();
+				$("tr.row-dvd").hide();
+				$("tr.row-bluray").hide();	
+			}else if(spanID=='all-movies-content') {
+				item_type_subtype = 'movies'
+				row_class = ['row-dvd','row-bluray']
+				$("tr.row-book").hide();
+				$("tr.row-ebook").hide();
+				$("tr.row-audiobook").hide();
+				$("tr.row-dvd").show();
+				$("tr.row-bluray").show();	
+			}else if(spanID=='dvds-content') {
+				item_type_subtype = 'DVDs'
+				row_class = ['row-dvd']
+				$("tr.row-book").hide();
+				$("tr.row-ebook").hide();
+				$("tr.row-audiobook").hide();
+				$("tr.row-dvd").show();
+				$("tr.row-bluray").hide();	
+			}else if(spanID=='blurays-content') {
+				item_type_subtype = 'Blu-rays'
+				row_class = ['row-bluray']
+				$("tr.row-book").hide();
+				$("tr.row-ebook").hide();
+				$("tr.row-audiobook").hide();
+				$("tr.row-dvd").hide();
+				$("tr.row-bluray").show();	
+			}
+			msg_if_no_results(row_class, item_type_subtype);
 		}
 	}
 	
@@ -180,6 +232,35 @@
 	
 	// Hide duplicates on initial load, since showing All Items
 	hide_duplicates();
+	
+	// Show message if no results
+	msg_if_no_results(["row-book","row-ebook","row-audiobook"],"books"); // Manually specified books because it loads to books
+	function msg_if_no_results(row_class, item_type_subtype) {
+		// Show message when the selection returns no results
+		if ($('#content-table tr').length == 0) {
+			$("#no-results-msg").html("<h4>There are no items in your network.</h4><p>Build your network and you'll begin seeing your connections' items here.</p>");
+		} else {
+		
+			// Loop through tr's and count rows visible
+			var visibleCount = 0
+			for(var i=0; i < row_class.length;i++) {
+				$('tr.' + row_class[i]).each(function() {
+					visibleCount = visibleCount + 1;
+				});
+			}
+			
+			if (visibleCount == 0) {
+				$("#no-results-msg").html("<h4>There are no " + item_type_subtype + " available in your network</h4>");
+			} else {
+				$("#no-results-msg").html("");
+			}
+		}
+	}
+	
+	// Hide movies on initial load, since it loads to books
+	$("tr.row-dvd").hide();
+	$("tr.row-bluray").hide();		
+	// TODO: A "Browse All" section should be added
 		
 </script>
 
@@ -218,56 +299,59 @@
 			<li><a href="#books" data-toggle="tab" onClick="display_content('books-content')">&nbsp;&nbsp;&nbsp;Browse Books</a></li>
 			<li><a href="#ebooks" data-toggle="tab" onClick="display_content('ebooks-content')">&nbsp;&nbsp;&nbsp;Browse eBooks</a></li>
 			<li><a href="#audiobooks" data-toggle="tab" onClick="display_content('audiobooks-content')">&nbsp;&nbsp;&nbsp;Browse Audiobooks</a></li>
+			<li><a href="#allmovies" data-toggle="tab" onClick="display_content('all-movies-content')">Browse All Movies</a></li>
+			<li><a href="#dvds" data-toggle="tab" onClick="display_content('dvds-content')">&nbsp;&nbsp;&nbsp;Browse DVDs</a></li>
+			<li><a href="#blurays" data-toggle="tab" onClick="display_content('blurays-content')">&nbsp;&nbsp;&nbsp;Browse Blu-rays</a></li>
 		</ul>
 	</div>
 	<div class="tab-content span10">
+		<div id="no-results-msg"></div>
 		<div class="tab-pane active" id="allbooks">
 			<span id="all-books-content">
 				<table class="table" id="content-table">
 					<tbody>
-						{% if itemlist | length < 1 %}
-							<tr><td>There are no books available in your network.</td></tr>
-						{% else %}
-							{% for item in itemlist %}
-								<tr class="{{ item.item_key }} content-row row-{{ item.item_subtype }}">
-									<td style="width:100px""><img {% if item.thumbnail_link == "" %}src="{{ url_for('static', filename='img/nocoverart.png') }}"
-												{% else %}src="{{ item.thumbnail_link }}"{% endif %} 
-												style="height:auto;width:100px;"/></td>
-									<td>
-											Title: {{ item.title }}<br/>
-											Author: {{ item.author }}
-									</td>
-									<td style="width: 150px">
-										<div class="btn-group library-btn-group tooltip-button" data-toggle="tooltip" data-placement="top" 
-											title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
-											else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}" 
-											id="add_btn_group{{ itemlist.index(item) }}">
-										  <a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} library-button"
+						{% for item in itemlist %}
+							<tr class="{{ item.item_key }} content-row row-{{ item.item_subtype }}" id="row{{ itemlist.index(item) }}">
+								<td style="width:100px"><img {% if item.thumbnail_link == "" %}src="{{ url_for('static', filename='img/nocoverart.png') }}"
+											{% else %}src="{{ item.thumbnail_link }}"{% endif %} 
+											style="height:auto;width:100px;"/></td>
+								<td>
+										Title: {{ item.title }}<br/>
+										Author: {{ item.author }}
+								</td>
+								<td style="width: 150px">
+									<div class="btn-group library-btn-group tooltip-button" data-toggle="tooltip" data-placement="top" 
+										title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
+										else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}" 
+										id="add_btn_group{{ itemlist.index(item) }}">
+										<a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} library-button"
 											{% if user.is_authenticated() == False %}disabled{% endif %} 
 											{% if item.inLibrary == [] %}onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}"{% else %}href="/library"{% endif %} 
 											id="add_button{{ itemlist.index(item) }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</a>
-										  <a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle" data-toggle="dropdown" id="caret_button{{ itemlist.index(item) }}">
+										<a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle" data-toggle="dropdown" id="caret_button{{ itemlist.index(item) }}">
 											<span class="caret"></span>
-										  </a>
-										  {% if item.inLibrary != ['book', 'ebook', 'audiobook'] %}
-											  <ul class="dropdown-menu">
+										</a>
+										<ul class="dropdown-menu">
+											{% if item.item_type == 'book'%}
 												{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
 												{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('ebook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
 												{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('audiobook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
-											  </ul>
-										  {% endif %}
-										</div>
-										<a class="btn tooltip-button"
-											style="width:120px" 
-											{% if user.is_authenticated() == False %}disabled{% endif %}
-											onclick="{% if user.is_authenticated() %}request_item('{{ item.item_key }}', '{{ item.escapedtitle }}', this){% endif %}"
-											data-toggle="tooltip" data-placement="bottom"
-											title="{% if user.is_authenticated() %}Request to borrow item from one of your connections{% 
-											else %}Join or login to request to borrow items{% endif %}">Request&nbsp;to&nbsp;Borrow</a>
-									</td>
-								</tr>
-							{% endfor %}
-						{% endif %}
+											{% elif item.item_type == 'movie' %}
+												{% if 'dvd' not in item.inLibrary %}<li><a id="add_dvd{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('dvd', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;DVD&nbsp;to&nbsp;Library</a></li>{% endif %}
+												{% if 'bluray' not in item.inLibrary %}<li><a id="add_bluray{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('bluray', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Blu-ray&nbsp;to&nbsp;Library</a></li>{% endif %}
+											{% endif %}
+										</ul>
+									</div>
+									<a class="btn tooltip-button"
+										style="width:120px" 
+										{% if user.is_authenticated() == False %}disabled{% endif %}
+										onclick="{% if user.is_authenticated() %}request_item('{{ item.item_key }}', '{{ item.escapedtitle }}', this){% endif %}"
+										data-toggle="tooltip" data-placement="bottom"
+										title="{% if user.is_authenticated() %}Request to borrow item from one of your connections{% 
+										else %}Join or login to request to borrow items{% endif %}">Request&nbsp;to&nbsp;Borrow</a>
+								</td>
+							</tr>
+						{% endfor %}
 					</tbody>
 				</table>
 			</span>
@@ -280,6 +364,15 @@
 		</div>
 		<div class="tab-pane" id="audiobooks">
 			<span id="audiobooks-content"></span>
+		</div>
+		<div class="tab-pane" id="allmovies">
+			<span id="all-movies-content"></span>
+		</div>
+		<div class="tab-pane" id="dvds">
+			<span id="dvds-content"></span>
+		</div>
+		<div class="tab-pane" id="blurays">
+			<span id="blurays-content"></span>
 		</div>
 	</div>
 </div>

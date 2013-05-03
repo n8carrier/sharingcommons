@@ -138,14 +138,14 @@
 	
     <div class="tabbable">
       <ul class="nav nav-tabs">
-        <li class="active"><a href="#MyItems" data-toggle="tab" id="my_items" onclick='add_hash("MyItems")'>My Books</a></li>
-        <li><a href="#LendedItems" data-toggle="tab" id="lended_items" onclick='add_hash("LendedItems")'>Lended Books</a></li>
-        <li><a href="#BorrowedItems" data-toggle="tab" id="borrowed_items" onclick='add_hash("BorrowedItems")'>Borrowed Books</a></li>
+        <li class="active"><a href="#MyItems" data-toggle="tab" id="my_items" onclick='add_hash("MyItems")'>My Books & Movies</a></li>
+        <li><a href="#LendedItems" data-toggle="tab" id="lended_items" onclick='add_hash("LendedItems")'>Lended Books & Movies</a></li>
+        <li><a href="#BorrowedItems" data-toggle="tab" id="borrowed_items" onclick='add_hash("BorrowedItems")'>Borrowed Books & Movies</a></li>
       </ul>
     </div>
       <div class="tab-content">
         <div class="tab-pane active" id="MyItems">
-          <h3 style="margin-top:-4px">Books I Own</h3>
+          <h3 style="margin-top:-4px">Books & Movies I Own</h3>
           <table class="table table-striped table-bordered" id="MyItemsTable">
             {% if itemlist|length < 1 %}
               <tr>
@@ -160,7 +160,7 @@
 				</tr>
 				{% for item in itemlist %}
 				  <tr>
-				    <td><i class="icon-{% if item.item_subtype == "book" %}book{% elif item.item_subtype == "ebook" %}tablet{% elif item.item_subtype == "audiobook" %}volume-down{% elif item.item_subtype == "dvd" or item.item_subtype == "bluray" %}icon-facetime-video{% endif %} icon-large"></i></td>
+				    <td><i class="icon-{% if item.item_subtype == "book" %}book{% elif item.item_subtype == "ebook" %}tablet{% elif item.item_subtype == "audiobook" %}volume-down{% elif item.item_subtype == "dvd" or item.item_subtype == "bluray" %}facetime-video{% endif %} icon-large" {% if item.item_subtype == "bluray" %}style="color:blue"{% endif %}></i></td>
 					<td>{{item.title}}</td>
 					<td>{{item.author}}</td>
 					<td>{% if item.available %}Available
@@ -173,7 +173,7 @@
         </div>
         <div class="tab-pane" id="LendedItems">
 
-		<h3 style="margin-top:-4px">Books I'm Lending</h3>
+		<h3 style="margin-top:-4px">Books & Movies I'm Lending</h3>
 		<table class="table table-striped table-bordered" id="items_lending">
 			{% if user.get_lent_items()|length < 1 %}
 			<tr>
@@ -205,7 +205,7 @@
 
         </div>
         <div class="tab-pane" id="BorrowedItems">
-          <h3 style="margin-top:-4px">Books I'm Borrowing</h3>
+          <h3 style="margin-top:-4px">Books & Movies I'm Borrowing</h3>
           <table class="table table-striped table-bordered" id="items_borrowing">
             {% if user.get_borrowed_items()|length < 1 %}
               <tr>
