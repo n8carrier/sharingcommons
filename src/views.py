@@ -60,6 +60,7 @@ def render_response(template, *args, **kwargs):
 
 ################################ Website landing pages ##################################
 def index():
+
 	# Each user has an invitation link (in /network) which they send to other users to
 	# invite them to connect. Currently, this is the only method of connecting
 	# users. The link adds an argument to the index link (?connect=) with the inviter's
@@ -264,6 +265,20 @@ def settings():
 			return False
 	return render_response('settings.html')
 	
+def tutorial():
+	# First time login page, also available through the footer
+	if request.method == 'POST' and "displayName" in request.form and "additionalInfo" in request.form:
+		user = current_user()
+		name = request.form["displayName"]
+		length = user.lending_length
+		notify = user.notification
+		info = request.form["additionalInfo"]
+		if user.update(name, length, notify, info):
+			return "Success"
+		else:
+			return False
+	return render_response('tutorial.html')
+	
 def reportbug():
 	if request.method == 'POST' and "submitterName" in request.form and "submitterEmail" in request.form and "issueName" in request.form and "issueDescription" in request.form:
 		title = request.form["issueName"]
@@ -331,9 +346,9 @@ def handle_join():
 	g_user = users.get_current_user()
 	if g_user:
 		if join_account(g_user):
-			return redirect(request.args.get("next") or url_for("index"))
+			return redirect(url_for("tutorial"))
 		else:
-			return render_response('join.html',invalid_join=True)
+			return redirect(url_for("join"),invalid_join=True)
 	return redirect(users.create_login_url(request.url))
 
 def login():

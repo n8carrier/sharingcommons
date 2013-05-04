@@ -1,4 +1,3 @@
-
 {% extends "maintemplate.html" %}
 
 {% block title %}Settings{% endblock %}
@@ -197,40 +196,20 @@
 </form>
 
 <div class="row">
-	<div class="span4">
-
+	<div class="span12">
+		<a class="btn btn-inverse" onclick="submit();" style="margin-bottom:25px;margin-top:-10px">
+			Save Changes
+		</a>
 		<div id="validationError" class="alert alert-error" style="display:none;">
 			<strong>Settings not saved!</strong>&nbsp; Fix the errors and try again.
 		</div>
-		
 		<div id="submitError" class="alert alert-error" style="display:none;">
 			<strong>Settings not saved!</strong>&nbsp; Something went wrong.
 		</div>
-		
 		<div id="submitSuccess" class="alert alert-success" style="display:none;">
 			<strong>Settings saved.</strong>
 		</div>
-		
-		<!--<div id="deleteConfirm" class="alert alert-block alert-error fade in" style="display:none;">
-			<button type="button" class="close" data-dismiss="alert">&times;</button>
-			<h4 class="alert-heading">Are you sure?</h4>
-			<p>If you delete your account it'll be gone forever!</p>
-			<p>
-				<a class="btn btn-danger" href="#">Delete Account</a> <a class="btn" href="#">Cancel</a>
-			</p>
-		</div>-->
-
 	</div>
 </div>
-
-<div class="row">
-	<div class="span12">
-		<a class="btn btn-inverse" onclick="submit();">
-			Save Changes
-		</a>
-	</div>
-</div>
-
-<div style="margin-bottom:25px;"></div>
 
 {% endblock %}

@@ -25,6 +25,8 @@
 				success: function(data) {
 					$("#submitSuccess").show();
 					$("#submitError").hide();
+					$("#submitButton").attr("disabled","disabled")
+					$("#submitButton").removeAttr("onclick")
 				},
 				error: function() {
 					$("#submitError").show();
