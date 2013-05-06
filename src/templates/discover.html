@@ -18,6 +18,11 @@
 	.notInNetwork {
 		display: none;
 	}
+	
+	.item-title {
+		font-size:125%;
+		font-weight: bolder;
+	}
 </style>
 
 {% endblock %}
@@ -138,6 +143,7 @@
 		if (spanID != replaceID) {
 			document.getElementById(spanID).innerHTML = document.getElementById(replaceID).innerHTML;
 			document.getElementById(replaceID).innerHTML = ""
+			$(".tooltip-button").tooltip({trigger: "hover"});
 			
 			// Show/hide appropriate items
 			var item_type_subtype
@@ -316,8 +322,15 @@
 											{% else %}src="{{ item.thumbnail_link }}"{% endif %} 
 											style="height:auto;width:100px;"/></td>
 								<td>
-										Title: {{ item.title }}<br/>
-										Author: {{ item.author }}
+									<a href="/{% if item.item_type == 'book' %}book{% elif item.item_type == 'movie' %}movie{% endif %}/{{ item.item_key }}" 
+										class="item-title tooltip-button" 
+										data-toggle="tooltip" data-placement="right" 
+										title="View {% if item.item_type == 'book' %}book{% elif item.item_type == 'movie' %}movie{% endif %} details">{{ item.title }}</a><br/>
+									{% if item.item_type == "book" %}Author: {{ item.author }}
+									{% elif item.item_type == "movie" %}Year: {{ item.year }}<br/>
+									Genre: {{ item.genre }}<br/>
+									Rating: {{ item.rating }}
+									{% endif %}
 								</td>
 								<td style="width: 150px">
 									<div class="btn-group library-btn-group tooltip-button" data-toggle="tooltip" data-placement="top" 

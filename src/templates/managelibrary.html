@@ -154,15 +154,16 @@
 				<tr>
 				  <th class="header" style="width:26px;text-align:center"></th>
 				  <th class="header">Title</th>
-				  <th class="header">Author</th>
 				  <th class="header">Lend Status</th>
 				  <th class="header" style="width:100px"></th>
 				</tr>
 				{% for item in itemlist %}
 				  <tr>
 				    <td><i class="icon-{% if item.item_subtype == "book" %}book{% elif item.item_subtype == "ebook" %}tablet{% elif item.item_subtype == "audiobook" %}volume-down{% elif item.item_subtype == "dvd" or item.item_subtype == "bluray" %}facetime-video{% endif %} icon-large" {% if item.item_subtype == "bluray" %}style="color:blue"{% endif %}></i></td>
-					<td>{{item.title}}</td>
-					<td>{{item.author}}</td>
+					<td><a href="/{% if item.item_type=='book'%}book{% elif item.item_type=='movie' %}movie{% endif %}/{{ item.item_key }}" 
+							class="item-title tooltip-button" 
+							data-toggle="tooltip" data-placement="right" 
+							title="View {% if item.item_type == 'book' %}book{% elif item.item_type == 'movie' %}movie{% endif %} details">{{item.title}}{% if item.item_type == 'book' %} ({{ item.author }}){% endif %}</a></td>
 					<td>{% if item.available %}Available
 						{% else %}On Loan{% endif %}</td>
 					<td style="text-align:center"><a class="btn btn-small" onclick="remove_item('{{ item.item_subtype }}', '{{item.item_key}}', '{{ item.escapedtitle }}', this)"><i class="icon-remove"></i>&nbsp;&nbsp;Remove</a></td>
@@ -213,8 +214,8 @@
 			  </tr>
 			{% else %}
 				<tr>
-				  <th>Item Title</th>
-				  <th>Item Borrower</th>
+				  <th>Title</th>
+				  <th>Borrower</th>
 				  <th style="text-align:center;width:200px">Due Date</th>
 				  <th style="text-align:center;width:200px"></th>
 				</tr>

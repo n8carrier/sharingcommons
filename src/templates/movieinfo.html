@@ -1,0 +1,56 @@
+{% extends "maintemplate.html" %}
+
+{% block title %}Movie - {{ movie.title }}{% endblock %}
+
+{% block style %}
+
+<style type="text/css">
+	.infoLabel {
+		padding-right: 10px;
+		font-weight: bolder;
+	}
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+	<div class="span12">
+		<h3>Movie Details</h3>
+	</div>
+</div>
+<div class="row">
+	<div class="span2">
+		<div class="well">
+			<img {% if movie.thumbnail_link == "" %} src="{{ url_for('static', filename='img/nocoverart.png') }}"
+				{% else %} src="{{ movie.thumbnail_link }}" {% endif %} style="height:auto;width:150px;text-align:center"/>
+			All movie information provided by Flixster
+		</div>
+	</div>
+	<div class="span10">
+		<table class="infoTable">
+			<tr>
+				<td class="infoLabel">Title:</td>
+				<td>{{ movie.title }}</td>
+			</tr>
+			<tr>
+				<td class="infoLabel">Year:</td>
+				<td>{{ movie.year }}</td>
+			</tr>
+			<tr>
+				<td class="infoLabel">Genre:</td>
+				<td>{{ movie.genre }}</td>
+			</tr>
+			<tr>
+				<td class="infoLabel">Rating:</td>
+				<td>{{ movie.rating }}</td>
+			</tr>
+			<tr>
+				<td class="infoLabel">Details:</td>
+				<td><a href="{{ movie.direct_link }}">View movie on Rotten Tomatoes</a></td>
+		</table>
+	</div>
+</div>
+
+{% endblock %}

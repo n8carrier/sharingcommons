@@ -120,7 +120,7 @@ class Item(ndb.Model):
 			query = value
 			apikey = "merwdck55zye5swrkrqcqhf8"
 			if not RT_Key:
-				url = "http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=" + apikey + "&q=" + query + "&page_limit=50"
+				url = "http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=" + apikey + "&q=" + query + "&page_limit=100"
 				response = urlfetch.fetch(url=url, deadline=10)
 				try:
 					if response.status_code == 200:
@@ -182,6 +182,7 @@ class Item(ndb.Model):
 						curItem.genre = movie['genres'][0]
 						for i in range(1, len(movie['genres'])):
 							curItem.genre += ", " + movie['genres'][i]
+						curItem.last_update = datetime.now()
 						if cache == True:
 								curItem.put()
 						itemlist.append(curItem.to_dict())

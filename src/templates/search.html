@@ -1,4 +1,3 @@
-
 {% extends "maintemplate.html" %}
 
 {% block title %}Search{% endblock %}
@@ -17,6 +16,11 @@
 	
 	.notInNetwork {
 		display: none;
+	}
+	
+	.item-title {
+		font-size:125%;
+		font-weight: bolder;
 	}
 </style>
 
@@ -50,20 +54,30 @@
 		
 		// Display appropriate rows on load
 		if ("{{subtype_specified}}"=="true") {
-			// User specifically requested at least one subtype, so forget their cookie setting and show in-network only
+			// User specifically requested at least one subtype, so forget their cookie setting and show in-network only and the appropriate subtypes
 			$.removeCookie("{{ user.get_id() }}");
 			$("#show_out_of_network_items_checkbox").removeAttr("checked");
 			$("tr.notInNetwork").hide();
 			toggle_checkboxes();
-			display_subtype("{{ subtype_book }}", "{{ subtype_ebook }}", "{{ subtype_audiobook }}", "{{ subtype_dvd }}", "{{ subtype_bluray }}");
+			display_subtype("{{ subtype_book }}", "{{ subtype_ebook }}", "{{ subtype_audiobook }}", "{{ subtype_dvd }}", "{{ subtype_bluray }}", true);
 		} else {
 			// User did not specify subtype, so show out-of-network based on cookie
 			if ($.cookie("{{ user.get_id() }}")) {
-				// Show in network only (requiring display of only the subtypes searched)
+				// Show in network only, including all subtypes (since they weren't specified, otherwise the above code would have been run)
 				$("#show_out_of_network_items_checkbox").removeAttr("checked");
 				$("tr.notInNetwork").hide();
 				toggle_checkboxes();
-				display_subtype("{{ subtype_book }}", "{{ subtype_ebook }}", "{{ subtype_audiobook }}", "{{ subtype_dvd }}", "{{ subtype_bluray }}");
+				// Show all subtypes of specified item_tpye and check their respective checkboxes
+				if ("{{ include_type }}"=="book") {
+					display_subtype(true, true, true, false, false, false);
+					$("#checkbox-books").prop('checked',true);
+					$("#checkbox-ebooks").prop('checked',true);
+					$("#checkbox-audiobooks").prop('checked',true);
+				} else if("{{ include_type }}"=="movie") {
+					display_subtype(false, false, false, true, true, false);
+					$("#checkbox-dvds").prop('checked',true);
+					$("#checkbox-blurays").prop('checked',true);
+				}
 			}
 			else {
 				// Show out of network, including all subtypes
@@ -75,6 +89,11 @@
 			}
 		}
 		
+		// Display Flixster attribution if loads to movies
+		if ("{{ include_type }}"=="movie") {
+			$("#flixster-attribution").html("<br><br><p>Movie data provided by Flixster</p>");
+		}
+		
 		$("#show_out_of_network_items_checkbox").change(function(){
 			if($.cookie("{{ user.get_id() }}")) {
 				$.removeCookie("{{ user.get_id() }}");
@@ -83,6 +102,30 @@
 			if(!$(this).is(":checked")) {
 				$.cookie("{{ user.get_id() }}", "true", { expires: 365 });
 				// User wants in-network only, hide out-of-network and display subtypes according to what's specified
+				// If no subtypes are checked, check them all
+				var subtype_checked = false
+				if("{{ include_type }}"=="book") {
+					if($("#checkbox-books").is(':checked')) {
+						subtype_checked = true
+					} else if($("#checkbox-ebooks").is(':checked')) {
+						subtype_checked = true
+					} else if($("#checkbox-audiobooks").is(':checked')) {
+						subtype_checked = true
+					} if(!subtype_checked) {
+						$("#checkbox-books").prop('checked',true);
+						$("#checkbox-ebooks").prop('checked',true);
+						$("#checkbox-audiobooks").prop('checked',true);
+					}
+				} else if("{{ include_type }}"=="movie") {
+					if($("#checkbox-dvds").is(':checked')) {
+						subtype_checked = true
+					} else if($("#checkbox-blurays").is(':checked')) {
+						subtype_checked = true
+					} if(!subtype_checked) {
+						$("#checkbox-dvds").prop('checked',true);
+						$("#checkbox-blurays").prop('checked',true);
+					}
+				}
 				$("tr.notInNetwork").hide();
 				if($("#checkbox-books").is(':checked')) {
 					$("tr.row-book").show();
@@ -98,6 +141,16 @@
 					$("tr.row-audiobook").show();
 				} else {
 					$("tr.row-audiobook").hide();
+				}
+				if($("#checkbox-dvds").is(':checked')) {
+					$("tr.row-dvds").show();
+				} else {
+					$("tr.row-dvd").hide();
+				}
+				if($("#checkbox-blurays").is(':checked')) {
+					$("tr.row-bluray").show();
+				} else {
+					$("tr.row-bluray").hide();
 				}
 				// Show subtype filters, since they'll work now
 				$("#filter-item-subtype").show();
@@ -126,22 +179,23 @@
 		});
 		
 		$("input[name='item_type']").change(function(){
-			// Swap include checkboxes
-			if($("#radio-books").is(':checked')) {
-				$("#checkbox-books").prop('checked',true)
-				$("#checkbox-ebooks").prop('checked',true)
-				$("#checkbox-audiobooks").prop('checked',true)
-				$("#checkbox-dvds").prop('checked',false)
-				$("#checkbox-blurays").prop('checked',false)
-			} else if ($("#radio-movies").is(':checked')){
-				$("#checkbox-books").prop('checked',false)
-				$("#checkbox-ebooks").prop('checked',false)
-				$("#checkbox-audiobooks").prop('checked',false)
-				$("#checkbox-dvds").prop('checked',true)
-				$("#checkbox-blurays").prop('checked',true)
-				alert("switched to movies");
-			}
+			// Remove name and attribute for all of the checkboxes so it's submitted without them
+			// This is necessary so that the out-of-network setting isn't overwritten thinking the 
+			// user is trying to find only specific subtypes
+			$("#checkbox-books").removeAttr('name')
+			$("#checkbox-books").removeAttr('value')
+			$("#checkbox-ebooks").removeAttr('name')
+			$("#checkbox-ebooks").removeAttr('value')
+			$("#checkbox-audiobooks").removeAttr('name')
+			$("#checkbox-audiobooks").removeAttr('value')
+			$("#checkbox-dvds").removeAttr('name')
+			$("#checkbox-dvds").removeAttr('value')
+			$("#checkbox-blurays").removeAttr('name')
+			$("#checkbox-blurays").removeAttr('value')
 			$(this).closest("form").submit();
+			// When a user hits back they end up with the old results, but the new item_type selection.
+			// Perhaps it can be reverted after submitting the form (not sure if it would work)
+			// Here's a link on how to get the old value: http://stackoverflow.com/a/1159245
 		});
 	});
 	
@@ -227,14 +281,15 @@
 		return false;
 	}
 	
-	function display_subtype(subtype_book, subtype_ebook, subtype_audiobook, subtype_dvd, subtype_bluray) {
-		// hide all, then show necessary
-		$("tr.row-book").hide();
-		$("tr.row-ebook").hide();
-		$("tr.row-audiobook").hide();
-		$("tr.row-dvd").hide();
-		$("tr.row-bluray").hide();
-		if(subtype_book=="true") {
+	function display_subtype(subtype_book, subtype_ebook, subtype_audiobook, subtype_dvd, subtype_bluray, hidefirst) {
+		if(hidefirst) {
+			// hide all, then show necessary
+			$("tr.row-book").hide();
+			$("tr.row-ebook").hide();
+			$("tr.row-audiobook").hide();
+			$("tr.row-dvd").hide();
+			$("tr.row-bluray").hide();
+		} if(subtype_book=="true") {
 			$("tr.row-book").show();
 		} else if(subtype_ebook=="true") {
 			$("tr.row-ebook").show();
@@ -282,6 +337,30 @@
 				} else {
 					$("#checkbox-audiobooks").attr("value", "false")
 					$("tr.row-audiobook").hide();
+					msg_if_no_results();
+				}
+			}
+		});
+		$("input[name='subtype_dvd']").change(function(){
+			if($("#show_out_of_network_items_checkbox").is(':checked')==false) {
+				if($("#checkbox-dvds").is(':checked')) {
+					$("#checkbox-dvds").attr("value", "true")
+					$("tr.row-dvd").show();
+				} else {
+					$("#checkbox-dvds").attr("value", "false")
+					$("tr.row-dvd").hide();
+					msg_if_no_results();
+				}
+			}
+		});
+		$("input[name='subtype_bluray']").change(function(){
+			if($("#show_out_of_network_items_checkbox").is(':checked')==false) {
+				if($("#checkbox-blurays").is(':checked')) {
+					$("#checkbox-blurays").attr("value", "true")
+					$("tr.row-bluray").show();
+				} else {
+					$("#checkbox-blurays").attr("value", "false")
+					$("tr.row-bluray").hide();
 					msg_if_no_results();
 				}
 			}
@@ -360,9 +439,9 @@
 <div class="row">
 	<div class="span2">
 		<br/>
-		<h3>Book Search:</h3>
+		<h3>Search:</h3>
 	</div>
-	<div class="span10">
+	<div class="span7">
 		<br/>
 		<h3>
 			
@@ -370,6 +449,9 @@
 			<button type="submit" class="btn">Search</button>
 			
 		</h3>
+	</div>
+	<div class="span3">
+		<span id="flixster-attribution"></span>
 	</div>
 </div>
 <br/>
@@ -410,8 +492,15 @@
 							{% else %} src="{{ item.thumbnail_link }}" {% endif %} 
 							style="height:auto;width:100px;"/></td>
 					<td>
-						Title: {{ item.title }}<br/>
-						{% if item.item_type == "book" %}Author: {{ item.author }}{% else %}Rating: {{ item.rating }}{% endif %}
+						<a href="/{% if item.item_type == 'book' %}book{% elif item.item_type == 'movie' %}movie{% endif %}/{{ item.item_key }}" 
+							class="item-title tooltip-button" 
+							data-toggle="tooltip" data-placement="right" 
+							title="View {% if item.item_type == 'book' %}book{% elif item.item_type == 'movie' %}movie{% endif %} details">{{ item.title }}</a><br/>
+						{% if item.item_type == "book" %}Author: {{ item.author }}
+						{% elif item.item_type == "movie" %}Year: {{ item.year }}<br/>
+						Genre: {{ item.genre }}<br/>
+						Rating: {{ item.rating }}
+						{% endif %}
 					</td>
 					<td style="width: 150px">
 						<div class="btn-group library-btn-group tooltip-button" data-toggle="tooltip" data-placement="top" 

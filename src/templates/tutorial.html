@@ -17,10 +17,15 @@
 	function submit() {
 		if(validate()) {
 			$("#validationError").hide();
-			$.post("/tutorial", $("#settingsForm").serialize())
-			.done(function() {
-				$("#submitSuccess").show();
-				$("#submitError").hide();
+			$.post("/update_user", $("#settingsForm").serialize())
+			.done(function(data) {
+				if(data.result=="success") {
+					$("#submitSuccess").show();
+					$("#submitError").hide();
+				} else {
+					$("#submitError").show();
+					$("#submitSuccess").hide();
+				}
 			}).fail(function() {
 				$("#submitError").show();
 				$("#submitSuccess").hide();
@@ -134,7 +139,7 @@
 				<br>
 					<div class="well">
 						<h4>Update Display Name and Profile Info</h4>
-						<form id="settingsForm" method="post" action="/tutorial">
+						<form id="settingsForm" onSubmit="javascript:return false;">
 							<fieldset>
 								<div class="control-group">
 									Display name to connections:&nbsp;

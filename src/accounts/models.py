@@ -20,6 +20,7 @@ class UserAccount(ndb.Model):
 	lending_length = ndb.StringProperty(default="14")
 	notification = ndb.StringProperty(default="email")
 	info = ndb.StringProperty(default="")
+	custom_url = ndb.StringProperty(required=False)
 
 	connected_accounts = ndb.StructuredProperty(Connection,repeated=True)
 	

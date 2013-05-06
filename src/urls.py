@@ -38,13 +38,13 @@ app.add_url_rule('/discover',view_func=views.discover)
 app.add_url_rule('/search', view_func=views.search)
 
 # Settings
-app.add_url_rule('/settings',view_func=views.settings,methods=["GET","POST"])
+app.add_url_rule('/settings',view_func=views.settings)
 
 # Tutorial
-app.add_url_rule('/tutorial',view_func=views.tutorial,methods=["GET","POST"])
+app.add_url_rule('/tutorial',view_func=views.tutorial)
 
 # Report a Bug
-app.add_url_rule('/reportbug',view_func=views.reportbug,methods=["GET","POST"])
+app.add_url_rule('/reportbug',view_func=views.reportbug)
 
 # Login
 app.add_url_rule('/login',view_func=views.login,methods=["GET","POST"])
@@ -68,7 +68,10 @@ app.add_url_rule('/logout',view_func=views.logout)
 app.add_url_rule('/user/<userID>',view_func=views.profile)
 
 # Book Info
-#app.add_url_rule('/book/<OLKey>',view_func=views.book_info)
+app.add_url_rule('/book/<OLKey>',view_func=views.book_info)
+
+# Movie Info
+app.add_url_rule('/movie/<RTKey>',view_func=views.movie_info)
 
 ######################## Internal calls (to be called by ajax) ##########################
 # Get book list

@@ -44,6 +44,57 @@ def item_due_reminders():
 Please return it to %s"""%(Item.query(Item.key==item.item).get().title,owner.name))
 	return "%s reminders were sent out" %count
 
+@app.route("/post_issue", methods=['POST'])
+def post_issue():
+	if request.method == 'POST' and "submitterName" in request.form and "submitterEmail" in request.form and "issueName" in request.form and "issueDescription" in request.form:
+		title = request.form["issueName"]
+		body = "Submitter Name: " + request.form["submitterName"] + "\nSubmitter Email: " + request.form["submitterEmail"] + "\nDescription:\n" + request.form["issueDescription"]
+		labels = request.form["issueType"]
+		import requests
+		import json
+		auth = ("sharingcommonsbot", "Sh4r3B0t")
+		github_url = "https://api.github.com"
+		headers = {'Content-Type': 'application/json'}
+		repo_owner = "natecarrier"
+		repo = "sharingcommons"
+		issues_url = "{0}/{1}".format(github_url, "/".join(
+				["repos", repo_owner, repo, "issues"]))
+		data = {"title": title,
+				"body": body,
+				"labels": labels}
+		result = requests.post(issues_url,
+							 auth=auth,
+							 headers=headers,
+							 data=json.dumps(data))
+	return jsonify({"result": str(result.status_code)})
+
+@app.route("/update_user", methods=['POST'])
+def update_user():
+	if request.method == 'POST':
+		# Get all attributes from form (or user if not in form)
+		user = current_user()
+		if "displayName" in request.form:
+			name = request.form["displayName"]
+		else:
+			name = user.name
+		if "lendingLength" in request.form :
+			length = request.form["lendingLength"]
+		else:
+			length = user.lending_length
+		if "notifications" in request.form:
+			notify = request.form["notifications"]
+		else:
+			notify = user.notification
+		if "additionalInfo" in request.form:
+			info = request.form["additionalInfo"]
+		else:
+			info = user.info
+		# Update user object
+		if user.update(name, length, notify, info):
+			return jsonify({"result": "success"})
+		else:
+			return jsonify({"result": "failure"})
+	
 @app.route("/crossdomain")
 @crossdomain(origin='*')
 def test_view():
@@ -176,6 +227,9 @@ def search():
 	
 	subtype_specified = "true" # Used in javascript to determine whether out-of-network cookie should be respected or not
 	
+	if item_type is None and subtype_book is None and subtype_ebook is None and subtype_audiobook is None and subtype_dvd is None and subtype_bluray is None:
+		#Nothing was specified, so act as if they searched books
+		item_type = "book"
 	
 	if subtype_book or subtype_ebook or subtype_audiobook or subtype_dvd or subtype_bluray:
 		# If subtype is included, item_type may not be, so it must be added
@@ -253,54 +307,13 @@ def search():
 	return render_response('search.html', itemlist=itemlist, search=searchterm, attribute=attr, include_type=item_type, subtype_book=subtype_book, subtype_ebook=subtype_ebook, subtype_audiobook=subtype_audiobook, subtype_specified=subtype_specified)
 	
 def settings():
-	if request.method == 'POST' and "displayName" in request.form and "lendingLength" in request.form and "notifications" in request.form and "additionalInfo" in request.form:
-		user = current_user()
-		name = request.form["displayName"]
-		length = request.form["lendingLength"]
-		notify = request.form["notifications"]
-		info = request.form["additionalInfo"]
-		if user.update(name, length, notify, info):
-			return "Success"
-		else:
-			return False
 	return render_response('settings.html')
 	
 def tutorial():
 	# First time login page, also available through the footer
-	if request.method == 'POST' and "displayName" in request.form and "additionalInfo" in request.form:
-		user = current_user()
-		name = request.form["displayName"]
-		length = user.lending_length
-		notify = user.notification
-		info = request.form["additionalInfo"]
-		if user.update(name, length, notify, info):
-			return "Success"
-		else:
-			return False
 	return render_response('tutorial.html')
 	
 def reportbug():
-	if request.method == 'POST' and "submitterName" in request.form and "submitterEmail" in request.form and "issueName" in request.form and "issueDescription" in request.form:
-		title = request.form["issueName"]
-		body = "Submitter Name: " + request.form["submitterName"] + "\nSubmitter Email: " + request.form["submitterEmail"] + "\nDescription:\n" + request.form["issueDescription"]
-		labels = request.form["issueType"]
-		import requests
-		import json
-		AUTH = ("sharingcommonsbot", "Sh4r3B0t")
-		GITHUB_URL = "https://api.github.com"
-		HEADERS = {'Content-Type': 'application/json'}
-		repo_owner = "natecarrier"
-		repo = "sharingcommons"
-		issues_url = "{0}/{1}".format(GITHUB_URL, "/".join(
-				["repos", repo_owner, repo, "issues"]))
-		data = {"title": title,
-				"body": body,
-				"labels": labels}
-		requests.post(issues_url,
-							 auth=AUTH,
-							 headers=HEADERS,
-							 data=json.dumps(data))
-	
 	return render_response('reportbug.html')
 	
 def about():
@@ -335,9 +348,18 @@ def profile(userID):
 		return render_response('profile.html',profile_user=profile_user,library=library)
 	return render_response('invalidprofile.html')
 	
-#def book_info():
+def book_info(OLKey):
 	# Pass book object to template
-	#return render_response('bookinfo.html')
+	book = Item.get_by_key("book",OLKey).to_dict()
+	# Determine if the user owns this book
+	# Find all connections who own this book and get the status for each
+	# Find out any pending actions regarding this book
+	# Find any current loans or borrow of this book
+	return render_response('bookinfo.html',book=book)
+	
+def movie_info(RTKey):
+	movie = Item.get_by_key("movie",RTKey).to_dict()
+	return render_response('movieinfo.html', movie=movie)
 	
 def join():
 	return render_response('join.html')

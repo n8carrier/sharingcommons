@@ -18,10 +18,15 @@
 	function submit() {
 		if(validate()) {
 			$("#validationError").hide();
-			$.post("\settings", $("#settingsForm").serialize())
-			.done(function() {
-				$("#submitSuccess").show();
-				$("#submitError").hide();
+			$.post("/update_user", $("#settingsForm").serialize())
+			.done(function(data) {
+				if(data.result=="success") {
+					$("#submitSuccess").show();
+					$("#submitError").hide();
+				} else {
+					$("#submitError").show();
+					$("#submitSuccess").hide();
+				}
 			}).fail(function() {
 				$("#submitError").show();
 				$("#submitSuccess").hide();
@@ -133,7 +138,7 @@
   </div>
 </div>
 
-<form id="settingsForm" method="post" action="/settings">
+<form id="settingsForm" onSubmit="javascript: return false;">
 
 <div class="row">
 	<div class="span5">
