@@ -93,7 +93,7 @@ def update_user():
 		if user.update(name, length, notify, info):
 			return jsonify({"result": "success"})
 		else:
-			return jsonify({"result": "failure"})
+			return jsonify({"result": "error"})
 	
 @app.route("/crossdomain")
 @crossdomain(origin='*')
@@ -327,7 +327,10 @@ def profile(userID):
 	profile_user = UserAccount.get_by_id(int(userID))
 	user = current_user()
 	if not profile_user:
-		return render_response('invalidprofile.html')
+		# Query custom URLs
+		custom_url_user = UserAccount.query(UserAccount.custom_url==userID).get()
+		if not custom_url_user:
+			return render_response('invalidprofile.html')
 	if user.is_connected(profile_user):
 		library = []
 		for copy in profile_user.get_library():
@@ -623,3 +626,41 @@ def reject_notification(notificationID):
 	action = Action.get_by_id(int(notificationID))
 	result = action.reject()
 	return result
+	
+def get_user_email(userID):
+	userEmail = UserAccount.get_by_id(int(userID)).email
+	emailSplit = userEmail.split("@", 1)
+	privacyEmail = userEmail[0:1] + '******@' + emailSplit[1]
+	return jsonify({"email": privacyEmail})
+	
+def request_to_borrow(lenderID, itemCopyID):
+	emailBody = request.data
+	
+	# Request item
+	try:
+		borrower = current_user()
+		lender = UserAccount.getuser(int(lenderID))
+		itemCopy = ItemCopy.get_by_id(int(itemCopyID))
+		
+		rtb1 = RequestToBorrow()
+		rtb1.useraccount = lender.key
+		rtb1.connection = borrower.key
+		rtb1.item = itemCopy.key
+		rtb1.put()
+		
+		wtb1 = WaitingToBorrow()
+		wtb1.useraccount = borrower.key
+		wtb1.connection = lender.key
+		wtb1.item = itemCopy.key
+		wtb1.put()
+		
+	except:
+		return jsonify({"result":"error"})
+	
+	# Send email
+	mail.send_mail(sender="Sharing Commons <admin@sharingcommons.com>",
+			to=lender.name + " <" + lender.email + ">",
+			reply_to=borrower.name + " <" + borrower.email + ">",
+			subject='Sharing Commons: Request to Borrow "' + Item.query(Item.key == itemCopy.item).get().title + '"',
+			body=emailBody)
+	return jsonify({"result":"success"})

@@ -186,6 +186,18 @@ app.add_url_rule('/search/in_network/<item_key>',view_func=views.search_network)
 #		bookCopyID - the id of the ItemCopy object being borrowed
 app.add_url_rule('/setup_item_borrow/<lenderID>/<itemCopyID>',view_func=views.setup_item_borrow_actions)
 
+# Starts process for current user to borrow book and sends email if successful
+#   parameters:
+#       lenderID - id of the owner of the item
+#       bookCopyID - the id of the ItemCopy object being borrowed
+#       emailBody - the body of the email, to be sent as a JSON
+app.add_url_rule('/request_to_borrow/<lenderID>/<itemCopyID>', methods = ['GET', 'POST', 'DELETE'], view_func=views.request_to_borrow)
+
+# Gets private email (first letter, some stars, the @, and the domain
+#   parameters:
+#        userID - the ID of the user for which the email address is being requested
+app.add_url_rule('/get_user_email/<userID>',view_func=views.get_user_email)
+
 ################################### Web service calls ###################################
 # Lookup a book from app
 #app.add_url_rule('/api/v1/book/<ISBN>', view_func=api.get_book)
