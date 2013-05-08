@@ -70,6 +70,9 @@ app.add_url_rule('/logout',view_func=views.logout)
 # User Profile
 app.add_url_rule('/user/<userID>',view_func=views.profile)
 
+# Invalid User Profile
+app.add_url_rule('/invalid-profile',view_func=views.invalid_profile)
+
 # Book Info
 app.add_url_rule('/book/<OLKey>',view_func=views.book_info)
 

@@ -238,8 +238,20 @@ def search():
 	subtype_audiobook = request.args.get('subtype_audiobook')
 	subtype_dvd = request.args.get('subtype_dvd')
 	subtype_bluray = request.args.get('subtype_bluray')
+	user_email = request.args.get('user_email')
 	searchterm = request.args.get('query')
 	attr = request.args.get('refineSearch')
+	
+	# If searching for a user, redirect to profile
+	if user_email:
+		profile_user = UserAccount.query(UserAccount.email==searchterm).get()
+		if not profile_user:
+			return redirect(url_for("invalid_profile"))
+		else:
+			if profile_user.custom_url:
+				return redirect('/user/' + profile_user.custom_url)
+			else:
+				return redirect('/user/' + profile_user.get_id())		
 	
 	subtype_specified = "true" # Used in javascript to determine whether out-of-network cookie should be respected or not
 	
@@ -341,20 +353,26 @@ def mobile_app():
 def licenses():
 	return render_response('licenses.html')
 
+def invalid_profile():
+	return render_response('invalidprofile.html')
+	
 def profile(userID):
 	try:
 		int(userID)
 		profile_user = UserAccount.get_by_id(int(userID))
 		# Check if profile user has a custom url and forward if so
-		if profile_user.custom_url:
+		try:
+			long(profile_user.custom_url) # Custom URLs MUST include at least one letter, so this will always fail with a custom URL
+		except:
 			return redirect('/user/' + profile_user.custom_url)
+			
 	except:
 		# Query custom URLs
 		custom_url_user = UserAccount.query(UserAccount.custom_url==userID).get()
 		if custom_url_user:
 			profile_user = custom_url_user
 		else:
-			return render_response('invalidprofile.html')
+			return redirect(url_for("invalid_profile"))
 	
 	user = current_user()
 	if user.is_authenticated():
@@ -400,7 +418,7 @@ def profile(userID):
 		movielist.sort(key=lambda item: item["item_subtype"])
 		movielist.sort(key=lambda item: item["title"].lower())
 		return render_response('profile.html',inNetwork=inNetwork,profile_user=profile_user,booklist=booklist,movielist=movielist)
-	return render_response('invalidprofile.html')
+	return redirect(url_for("invalid_profile"))
 
 def book_info(OLKey):
 	# Pass book object to template
@@ -439,7 +457,7 @@ def handle_join():
 		if join_account(g_user):
 			return redirect(url_for("tutorial"))
 		else:
-			return redirect(url_for("join"),invalid_join=True)
+			return redirect(url_for("login"))
 	return redirect(users.create_login_url(request.url))
 
 def login():
