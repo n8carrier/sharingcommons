@@ -12,7 +12,13 @@
 	
 	.infoLabel {
 		padding-right: 10px;
+		padding-bottom: 16px;
 		font-weight: bolder;
+		width: 100px;
+	}
+	
+	.infoText {
+		padding-bottom: 16px;
 	}
 </style>
 
@@ -87,30 +93,35 @@
 {% endif %}
 
 <div class="row">
-	<div class="span10">
+	<div class="span6">
 		<h3>User Profile</h3>
 		<table class="infoTable">
 			<tr>
-				<td class="infoLabel">Name:</td>
-				<td>{{ profile_user.name }}</td>
+				<td class="infoLabel">Display Name:</td>
+				<td class="infoText">{{ profile_user.name }}</td>
 			</tr>
 			<tr>
 				<td class="infoLabel">Public Info:</td>
-				<td>{{ profile_user.public_info }}</td>
+				<td class="infoText">{{ profile_user.public_info }}</td>
 			</tr>
 			{% if inNetwork %}
 				<tr>
 					<td class="infoLabel">Private Info:</td>
-					<td>{{ profile_user.info }}</td>
+					<td class="infoText">{{ profile_user.info }}</td>
 				</tr>
 			{% endif %}
 		</table>
 	</div>
 	{% if not inNetwork %}
-	<div class="span2">
-		<br>
-		<a class="btn btn-inverse" onClick="request_to_connect();">Request to Connect</a>
-	</div>
+		<div class="span2 offset4">
+			<br>
+			<a class="btn btn-inverse {% if not user.is_authenticated() %}disabled tooltip-button{% endif %}"
+			{% if not user.is_authenticated() %}data-toggle="tooltip" 
+			data-placement="bottom"
+			title="Join or login to connect with {{ profile_user.name }}"{% endif %}
+			style="width:126px"
+			{% if user.is_authenticated() %}onClick="request_to_connect();"{% endif %}>Request to Connect</a>
+		</div>
 	{% endif %}
 </div>
 {% if inNetwork or profile_user.book_privacy == 1 %}

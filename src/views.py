@@ -357,7 +357,10 @@ def profile(userID):
 			return render_response('invalidprofile.html')
 	
 	user = current_user()
-	inNetwork = user.is_connected(profile_user)
+	if user.is_authenticated():
+		inNetwork = user.is_connected(profile_user)
+	else:
+		inNetwork = False
 	if inNetwork or profile_user.profile_privacy == 1:
 		if user == profile_user:
 			inNetwork = True
