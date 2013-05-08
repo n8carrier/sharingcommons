@@ -251,7 +251,7 @@ def search():
 			if profile_user.custom_url:
 				return redirect('/user/' + profile_user.custom_url)
 			else:
-				return redirect('/user/' + profile_user.get_id())		
+				return redirect('/user/' + str(profile_user.get_id()))
 	
 	subtype_specified = "true" # Used in javascript to determine whether out-of-network cookie should be respected or not
 	
@@ -361,10 +361,11 @@ def profile(userID):
 		int(userID)
 		profile_user = UserAccount.get_by_id(int(userID))
 		# Check if profile user has a custom url and forward if so
-		try:
-			long(profile_user.custom_url) # Custom URLs MUST include at least one letter, so this will always fail with a custom URL
-		except:
-			return redirect('/user/' + profile_user.custom_url)
+		if profile_user.custom_url:
+			try:
+				long(profile_user.custom_url) # Custom URLs MUST include at least one letter, so this will always fail with a custom URL
+			except:
+				return redirect('/user/' + profile_user.custom_url)
 			
 	except:
 		# Query custom URLs
