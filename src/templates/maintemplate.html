@@ -240,7 +240,7 @@
 								<span class="caret" style="margin-left:-3px"></span>
 								</a>
 								<ul class="dropdown-menu">
-									<li><a href="/user/{{ user.get_id() }}">{{ user.email }}</a></li>
+									<li><a href="/user/{% if user.custom_url %}{{ user.custom_url }}{% else %}{{ user.get_id() }}{% endif %}" id="profile-link">{{ user.email }}</a></li>
 									<li class="divider"></li>
 									<li><a href="/settings">Settings</a></li>
 									<li><a href="/logout">Sign Out</a></li>

@@ -20,7 +20,11 @@ class UserAccount(ndb.Model):
 	lending_length = ndb.StringProperty(default="14")
 	notification = ndb.StringProperty(default="email")
 	info = ndb.StringProperty(default="")
+	public_info = ndb.StringProperty(default="")
 	custom_url = ndb.StringProperty(required=False)
+	profile_privacy = ndb.IntegerProperty(default=0) #0=private;1=public
+	book_privacy = ndb.IntegerProperty(default=0) #0=private;1=public
+	movie_privacy = ndb.IntegerProperty(default=0) #0=private;1=public
 
 	connected_accounts = ndb.StructuredProperty(Connection,repeated=True)
 	
@@ -67,7 +71,7 @@ class UserAccount(ndb.Model):
 			connections.append(UserAccount.query(UserAccount.key==connection.user).get())
 		return connections
 	
-	def update(self,name,lending_length,notifications,info):
+	def update(self,name,lending_length,custom_url,profile_privacy,book_privacy,movie_privacy,public_info,info):
 		"""update the user's settings
 
 		Arguments:
@@ -77,15 +81,24 @@ class UserAccount(ndb.Model):
 		info - a string, additional information about the user that will be displayed to other users
 		
 		Return value:
-		True if successfull
+		True if successful
 		"""
 		# validate name
 		self.name = name
 		self.lending_length = lending_length
-		self.notification = notifications
+		#self.notification = notifications
+		self.profile_privacy = profile_privacy
+		self.book_privacy = book_privacy
+		self.movie_privacy = movie_privacy
+		self.public_info = public_info
 		self.info = info
-		self.put()
-		return True
+		url_in_use = UserAccount.query(UserAccount.custom_url==custom_url,UserAccount.key!=self.key).get()
+		if url_in_use:
+			return False
+		else:
+			self.custom_url = custom_url
+			self.put()
+			return True
 
 	def is_authenticated(self):
 		"""determine whether the UserAccount is authenticated

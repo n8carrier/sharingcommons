@@ -81,19 +81,35 @@ def update_user():
 			length = request.form["lendingLength"]
 		else:
 			length = user.lending_length
-		if "notifications" in request.form:
-			notify = request.form["notifications"]
+		if "customURL" in request.form:
+			custom_url = request.form["customURL"]
 		else:
-			notify = user.notification
+			custom_url = user.custom_url
+		if "profilePrivacy" in request.form:
+			profile_privacy = int(request.form["profilePrivacy"])
+		else:
+			profile_privacy = user.profile_privacy
+		if "bookPrivacy" in request.form:
+			book_privacy = int(request.form["bookPrivacy"])
+		else:
+			book_privacy = user.book_privacy
+		if "moviePrivacy" in request.form:
+			movie_privacy = int(request.form["moviePrivacy"])
+		else:
+			movie_privacy = user.movie_privacy
+		if "publicInfo" in request.form:
+			public_info = request.form["publicInfo"]
+		else:
+			public_info = user.public_info
 		if "additionalInfo" in request.form:
 			info = request.form["additionalInfo"]
 		else:
 			info = user.info
 		# Update user object
-		if user.update(name, length, notify, info):
+		if user.update(name,length,custom_url,profile_privacy,book_privacy,movie_privacy,public_info,info):
 			return jsonify({"result": "success"})
 		else:
-			return jsonify({"result": "error"})
+			return jsonify({"result": "url in use"})
 	
 @app.route("/crossdomain")
 @crossdomain(origin='*')
@@ -325,33 +341,62 @@ def mobile_app():
 def licenses():
 	return render_response('licenses.html')
 
-@login_required
 def profile(userID):
-	profile_user = UserAccount.get_by_id(int(userID))
-	user = current_user()
-	if not profile_user:
+	try:
+		int(userID)
+		profile_user = UserAccount.get_by_id(int(userID))
+		# Check if profile user has a custom url and forward if so
+		if profile_user.custom_url:
+			return redirect('/user/' + profile_user.custom_url)
+	except:
 		# Query custom URLs
 		custom_url_user = UserAccount.query(UserAccount.custom_url==userID).get()
-		if not custom_url_user:
+		if custom_url_user:
+			profile_user = custom_url_user
+		else:
 			return render_response('invalidprofile.html')
-	if user.is_connected(profile_user):
-		library = []
+	
+	user = current_user()
+	inNetwork = user.is_connected(profile_user)
+	if inNetwork or profile_user.profile_privacy == 1:
+		if user == profile_user:
+			inNetwork = True
+		booklist = []
 		for copy in profile_user.get_library():
 			item = Item.query(Item.key == copy.item).get().to_dict()
-			item["item_subtype"] = copy.item_subtype
-			item["escapedtitle"] = re.escape(item["title"])
-			if copy.borrower is None:
-				item["available"] = True
-			else:
-				item["available"] = False
-			item["copyID"] = copy.key.id()
-			library.append(item)
+			if item["item_type"] == "book":
+				item["item_subtype"] = copy.item_subtype
+				item["escapedtitle"] = re.escape(item["title"])
+				if copy.borrower is None:
+					item["available"] = True
+				else:
+					item["available"] = False
+				item["copyID"] = copy.key.id()
+				booklist.append(item)
 			
 		# Sort library alphabetically, with title as the primary sort key,
 		# author as secondary, and item_subtype as tertiary
-		library.sort(key=lambda item: item["item_subtype"])
-		library.sort(key=lambda item: item["title"].lower())
-		return render_response('profile.html',profile_user=profile_user,library=library)
+		booklist.sort(key=lambda item: item["item_subtype"])
+		booklist.sort(key=lambda item: item["title"].lower())
+
+		movielist = []
+		for copy in profile_user.get_library():
+			item = Item.query(Item.key == copy.item).get().to_dict()
+			if item["item_type"] == "movie":
+				item["item_subtype"] = copy.item_subtype
+				item["escapedtitle"] = re.escape(item["title"])
+				if copy.borrower is None:
+					item["available"] = True
+				else:
+					item["available"] = False
+				item["copyID"] = copy.key.id()
+				movielist.append(item)
+			
+		# Sort library alphabetically, with title as the primary sort key,
+		# author as secondary, and item_subtype as tertiary
+		movielist.sort(key=lambda item: item["item_subtype"])
+		movielist.sort(key=lambda item: item["title"].lower())
+		return render_response('profile.html',inNetwork=inNetwork,profile_user=profile_user,booklist=booklist,movielist=movielist)
 	return render_response('invalidprofile.html')
 
 def book_info(OLKey):

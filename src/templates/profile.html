@@ -9,6 +9,11 @@
 	.in-library-button	{
 		margin-bottom: 10px;
 	}
+	
+	.infoLabel {
+		padding-right: 10px;
+		font-weight: bolder;
+	}
 </style>
 
 {% endblock %}
@@ -30,14 +35,59 @@
 			$(button).tooltip("destroy").attr("title", "Item has been requested").tooltip({trigger: "hover"});
 		});
 	}
+	
+	function request_to_connect() {
+		// Show modal
+		$("#connectModal").modal('show');
+	}
+	
+	function sendRequest() {
+	// Send connection request to user in invitation link
+		$.ajax({
+			url:"/manage_network/" + {{ profile_user.get_id() }},
+			type: 'POST',
+			success:function(data) {
+				$("#requestSent").show();
+			}
+		});
+		return false;
+	}
+	
+	function hide_requestSent() {
+		$("#undoMessage").hide();
+		return false;
+	}
+	
 </script>
 
 {% endblock %}
 
 {% block content %}
 
+{% if not inNetwork %}
+	<div id="connectModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="connectModalLabel" aria-hidden="true">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			<h3 id="connectModalLabel">Send Request to Connect</h3>
+		</div>
+		<div class="modal-body">
+			<p>Please confirm your intention to send a connection request to {{ profile_user.name }}. Once {{ profile_user.name }} accepts your request, {{ profile_user.name }}'s library will appear in your network and within applicable search results.</p>
+		</div>
+		<div class="modal-footer">
+			<a class="btn btn-inverse" id="connectModalSend" onclick="sendRequest()" data-dismiss="modal">Send Request</a>
+			<a class="btn" id="connectModalCancel" data-dismiss="modal">Cancel</a>
+		</div>
+	</div>
+	<div class="span6 offset3" style="position: absolute; top: 60px;">
+		<div id="requestSent" class="alert" style="display: none;">
+			<a class="close" onclick="hide_requestSent()">&times;</a>
+			You have requested to connect with {{ profile_user.name }}. Once {{ profile_user.name }} accepts your request, {{ profile_user.name }}'s library will appear in your network and within applicable search results.
+		</div>
+	</div>
+{% endif %}
+
 <div class="row">
-	<div class="span12">
+	<div class="span10">
 		<h3>User Profile</h3>
 		<table class="infoTable">
 			<tr>
@@ -45,64 +95,141 @@
 				<td>{{ profile_user.name }}</td>
 			</tr>
 			<tr>
-				<td class="infoLabel">Info:</td>
-				<td>{{ profile_user.info }}</td>
+				<td class="infoLabel">Public Info:</td>
+				<td>{{ profile_user.public_info }}</td>
 			</tr>
-		<table>
-	</div>
-</div>
-<br/>
-<div class="row">
-	<div class="span12">
-		<h4>{{ profile_user.name }}'s Library</h4>
-		<table class="table table-bordered table-striped">
-			<tr>
-				<th></th>
-				<th>Title</th>
-				<th>Author</th>
-				<th style="width:160px;text-align:center">{% if profile_user.get_id() == user.get_id() %}Lend Status{% endif %}</th>
-			</tr>
-			{% if library|length < 1 %}
-			<tr>
-				{% if profile_user.get_id() == user.get_id() %}
-				<td colspan='4'>You don't have any items in your library. To add items, use the search field inside the header. Once you've added items, they'll show up here.</td>
-				{% else %}
-				<td colspan='4'>{{ profile_user.name }} has not added any items yet.</td>
-				{% endif %}
-			</tr>
+			{% if inNetwork %}
+				<tr>
+					<td class="infoLabel">Private Info:</td>
+					<td>{{ profile_user.info }}</td>
+				</tr>
 			{% endif %}
-			{% for item in library %}
-			<tr>
-				<td><i class="icon-{% if item.item_subtype == "book" %}book{% elif item.item_subtype == "ebook" %}tablet{% elif item.item_subtype == "audiobook" %}volume-down{% endif %} icon-large"></i></td>
-				<td>{{ item.title }}</td>
-				<td>{{ item.author }}</td>
-				<td style="text-align:center">
-				{% if profile_user.get_id() == user.get_id() %}
-					{% if item.available %}Available
-					{% else %}On Loan
-					{% endif %}
-				{% else %}
-					{% if item.available %}
-					<a class="btn btn-inverse tooltip-button"
-						style="width:120px"
-						onclick="borrow_item('{{ item.copyID }}', this)"
-						data-toggle="tooltip" 
-						data-placement="right"
-						title="Request to borrow item from {{ profile_user.name }}">
-						Request&nbsp;to&nbsp;Borrow</a>
-					{% else %}
-					<a class="btn btn-inverse tooltip-button disabled"
-						style="width:120px"
-						data-toggled="tooltip"
-						data-placement="right"
-						title="Item not available">
-						Unavailable</a>
-					{% endif %}
-				{% endif %}</td>
-			</tr>
-			{% endfor %}
 		</table>
 	</div>
+	{% if not inNetwork %}
+	<div class="span2">
+		<br>
+		<a class="btn btn-inverse" onClick="request_to_connect();">Request to Connect</a>
+	</div>
+	{% endif %}
 </div>
+{% if inNetwork or profile_user.book_privacy == 1 %}
+	<br/>
+	<div class="row">
+		<div class="span12">
+			<h4>{{ profile_user.name }}'s Books</h4>
+			<table class="table table-bordered table-striped">
+				<tr>
+					<th style="width:26px;text-align:center"></th>
+					<th>Title</th>
+					<th>Author</th>
+					{% if inNetwork %}<th style="width:160px;text-align:center">{% if profile_user.get_id() == user.get_id() %}Lend Status{% endif %}</th>{% endif %}
+				</tr>
+				{% if booklist|length < 1 %}
+				<tr>
+					{% if profile_user.get_id() == user.get_id() %}
+					<td colspan='4'>You don't have any books in your library. To add books, use the search field inside the header. Once you've added books, they'll show up here.</td>
+					{% else %}
+					<td colspan='4'>{{ profile_user.name }} has not added any books yet.</td>
+					{% endif %}
+				</tr>
+				{% endif %}
+				{% for item in booklist %}
+					<tr>
+						<td><i class="icon-{% if item.item_subtype == 'book' %}book{% elif item.item_subtype == 'ebook' %}tablet{% elif item.item_subtype == 'audiobook' %}volume-down{% endif %} icon-large"></i></td>
+						<td>{{ item.title }}</td>
+						<td>{{ item.author }}</td>
+						{% if inNetwork %}
+							<td style="text-align:center">
+							{% if profile_user.get_id() == user.get_id() %}
+								{% if item.available %}Available
+								{% else %}On Loan
+								{% endif %}
+							{% else %}
+								{% if item.available %}
+								<a class="btn btn-inverse tooltip-button"
+									style="width:120px"
+									onclick="borrow_item('{{ item.copyID }}', this)"
+									data-toggle="tooltip" 
+									data-placement="right"
+									title="Request to borrow item from {{ profile_user.name }}">
+									Request&nbsp;to&nbsp;Borrow</a>
+								{% else %}
+								<a class="btn btn-inverse tooltip-button disabled"
+									style="width:120px"
+									data-toggled="tooltip"
+									data-placement="right"
+									title="Item not available">
+									Unavailable</a>
+								{% endif %}
+							{% endif %}</td>
+						{% endif %}
+					</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+{% endif %}
+{% if inNetwork or profile_user.movie_privacy == 1 %}
+<br/>
+	<div class="row">
+		<div class="span12">
+			<h4>{{ profile_user.name }}'s Movies</h4>
+			<table class="table table-bordered table-striped">
+				<tr>
+					<th style="width:26px;text-align:center"></th>
+					<th>Title</th>
+					<th>Year</th>
+					<th style="350px">Genre</th>
+					<th>Rating</th>
+					{% if inNetwork %}<th style="width:160px;text-align:center">{% if profile_user.get_id() == user.get_id() %}Lend Status{% endif %}</th>{% endif %}
+				</tr>
+				{% if movielist|length < 1 %}
+				<tr>
+					{% if profile_user.get_id() == user.get_id() %}
+					<td colspan='6'>You don't have any movies in your library. To add movies, use the search field inside the header. Once you've added movies, they'll show up here.</td>
+					{% else %}
+					<td colspan='6'>{{ profile_user.name }} has not added any movies yet.</td>
+					{% endif %}
+				</tr>
+				{% endif %}
+				{% for item in movielist %}
+					<tr>
+						<td><i class="icon-facetime-video icon-large" {% if item.item_subtype == "bluray" %}style="color:blue"{% endif %}></i></td>
+						<td>{{ item.title }}</td>
+						<td>{{ item.year }}</td>
+						<td>{{ item.genre }}</td>
+						<td>{{ item.rating }}</td>
+						{% if inNetwork %}
+							<td style="text-align:center">
+							{% if profile_user.get_id() == user.get_id() %}
+								{% if item.available %}Available
+								{% else %}On Loan
+								{% endif %}
+							{% else %}
+								{% if item.available %}
+								<a class="btn btn-inverse tooltip-button"
+									style="width:120px"
+									onclick="borrow_item('{{ item.copyID }}', this)"
+									data-toggle="tooltip" 
+									data-placement="right"
+									title="Request to borrow item from {{ profile_user.name }}">
+									Request&nbsp;to&nbsp;Borrow</a>
+								{% else %}
+								<a class="btn btn-inverse tooltip-button disabled"
+									style="width:120px"
+									data-toggled="tooltip"
+									data-placement="right"
+									title="Item not available">
+									Unavailable</a>
+								{% endif %}
+							{% endif %}</td>
+						{% endif %}
+					</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+{% endif %}
 
 {% endblock %}

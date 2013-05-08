@@ -16,6 +16,10 @@
 <script type="text/javascript">
 
 	function submit() {
+		$("#submitSuccess").hide();
+		$("#urlError").hide();
+		$("#customURLHelpInUse").hide();
+		$("#custom_url").parent().removeClass("error")
 		if(validate()) {
 			$("#validationError").hide();
 			$.post("/update_user", $("#settingsForm").serialize())
@@ -23,12 +27,18 @@
 				if(data.result=="success") {
 					$("#submitSuccess").show();
 					$("#submitError").hide();
+					$("#custom_url").parent().addClass("success");
+					$("#profile-link").attr("href","/user/" + $("#custom_url").val())
 				} else {
-					$("#submitError").show();
+					$("#urlError").show();
+					$("#custom_url").parent().removeClass("success").addClass("error");
+					$("#customURLHelpInUse").show();
+					$("#submitError").hide();
 					$("#submitSuccess").hide();
 				}
 			}).fail(function() {
 				$("#submitError").show();
+				$("#urlError").hide();
 				$("#submitSuccess").hide();
 			});
 		}
@@ -68,6 +78,37 @@
 			$("#displayNameHelp").hide();
 		}
 		
+		// Test that custom URL has at least one letter and only contains letters and numbers
+		// Check only if it has been changed from the user's ID
+		$("#custom_url").val($("#custom_url").val().toLowerCase())
+		if($("#custom_url").val() != "{{ user.get_id() }}") {
+			var reName = /^\d*[a-zA-Z][a-zA-Z0-9]*$/;
+			if(!reName.test($("#custom_url").val())) {
+				validates = false;
+				$("#custom_url").parent().removeClass("success").addClass("error");
+				$("#customURLHelp").show();
+			}
+			else {
+				//$("#custom_url").parent().removeClass("error").addClass("success");
+				$("#customURLHelp").hide();
+			}
+		} else {
+			$("#custom_url").parent().removeClass("error").addClass("success");
+			$("#customURLHelp").hide();
+		}
+		
+		
+		// Test that the info does not exceed 2000 characters
+		if($("#public_info").val().length > 2000) {
+			validates = false;
+			$("#public_info").parent().removeClass("success").addClass("error");
+			$("#publicInfoHelp").show();
+		}
+		else {
+			$("#public_info").parent().removeClass("error").addClass("success");
+			$("#publicInfoHelp").hide();
+		}
+		
 		// Test that the info does not exceed 2000 characters
 		if($("#additional_info").val().length > 2000) {
 			validates = false;
@@ -77,18 +118,6 @@
 		else {
 			$("#additional_info").parent().removeClass("error").addClass("success");
 			$("#additionalInfoHelp").hide();
-		}
-		
-		// Test if user is mobile user
-		// We don't have a way of knowing this yet, so assume all users are web only
-		if($("#notification_settings option:selected").val() != "email") {
-			validates = false;
-			$("#notification_settings").parent().removeClass("success").addClass("error");
-			$("#notificationSettingsHelp").show();
-		}
-		else {
-			$("#notification_settings").parent().removeClass("error").addClass("success");
-			$("#notificationSettingsHelp").hide();
 		}
 		
 		return validates;
@@ -117,6 +146,38 @@
           });
         return false;
 	}
+	
+	$("#profile_privacy").change(function(){
+		if($(this).is(":checked")) {
+			$("#book_privacy").removeAttr("disabled");
+			$("#movie_privacy").removeAttr("disabled");
+			$("#public_info").removeAttr("disabled");
+			$("#profile_privacy").attr("value","1");
+		} else {
+			$("#book_privacy").attr("disabled",true);
+			$("#movie_privacy").attr("disabled",true);
+			$("#public_info").attr("disabled",true);
+			$("#profile_privacy").attr("value","0");
+		}
+	});
+	
+	$("#book_privacy").change(function(){
+		if($(this).is(":checked")) {
+			$("#book_privacy").attr("value","1");
+		} else {
+			$("#book_privacy").attr("value","0");
+		}
+	});
+	
+	$("#movie_privacy").change(function(){
+		if($(this).is(":checked")) {
+			$("#movie_privacy").attr("value","1");
+		} else {
+			$("#movie_privacy").attr("value","0");
+		}
+	});
+	
+	
 
 </script>
 
@@ -141,7 +202,15 @@
 <form id="settingsForm" onSubmit="javascript: return false;">
 
 <div class="row">
-	<div class="span5">
+	<div class="span8">
+	
+		<h3>User Settings</h3>
+		
+		<div class="control-group">
+			Display name to connections:&nbsp;
+			<input type="text" id="display_name" name="displayName" value="{{ user.name }}" style="vertical-align:baseline" />
+			<span id="displayNameHelp" class="help-inline" style="display: none;">Must have at least one letter or number.</span> 
+		</div>		
 
 		<h3>Lending Settings</h3>
 
@@ -150,27 +219,32 @@
 			<input id="lending_length" name="lendingLength" style="width:1.5em;" value="{{ user.lending_length }}" />
 			<span id="lendingLengthHelp" class="help-inline" style="display: none;">Must be between 1 and 99.</span>
 		</div>
-
-		<h3>Notifications</h3>
-		<div class="control-group">
-			Receive notifications via:&nbsp;
-			<select id="notification_settings" name="notifications" style="vertical-align:baseline">
-				<option {% if user.notification == "email" %} selected="true" {% endif %} value="email">Email</option>
-				<option {% if user.notification == "mobile" %} selected="true" {% endif %} value="mobile">Mobile App</option>
-				<option {% if user.notification == "both" %} selected="true" {% endif %} value="both">Both</option>
-			</select>
-			<span id="notificationSettingsHelp" class="help-inline" style="display: none;">Must be a mobile app user to select options other than Email.</span> 
-		</div>
 		
-		<h3>User Profile</h3>
+		<h3>Profile Settings</h3>
 		
 		<div class="control-group">
-			Display name to connections:&nbsp;
-			<input type="text" id="display_name" name="displayName" value="{{ user.name }}" style="vertical-align:baseline" />
-			<span id="displayNameHelp" class="help-inline" style="display: none;">Must have at least one letter or number.</span> 
+			Profile URL:&nbsp;&nbsp;{{ request.host_url }}user/
+			<input type="text" id="custom_url" name="customURL" value="{% if user.custom_url %}{{ user.custom_url }}{% else %}{{ user.get_id() }}{% endif %}" style="vertical-align:baseline" />
+			<span id="customURLHelp" class="help-inline" style="display: none;">Must have at least one letter and include only letters and numbers.</span> 
+			<span id="customURLHelpInUse" class="help-inline" style="display: none;">The URL you entered is already in use.</span> 
 		</div>
 		
-		<p>Additional info available to connections:</p>
+		<div class="control-group" style="margin-bottom:20px">
+			<p>Profile visibility:</p>
+			<label class="checkbox"><input type="checkbox" {% if user.profile_privacy==1 %}checked{% endif %} id="profile_privacy" name="profilePrivacy" value="{{ user.profile_privacy }}">Make profile public</label>
+			<label class="checkbox"><input type="checkbox" {% if user.book_privacy==1 %}checked{% endif %} {% if user.profile_privacy==0 %}disabled{% endif %} id="book_privacy" name="bookPrivacy" value="{{ user.book_privacy }}">Show books on public profile</label>
+			<label class="checkbox"><input type="checkbox" {% if user.movie_privacy==1 %}checked{% endif %} {% if user.profile_privacy==0 %}disabled{% endif %} id="movie_privacy" name="moviePrivacy" value="{{ user.movie_privacy }}">Show movies on public profile</label>
+		</div>
+		
+		<div class="control-group">
+			<p>Profile content available publicly:</p>
+			<textarea name="publicInfo" id="public_info" style="width:400px;height:125px;" {% if user.profile_privacy==0 %}disabled{% endif %}
+			placeholder="Enter any content you would like to have visible on your public profile, such as your policy on lending to strangers, your general area, or your tastes in literature and film."
+			>{{ user.public_info }}</textarea>
+			<span id="publicInfoHelp" class="help-inline" style="display: none;">Info cannot exceed 2000 characters.</span> 
+		</div>
+		
+		<p>Profile content available to connections only:</p>
 		
 		<div class="control-group">
 			<textarea name="additionalInfo" id="additional_info" style="width:400px;height:125px;"
@@ -206,10 +280,13 @@
 			Save Changes
 		</a>
 		<div id="validationError" class="alert alert-error" style="display:none;">
-			<strong>Settings not saved!</strong>&nbsp; Fix the errors and try again.
+			<strong>Settings not saved!</strong>&nbsp; Please fix the errors and try again.
 		</div>
 		<div id="submitError" class="alert alert-error" style="display:none;">
 			<strong>Settings not saved!</strong>&nbsp; Something went wrong.
+		</div>
+		<div id="urlError" class="alert alert-error" style="display:none;">
+			<strong>Settings not saved!</strong>&nbsp; The URL you entered is already in use.
 		</div>
 		<div id="submitSuccess" class="alert alert-success" style="display:none;">
 			<strong>Settings saved.</strong>
