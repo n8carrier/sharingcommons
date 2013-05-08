@@ -656,7 +656,11 @@ def get_user_email(userID):
 	return jsonify({"email": privacyEmail})
 	
 def request_to_borrow(lenderID, itemCopyID):
-	emailBody = request.data
+	emailText = []
+	emailText.append("You have received the following message from " + current_user().name + ", a Sharing Commons user.\n----\n\n")
+	emailText.append(request.data)
+	emailText.append("\n\n----\nReply to this message to send an email to " + current_user().name + " and set up the exchange. Once you've lent the item, visit beta.sharingcommons.com to confirm lending the item. "  + current_user().name + " will receive an email when the item is due")
+	emailBody = ''.join(emailText)
 	
 	# Request item
 	try:

@@ -163,7 +163,7 @@
 					<td><a href="/{% if item.item_type=='book'%}book{% elif item.item_type=='movie' %}movie{% endif %}/{{ item.item_key }}" 
 							class="item-title tooltip-button" 
 							data-toggle="tooltip" data-placement="right" 
-							title="View {% if item.item_type == 'book' %}book{% elif item.item_type == 'movie' %}movie{% endif %} details">{{item.title}}{% if item.item_type == 'book' %} ({{ item.author }}){% endif %}</a></td>
+							title="View {% if item.item_type == 'book' %}book{% elif item.item_type == 'movie' %}movie{% endif %} details or manually check out item">{{item.title}}{% if item.item_type == 'book' %} ({{ item.author }}){% endif %}</a></td>
 					<td>{% if item.available %}Available
 						{% else %}On Loan{% endif %}</td>
 					<td style="text-align:center"><a class="btn btn-small" onclick="remove_item('{{ item.item_subtype }}', '{{item.item_key}}', '{{ item.escapedtitle }}', this)"><i class="icon-remove"></i>&nbsp;&nbsp;Remove</a></td>
@@ -191,7 +191,7 @@
 				<tr>
 				  <td>{{ item.display() }}</td>
 				  <td>{% if not item.manual_borrower_name %}{{ item.get_borrower() }}{% else %}{{ item.manual_borrower_name }}{% endif %}</td>
-				  <td style="text-align:center;">{{ item.due_date }}</td>
+				  <td style="text-align:center;">{{ item.due_date.strftime('%m/%d/%Y') }}</td>
 				  <td style="text-align:center;">
 				    <a class="btn btn-inverse tooltip-button" 
 									style="width:140px" 
@@ -223,7 +223,7 @@
 				<tr>
 				  <td>{{ item.display() }}</td>
 				  <td>{{ item.get_owner() }}</td>
-				  <td style="text-align:center">{{ item.due_date }}</td>
+				  <td style="text-align:center">{{ item.due_date.strftime('%m/%d/%Y') }}</td>
 				  <td style="text-align:center">
 					<a class="btn btn-inverse tooltip-button" 
 									style="width:140px" 

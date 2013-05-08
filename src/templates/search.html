@@ -549,17 +549,19 @@
 								{% if user.is_authenticated() == False %}disabled{% endif %} 
 								{% if item.inLibrary == [] %}onclick="{% if user.is_authenticated() and item.inLibrary == [] %}add_item('{% if item.item_type == 'book' %}book{% else %}dvd{% endif %}', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}"{% else %}href="/library"{% endif %} 
 								id="add_button{{ itemlist.index(item) }}">{% if item.inLibrary == [] %}Add&nbsp;to&nbsp;Library{% else %}In&nbsp;Library{% endif %}</a>
-							<a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle" data-toggle="dropdown" id="caret_button{{ itemlist.index(item) }}">
+							<a class="btn btn-{% if item.inLibrary == [] %}inverse{% else %}primary{% endif %} dropdown-toggle" 
+								{% if user.is_authenticated() == False %}disabled{% endif %} 
+								data-toggle="dropdown" id="caret_button{{ itemlist.index(item) }}">
 								<span class="caret"></span>
 							</a>
 							<ul class="dropdown-menu">
 								{% if item.item_type == 'book'%}
-									{% if 'book' not in item.inLibrary %}<li><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
-									{% if 'ebook' not in item.inLibrary %}<li><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('ebook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
-									{% if 'audiobook' not in item.inLibrary %}<li><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('audiobook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
+									{% if 'book' not in item.inLibrary %}<li {% if user.is_authenticated() == False %}class="disabled"{% endif %}><a id="add_book{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('book', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Book&nbsp;to&nbsp;Library</a></li>{% endif %}
+									{% if 'ebook' not in item.inLibrary %}<li {% if user.is_authenticated() == False %}class="disabled"{% endif %}><a id="add_ebook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('ebook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;eBook&nbsp;to&nbsp;Library</a></li>{% endif %}
+									{% if 'audiobook' not in item.inLibrary %}<li {% if user.is_authenticated() == False %}class="disabled"{% endif %}><a id="add_audiobook{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('audiobook', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Audiobook&nbsp;to&nbsp;Library</a></li>{% endif %}
 								{% elif item.item_type == 'movie' %}
-									{% if 'dvd' not in item.inLibrary %}<li><a id="add_dvd{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('dvd', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;DVD&nbsp;to&nbsp;Library</a></li>{% endif %}
-									{% if 'bluray' not in item.inLibrary %}<li><a id="add_bluray{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('bluray', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Blu-ray&nbsp;to&nbsp;Library</a></li>{% endif %}
+									{% if 'dvd' not in item.inLibrary %}<li {% if user.is_authenticated() == False %}class="disabled"{% endif %}><a id="add_dvd{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('dvd', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;DVD&nbsp;to&nbsp;Library</a></li>{% endif %}
+									{% if 'bluray' not in item.inLibrary %}<li {% if user.is_authenticated() == False %}class="disabled"{% endif %}><a id="add_bluray{{ itemlist.index(item) }}" onclick="{% if user.is_authenticated() %}add_item('bluray', '{{ item.item_key }}', '{{ itemlist.index(item) }}'){% endif %}">Add&nbsp;Blu-ray&nbsp;to&nbsp;Library</a></li>{% endif %}
 								{% endif %}
 							</ul>
 						</div>

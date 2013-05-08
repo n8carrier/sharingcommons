@@ -6,8 +6,11 @@
 {% block style %}
 
 <style type="text/css">
-	.library-btn-group {
+	.request-button {
 		margin-bottom: 10px;
+	}
+
+	.library-btn-group {
 		width: 120px;
 	}
 	
@@ -371,6 +374,13 @@
 									{% endif %}
 								</td>
 								<td style="width: 150px">
+									<a class="btn request-button tooltip-button"
+										style="width:120px" 
+										{% if user.is_authenticated() == False %}disabled{% endif %}
+										onclick="{% if user.is_authenticated() %}request_item('{{ item.item_key }}', '{{ item.escapedtitle }}', this){% endif %}"
+										data-toggle="tooltip" data-placement="bottom"
+										title="{% if user.is_authenticated() %}Request to borrow item from one of your connections{% 
+										else %}Join or login to request to borrow items{% endif %}">Request&nbsp;to&nbsp;Borrow</a>
 									<div class="btn-group library-btn-group tooltip-button" data-toggle="tooltip" data-placement="top" 
 										title="{% if item.inLibrary == [] %}{% if user.is_authenticated() %}Add to library and make available to your network{% 
 										else %}Join or login to add to your library{% endif %}{% else %}Book is already in your library. Click to view library.{% endif %}" 
@@ -393,13 +403,6 @@
 											{% endif %}
 										</ul>
 									</div>
-									<a class="btn tooltip-button"
-										style="width:120px" 
-										{% if user.is_authenticated() == False %}disabled{% endif %}
-										onclick="{% if user.is_authenticated() %}request_item('{{ item.item_key }}', '{{ item.escapedtitle }}', this){% endif %}"
-										data-toggle="tooltip" data-placement="bottom"
-										title="{% if user.is_authenticated() %}Request to borrow item from one of your connections{% 
-										else %}Join or login to request to borrow items{% endif %}">Request&nbsp;to&nbsp;Borrow</a>
 								</td>
 							</tr>
 						{% endfor %}
