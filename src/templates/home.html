@@ -35,8 +35,10 @@
 			$("#connectModal").modal('show');
 		}
 		
-		$('.datepicker').on('dateChanged', function(ev) {
-			alert("Update the due date!");
+		$('.lending-due-date').datepicker()
+			.on('changeDate', function(ev){
+			// Loop through datepickers to find the one that changed
+				alert(ev.date.valueOf());
 		});
 	});
 	
@@ -295,8 +297,7 @@
 									{% if not item.manual_borrower_name %}{{ item.get_borrower() }}{% else %}{{ item.manual_borrower_name }}{% endif %}
 								</td>
 								<td style="text-align:center;">
-									{{ item.due_date }}
-									<!--<input class="span2 datepicker" size="16" type="text" value="{{ item.due_date }}">-->
+									<input class="datepicker lending-due-date span2" id="dp{{ loop.index }}" size="16" type="text" value="{{ item.due_date.strftime('%m/%d/%Y') }}" style="margin-bottom:-10px">
 								</td>
 								<td style="text-align:center;">
 									<a class="btn btn-inverse tooltip-button" 
