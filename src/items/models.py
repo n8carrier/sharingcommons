@@ -20,15 +20,15 @@ class Item(ndb.Model):
 	rating = ndb.StringProperty(required=False)
 	direct_link = ndb.StringProperty(required=False)
 	
-	def update_cache(self,item_type):
+	def update_cache(self):
 		#update cached information about the item using the external apis
 		if self.item_key:
 			logging.debug("update_cache(%s)" % self.item_key)
-			if item_type == "movie":
+			if self.item_type == "movie":
 				RT_Key = True #specify that you're searching a rotten tomatoes key, not executing a query
 			else:
 				RT_Key = False
-			Item.search_by_attribute(item_type,self.item_key, None, True, RT_Key)
+			Item.search_by_attribute(self.item_type,self.item_key, None, True, RT_Key)
 
 	def cache_expired(self):
 		"""determine if the cached information in the database needs to be refreshed
@@ -56,11 +56,11 @@ class Item(ndb.Model):
 		if item:
 			logging.debug("item_key:%s was found in the item cache" % item_key)
 			if item.cache_expired():
-				item.update_cache(item_type)
+				item.update_cache()
 		else:
 			logging.debug("item_key:%s not found in cache; performing external search" % item_key)
-			item = Item(item_key=item_key)
-			item.update_cache(item_type)
+			item = Item(item_key=item_key,item_type=item_type)
+			item.update_cache()
 			item = Item.query(Item.item_key==item_key).get()
 		return item
 	
