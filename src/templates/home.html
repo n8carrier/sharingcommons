@@ -292,7 +292,7 @@
 									{{ item.display() }}
 								</td>
 								<td>
-									{{ item.get_borrower() }}
+									{% if not item.manual_borrower_name %}{{ item.get_borrower() }}{% else %}{{ item.manual_borrower_name }}{% endif %}
 								</td>
 								<td style="text-align:center;">
 									{{ item.due_date }}

@@ -321,6 +321,9 @@ def about():
 	
 def mobile_app():
 	return render_response('mobileapp.html')
+	
+def licenses():
+	return render_response('licenses.html')
 
 @login_required
 def profile(userID):
@@ -350,19 +353,34 @@ def profile(userID):
 		library.sort(key=lambda item: item["title"].lower())
 		return render_response('profile.html',profile_user=profile_user,library=library)
 	return render_response('invalidprofile.html')
-	
+
 def book_info(OLKey):
 	# Pass book object to template
-	book = Item.get_by_key("book",OLKey).to_dict()
+	itemBook = Item.get_by_key("book",OLKey)
+	book = itemBook.to_dict()
 	# Determine if the user owns this book
 	# Find all connections who own this book and get the status for each
 	# Find out any pending actions regarding this book
 	# Find any current loans or borrow of this book
-	return render_response('bookinfo.html',book=book)
+	
+	# Check if user owns book and pass itemCopy object
+	itemCopy = ItemCopy.query(ItemCopy.item==itemBook.key,ItemCopy.owner==current_user().key).fetch()
+	if itemCopy:
+		bookCopy = itemCopy[0]
+	else:
+		bookCopy = None
+	return render_response('itemdetail.html',item=book,itemCopy=bookCopy)
 	
 def movie_info(RTKey):
-	movie = Item.get_by_key("movie",RTKey).to_dict()
-	return render_response('movieinfo.html', movie=movie)
+	itemMovie = Item.get_by_key("movie",RTKey)
+	movie = itemMovie.to_dict()
+	# Check if user owns book and pass itemCopy object
+	itemCopy = ItemCopy.query(ItemCopy.item==itemMovie.key,ItemCopy.owner==current_user().key).fetch()
+	if itemCopy:
+		movieCopy = itemCopy[0]
+	else:
+		movieCopy = None
+	return render_response('itemdetail.html', item=movie, itemCopy=movieCopy)
 	
 def join():
 	return render_response('join.html')
@@ -536,23 +554,27 @@ def get_lent_items():
 		itemInfo["borrowerId"] = itemcopy.borrower.id()
 		itemInfo["borrower"] = borrower.name
 		itemInfo["due_date"] = str(itemcopy.due_date)
-		itemcopy.append(itemInfo)
-	return jsonify({"lentItems":itemcopy})
+		if itemcopy.manual_borrower_name:
+			itemInfo["manual_borrower_name"] = itemcopy.manual_borrower_name
+			itemInfo["manual_borrower_email"] = itemcopy.manual_borrower_email
+		lentItems.append(itemInfo)
+	return jsonify({"lentItems":lentItems})
 
 def get_borrowed_items():
 	cur_user = current_user()
 	borrowedItems = []
 	for itemcopy in cur_user.get_borrowed_books():
-		item = Item.get_by_id(itemcopy.item.id())
-		owner = UserAccount.get_by_id(itemcopy.owner.id())
-		itemInfo = dict()
-		itemInfo["title"] = item.title
-		itemInfo["author"] = item.author
-		itemInfo["copyID"] = itemcopy.key.id()
-		itemInfo["ownerId"] = itemcopy.owner.id()
-		itemInfo["owner"] = owner.name
-		itemInfo["due_date"] = str(itemcopy.due_date)
-		borrowedItems.append(itemInfo)
+		if not itemcopy.manual_borrower_name: #Don't include items the user is manually lending (they would come up because the borrower is set to the user)
+			item = Item.get_by_id(itemcopy.item.id())
+			owner = UserAccount.get_by_id(itemcopy.owner.id())
+			itemInfo = dict()
+			itemInfo["title"] = item.title
+			itemInfo["author"] = item.author
+			itemInfo["copyID"] = itemcopy.key.id()
+			itemInfo["ownerId"] = itemcopy.owner.id()
+			itemInfo["owner"] = owner.name
+			itemInfo["due_date"] = str(itemcopy.due_date)
+			borrowedItems.append(itemInfo)
 	return jsonify({"borrowedItems":borrowedItems})
 
 def return_item(itemCopyID):
@@ -664,3 +686,21 @@ def request_to_borrow(lenderID, itemCopyID):
 			subject='Sharing Commons: Request to Borrow "' + Item.query(Item.key == itemCopy.item).get().title + '"',
 			body=emailBody)
 	return jsonify({"result":"success"})
+	
+def manual_checkout(itemCopyID):
+	if request.method == 'POST':
+		itemCopy = ItemCopy.get_by_id(int(itemCopyID))
+		
+		# Manually checkout
+		itemCopy.borrower = current_user().key
+		itemCopy.lender = current_user().key
+		itemCopy.manual_borrower_name = request.form["borrowerName"]
+		if "borrowerEmail" in request.form:
+			itemCopy.manual_borrower_email = request.form["borrowerEmail"]
+		from datetime import datetime
+		itemCopy.due_date = datetime.strptime(request.form["dueDate"], "%m/%d/%Y")
+		itemCopy.put()
+		
+		return jsonify({"result":"success"})
+	else:
+		return jsonify({"result":"error"})

@@ -203,6 +203,8 @@ class ItemCopy(ndb.Model):
 	owner = ndb.KeyProperty(kind=UserAccount)
 	borrower = ndb.KeyProperty(kind=UserAccount)
 	due_date = ndb.DateProperty()
+	manual_borrower_name = ndb.StringProperty(required=False)
+	manual_borrower_email = ndb.StringProperty(required=False)
 	
 	def get_owner(self):
 		owner = UserAccount.get_by_id(self.owner.id())
@@ -229,6 +231,8 @@ class ItemCopy(ndb.Model):
 	def return_item(self):
 		self.borrower = None
 		self.due_date = None
+		self.manual_borrower_name = None
+		self.manual_borrower_email = None
 
 	def update_due_date(self, date):
 		import datetime

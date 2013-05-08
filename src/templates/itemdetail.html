@@ -1,0 +1,238 @@
+
+{% extends "maintemplate.html" %}
+
+{% block title %}{% if item.item_type == "book" %}Book - {{ item.title }}{% elif item.item_type == "movie"%}Movie - {{ movie.title }}{% endif %}{% endblock %}
+
+{% block style %}
+
+<style type="text/css">
+	.infoLabel {
+		padding-right: 10px;
+		font-weight: bolder;
+	}
+</style>
+
+{% endblock %}
+
+{% block script %}
+
+{% if itemCopy %}
+<script type="text/javascript">
+	
+	function submitForm() {
+		if(validate()) {
+			$("#validationError").hide();
+			$.post("/manual_checkout/{{ itemCopy.key.id() }}", $("#manual-borrow-form").serialize())
+			.done(function(data) {
+				if(data.result=="success") {
+					$("#submitSuccess").show();
+					$("#submitError").hide();
+				} else {
+					$("#submitError").show();
+					$("#submitSuccess").hide();
+				}
+			}).fail(function() {
+				$("#submitError").show();
+				$("#submitSuccess").hide();
+			});
+		}
+		else {
+			$("#validationError").show();
+			$("#submitSuccess").hide();
+			$("#submitError").hide();
+		}
+		
+		return false;
+	}
+	
+	function validate() {
+		var validates = true;
+		
+		// Test that the borrower name has at least one letter or number
+		var reName = /\w/;
+		if(!reName.test($("#borrowerName").val())) {
+			validates = false;
+			$("#borrowerName").parent().removeClass("success").addClass("error");
+			$("#borrowerNameHelp").show();
+		}
+		else {
+			$("#borrowerName").parent().removeClass("error").addClass("success");
+			$("#borrowerNameHelp").hide();
+		}
+		
+		// Test that the borrower email is in valid format
+		var reName = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		if(!reName.test($("#borrowerEmail").val())) {
+			validates = false;
+			$("#borrowerEmail").parent().removeClass("success").addClass("error");
+			$("#borrowerEmailHelp").show();
+		}
+		else {
+			$("#borrowerEmail").parent().removeClass("error").addClass("success");
+			$("#borrowerEmailHelp").hide();
+		}
+		
+		// Test that the due date is in valid format
+		// TODO: Needs to be tested to be after today and not ridiculously far away
+		//var reNmae = /^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/;
+		//if(!reName.test($("#dueDate").val())) {
+		//	validates = false;
+		//	$("#dueDate").parent().removeClass("success").addClass("error");
+		//	$("#dueDateHelp").show();
+		//}
+		//else {
+		//	$("#dueDate").parent().removeClass("error").addClass("success");
+		//	$("#dueDateHelp").hide();
+		//}
+		
+		return validates;
+	}
+		
+	function checkIn() {
+		$.get("/return_item/{{ itemCopy.key.id() }}")
+		.done(function(data) {
+			$("#borrowerName").attr("value","");
+			$("#borrowerEmail").attr("value","");
+			$("#checkInMessage").show();
+			set_duedate;
+		});
+	}
+	
+	function hide_checkin_message() {
+		$("#undoMessage").hide();
+		return false;
+	}
+	
+	function set_duedate() {
+		var today = new Date();
+		var dueDate = new Date();
+		dueDate.setDate(today.getDate()+{{ user.lending_length }});
+		var dd = dueDate.getDate();
+		var mm = dueDate.getMonth() + 1;
+		var y = dueDate.getFullYear();
+		var formattedDueDate = mm + '/'+ dd + '/'+ y;
+		$("#dueDate").attr("value",formattedDueDate);
+	}
+	
+	if($("#dueDate").attr("value")=="") {
+		set_duedate();
+	}
+
+</script>
+{% endif %}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+	<div class="span6 offset3" style="position: absolute; top: 50px;">
+		<div id="checkInMessage" class="alert" style="display: none;">
+			<a class="close" onclick="hide_checkin_message()">&times;</a>
+			{{ item.title }} has been checked in.&nbsp;&nbsp;
+		</div>
+	</div>
+	<div class="span12">
+		<h3>{% if item.item_type == "book" %}Book{% elif item.item_type == "movie"%}Movie{% endif %} Details</h3>
+	</div>
+</div>
+<div class="row">
+	<div class="span2">
+		<div class="well">
+			<img {% if item.thumbnail_link == "" %} src="{{ url_for('static', filename='img/nocoverart.png') }}"
+				{% else %} src="{{ item.thumbnail_link }}" {% endif %} style="height:auto;width:150px;text-align:center"/>
+			{% if item.item_type == "movie" %}All movie information provided by Flixster{% endif %}
+		</div>
+	</div>
+	<div class="span10">
+		<table class="infoTable">
+			{% if item.item_type == "book" %}
+				<tr>
+					<td class="infoLabel">Title:</td>
+					<td>{{ item.title }}</td>
+				</tr>
+				<tr>
+					<td class="infoLabel">Author:</td>
+					<td>{{ item.author }}</td>
+				</tr>
+				<tr>
+					<td class="infoLabel">Details:</td>
+					<td><a href="http://openlibrary.org/works/{{ item.item_key }}">View book in OpenLibrary</a></td>
+			{% elif item.item_type == "movie" %}
+				<tr>
+					<td class="infoLabel">Title:</td>
+					<td>{{ movie.title }}</td>
+				</tr>
+				<tr>
+					<td class="infoLabel">Year:</td>
+					<td>{{ movie.year }}</td>
+				</tr>
+				<tr>
+					<td class="infoLabel">Genre:</td>
+					<td>{{ movie.genre }}</td>
+				</tr>
+				<tr>
+					<td class="infoLabel">Rating:</td>
+					<td>{{ movie.rating }}</td>
+				</tr>
+				<tr>
+					<td class="infoLabel">Details:</td>
+					<td><a href="{{ movie.direct_link }}">View movie on Rotten Tomatoes</a></td>
+			{% endif %}
+		</table>
+		
+	</div>
+</div>
+
+{% if itemCopy %}
+	<div class="row">
+		<div class="span12">
+			<form class="form-horizontal" id="manual-borrow-form" onSubmit="javascript: return false;">
+				<h3>Manual Checkout</h3>
+				<div class="control-group">
+					<label class="control-label" for="borrowerName">Borrower Name:</label>
+					<div class="controls">
+						<input type="text" class="input-large" id="borrowerName" name="borrowerName" value="{% if itemCopy.manual_borrower_name %}{{ itemCopy.manual_borrower_name }}{% endif %}">
+						<span id="borrowerNameHelp" class="help-inline" style="display: none;">Please enter the borrower's name.</span>
+					</div>
+				</div>
+				<div class="control-group">
+					<label class="control-label" for="borrowerEmail">Borrower Email: (Optional)</label>
+					<div class="controls">
+						<input type="text" class="input-large" id="borrowerEmail" name="borrowerEmail" value="{% if itemCopy.manual_borrower_email %}{{ itemCopy.manual_borrower_email }}{% endif %}">
+						<span id="borrowerEmailHelp" class="help-inline" style="display: none;">Please enter a valid email address or leave blank.</span>
+						<p class="help-block">Enter the borrower's email address if you would like the borrower to receive emails about the item being due.</p>
+					</div>
+				</div>
+				<div class="control-group">
+					<label class="control-label" for="dueDate">Due Date:</label>
+					<div class="controls">
+						<input class="datepicker" size="16" type="text" id="dueDate" name="dueDate" value="{% if itemCopy.due_date %}{{ itemCopy.due_date.strftime('%m/%d/%Y') }}{% endif %}"" style="width:100px;text-align:center;vertical-align:middle;margin-bottom:0px;" />
+						<span id="dueDateHelp" class="help-inline" style="display: none;">Please choose a valid date.</span>
+					</div>
+				</div>
+				<div class="control-group">
+					<div class="controls" style="margin-bottom:25px">
+						<a class="btn btn-inverse" onclick="submitForm();" style="margin-right:10px">
+							Checkout {% if item.item_type == "book" %}Book{% elif item.item_type == "movie"%}Movie{% endif %}
+						</a>
+						<a class="btn" onclick="checkIn();">
+							Check In {% if item.item_type == "book" %}Book{% elif item.item_type == "movie"%}Movie{% endif %}
+						</a>
+					</div>
+				</div>
+			</form>
+			<div id="validationError" class="alert alert-error" style="display:none;">
+				<strong>Checkout unsuccessful</strong>&nbsp; Fix the errors and try again.
+			</div>
+			<div id="submitError" class="alert alert-error" style="display:none;">
+				<strong>Checkout unsuccessful</strong>&nbsp; Something went wrong.
+			</div>
+			<div id="submitSuccess" class="alert alert-success" style="display:none;">
+				<strong>"{{ item.title }}" has manually been checked out.</strong>
+			</div>
+		</div>
+	</div>
+{% endif %}
+
+{% endblock %}

@@ -190,7 +190,7 @@
 				{% for item in user.get_lent_items() %}
 				<tr>
 				  <td>{{ item.display() }}</td>
-				  <td>{{ item.get_borrower() }}</td>
+				  <td>{% if not item.manual_borrower_name %}{{ item.get_borrower() }}{% else %}{{ item.manual_borrower_name }}{% endif %}</td>
 				  <td style="text-align:center;">{{ item.due_date }}</td>
 				  <td style="text-align:center;">
 				    <a class="btn btn-inverse tooltip-button" 
@@ -215,7 +215,7 @@
 			{% else %}
 				<tr>
 				  <th>Title</th>
-				  <th>Borrower</th>
+				  <th>Owner</th>
 				  <th style="text-align:center;width:200px">Due Date</th>
 				  <th style="text-align:center;width:200px"></th>
 				</tr>

@@ -61,6 +61,9 @@ app.add_url_rule('/about',view_func=views.about)
 # Mobile App
 app.add_url_rule('/mobileapp',view_func=views.mobile_app)
 
+# Licenses
+app.add_url_rule('/licenses',view_func=views.licenses)
+
 # Logout
 app.add_url_rule('/logout',view_func=views.logout)
 
@@ -197,6 +200,8 @@ app.add_url_rule('/request_to_borrow/<lenderID>/<itemCopyID>', methods = ['GET',
 #   parameters:
 #        userID - the ID of the user for which the email address is being requested
 app.add_url_rule('/get_user_email/<userID>',view_func=views.get_user_email)
+
+app.add_url_rule('/manual_checkout/<itemCopyID>', methods = ['GET', 'POST', 'DELETE'], view_func=views.manual_checkout)
 
 ################################### Web service calls ###################################
 # Lookup a book from app

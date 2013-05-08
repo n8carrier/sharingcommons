@@ -368,7 +368,13 @@ class UserAccount(ndb.Model):
 		A list of ItemCopy objects of all the the items the user is currently lending
 		"""
 		from src.items.models import ItemCopy
-		return ItemCopy.query(ItemCopy.owner==self.key,ItemCopy.borrower!=None).fetch()
+		itemList = ItemCopy.query(ItemCopy.owner==self.key,ItemCopy.borrower!=None).fetch()
+		# Remove manually lent items (items being lended to the user's self)
+		lentItems = []
+		for item in itemList:
+			if not item.manual_borrower_name:
+				lentItems.append(item)
+		return lentItems
 
 	def get_borrowed_items(self):
 		"""Get all the items that the user is currently borrowing from anther user
