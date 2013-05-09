@@ -96,6 +96,7 @@
 	<div class="span2">
 		<div class="well">
 			<img src="{{ gravatar_url }}" style="text-align:center"/>
+			{% if profile_user.get_id() == user.get_id() %}Image from <a href="http://gravatar.com/">Gravatar</a>{% endif %}
 		</div>
 	</div>
 	<div class="span6">
@@ -152,7 +153,7 @@
 				{% endif %}
 				{% for item in booklist %}
 					<tr>
-						<td><i class="icon-{% if item.item_subtype == 'book' %}book{% elif item.item_subtype == 'ebook' %}tablet{% elif item.item_subtype == 'audiobook' %}volume-down{% endif %} icon-large"></i></td>
+						<td><i class="icon-{% if item.item_subtype == 'book' %}book{% elif item.item_subtype == 'ebook' %}tablet{% elif item.item_subtype == 'audiobook' %}volume-down{% endif %} icon-large" title="{% if item.item_subtype == 'book' %}Book{% elif item.item_subtype == 'ebook' %}eBook{% elif item.item_subtype == 'audiobook' %}Audiobook{% endif %}"></i></td>
 						<td>{{ item.title }}</td>
 						<td>{{ item.author }}</td>
 						{% if inNetwork %}
@@ -211,7 +212,7 @@
 				{% endif %}
 				{% for item in movielist %}
 					<tr>
-						<td><i class="icon-facetime-video icon-large" {% if item.item_subtype == "bluray" %}style="color:blue"{% endif %}></i></td>
+						<td><i class="icon-facetime-video icon-large" {% if item.item_subtype == 'bluray' %}style="color:blue"{% endif %} title="{% if item.item_subtype == 'dvd' %}DVD{% elif item.item_subtype == 'bluray' %}Blu-ray{% endif %}"></i></td>
 						<td>{{ item.title }}</td>
 						<td>{{ item.year }}</td>
 						<td>{{ item.genre }}</td>

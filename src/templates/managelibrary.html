@@ -159,7 +159,7 @@
 				</tr>
 				{% for item in itemlist %}
 				  <tr>
-				    <td><i class="icon-{% if item.item_subtype == "book" %}book{% elif item.item_subtype == "ebook" %}tablet{% elif item.item_subtype == "audiobook" %}volume-down{% elif item.item_subtype == "dvd" or item.item_subtype == "bluray" %}facetime-video{% endif %} icon-large" {% if item.item_subtype == "bluray" %}style="color:blue"{% endif %}></i></td>
+				    <td><i class="icon-{% if item.item_subtype == 'book' %}book{% elif item.item_subtype == 'ebook' %}tablet{% elif item.item_subtype == 'audiobook' %}volume-down{% elif item.item_subtype == 'dvd' or item.item_subtype == 'bluray' %}facetime-video{% endif %} icon-large"{% if item.item_subtype == "bluray" %} style="color:blue"{% endif %} title="{% if item.item_subtype == 'book' %}Book{% elif item.item_subtype == 'ebook' %}eBook{% elif item.item_subtype == 'audiobook' %}Audiobook{% elif item.item_subtype == 'dvd' %}DVD{% elif item.item_subtype == 'bluray' %}Blu-ray{% endif %}"></i></td>
 					<td><a href="/{% if item.item_type=='book'%}book{% elif item.item_type=='movie' %}movie{% endif %}/{{ item.item_key }}" 
 							class="item-title tooltip-button" 
 							data-toggle="tooltip" data-placement="right" 
