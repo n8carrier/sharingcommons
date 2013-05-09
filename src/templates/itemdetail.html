@@ -163,10 +163,12 @@
 					<td class="infoLabel">Title:</td>
 					<td>{{ movie.title }}</td>
 				</tr>
-				<tr>
-					<td class="infoLabel">Year:</td>
-					<td>{{ movie.year }}</td>
-				</tr>
+				{% if movie.year %}
+					<tr>
+						<td class="infoLabel">Year:</td>
+						<td>{{ movie.year }}</td>
+					</tr>
+				{% endif %}
 				<tr>
 					<td class="infoLabel">Genre:</td>
 					<td>{{ movie.genre }}</td>

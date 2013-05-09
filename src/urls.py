@@ -13,10 +13,8 @@
 #
 # Warmup info: http://stackoverflow.com/questions/8235716/how-does-the-warmup-service-work-in-python-google-app-engine
 
-from flask import Flask
-from src import app, views, api
+from src import app, views
 from views import render_response
-import accounts.views
 
 # Warmup
 app.add_url_rule('/_ah/warmup',view_func=views.warmup)
@@ -79,10 +77,13 @@ app.add_url_rule('/book/<OLKey>',view_func=views.book_info)
 # Movie Info
 app.add_url_rule('/movie/<RTKey>',view_func=views.movie_info)
 
-######################## Internal calls (to be called by ajax) ##########################
-
 # Gets gravatar link
 app.add_url_rule('/gravatar/<userID>/<size>',view_func=views.generate_gravatar)
+
+######################## Internal calls (to be called by ajax) ##########################
+
+# Star Rating
+app.add_url_rule('/star-rating/<item_subtype>/<item_key>/<star_rating>', methods = ['POST'], view_func=views.star_rating)
 
 # Get book list
 #	Returns:

@@ -1,22 +1,19 @@
 # Views
 from google.appengine.api import users
-from flask import Response, jsonify, render_template, request, url_for, redirect, flash
-from flaskext.login import login_required, login_user, logout_user
+from flask import jsonify, render_template, request, url_for, redirect
 from src.items.models import Item,ItemCopy
 from activity.models import RequestToBorrow, WaitingToBorrow
 import logging
 from decorators import crossdomain
 from src import app
 from utilities.JsonIterable import *
-from accounts import login as login_account, logout as logout_account, join as join_account, delete as delete_account, current_user, login_required
+from accounts import login as login_account, logout as logout_account, join as join_account, delete as delete_account, current_user
 from accounts.models import UserAccount
 from activity.models import Action
 from google.appengine.api import mail
 from datetime import date,timedelta
 import re
-
 import filters
-
 
 #mail = Mail(app)
 
@@ -170,6 +167,10 @@ def library():
 	for copy in useraccount.get_library():
 		item = Item.query(Item.key == copy.item).get().to_dict()
 		item["item_subtype"] = copy.item_subtype
+		if copy.star_rating:
+			item["star_rating"] = copy.star_rating
+		else:
+			item["star_rating"] = 0
 		item["escapedtitle"] = re.escape(item["title"])
 		if copy.borrower is None:
 			item["available"] = True
@@ -225,8 +226,8 @@ def discover():
 	#Remove duplicate books (dictionaries) from itemlist (list)
 	dedupeditemlist = []
 	for item in itemlist:
-	  if item not in dedupeditemlist:
-	    dedupeditemlist.append(item)
+		if item not in dedupeditemlist:
+			dedupeditemlist.append(item)
 	
 	return render_response('discover.html',itemlist=dedupeditemlist)
 	
@@ -388,6 +389,7 @@ def profile(userID):
 			item = Item.query(Item.key == copy.item).get().to_dict()
 			if item["item_type"] == "book":
 				item["item_subtype"] = copy.item_subtype
+				item["star_rating"] = copy.star_rating
 				item["escapedtitle"] = re.escape(item["title"])
 				if copy.borrower is None:
 					item["available"] = True
@@ -406,6 +408,7 @@ def profile(userID):
 			item = Item.query(Item.key == copy.item).get().to_dict()
 			if item["item_type"] == "movie":
 				item["item_subtype"] = copy.item_subtype
+				item["star_rating"] = copy.star_rating
 				item["escapedtitle"] = re.escape(item["title"])
 				if copy.borrower is None:
 					item["available"] = True
@@ -490,6 +493,25 @@ def logout():
 	return redirect(users.create_logout_url("/"))
 
 ######################## Internal calls (to be called by ajax) ##########################
+
+def star_rating(item_subtype, item_key, star_rating):
+	# Get Item
+	# Infer item_type
+	if item_subtype in ('book', 'ebook', 'audiobook'):
+		item_type = 'book'
+	elif item_subtype in ('dvd', 'bluray'):
+		item_type = 'movie'
+	else:
+		item_type = ''
+	item = Item.get_by_key(item_type,item_key)
+	
+	# Get ItemCopy
+	itemCopy = ItemCopy.query(ItemCopy.item==item.key,ItemCopy.owner==current_user().key,ItemCopy.item_subtype==item_subtype).get()
+	if itemCopy.update_star_rating(star_rating):
+		return jsonify({"result":"success"})
+	else:
+		return jsonify({"result":"error"})
+
 def delete_user():
 	cur_user = current_user()
 	if not cur_user:
@@ -782,7 +804,6 @@ def manual_checkout(itemCopyID):
 		itemCopy.manual_borrower_name = request.form["borrowerName"]
 		if "borrowerEmail" in request.form:
 			itemCopy.manual_borrower_email = request.form["borrowerEmail"]
-		from datetime import datetime
 		itemCopy.due_date = datetime.strptime(request.form["dueDate"], "%m/%d/%Y")
 		itemCopy.put()
 		

@@ -34,7 +34,10 @@ class Item(ndb.Model):
 		"""determine if the cached information in the database needs to be refreshed
 		
 		"""
-		return (datetime.now() - self.last_update) > timedelta(days=1)
+		if self.last_update:
+			return (datetime.now() - self.last_update) > timedelta(days=1)
+		else:
+			True
 	
 	@classmethod
 	def get_by_key(cls,item_type,item_key=None):
@@ -203,6 +206,7 @@ class ItemCopy(ndb.Model):
 	owner = ndb.KeyProperty(kind=UserAccount)
 	borrower = ndb.KeyProperty(kind=UserAccount)
 	due_date = ndb.DateProperty()
+	star_rating = ndb.StringProperty(required=False)
 	manual_borrower_name = ndb.StringProperty(required=False)
 	manual_borrower_email = ndb.StringProperty(required=False)
 	
@@ -240,5 +244,10 @@ class ItemCopy(ndb.Model):
 
 	def get_due_date(self):
 		return self.due_date
+		
+	def update_star_rating(self, star_rating):
+		self.star_rating = star_rating
+		self.put()
+		return True
 
 
