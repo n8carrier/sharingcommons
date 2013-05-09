@@ -420,7 +420,7 @@ def profile(userID):
 		movielist.sort(key=lambda item: item["title"].lower())
 		import hashlib
 		import urllib
-		gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(profile_user.email).hexdigest() + "?s=150&d=" + urllib.quote(request.host_url,'') + "img%2Fnoimage.png"
+		gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(profile_user.email).hexdigest() + "?s=150&d=" + urllib.quote(request.host_url,'') + "static%2Fimg%2Fnoimage.png"
 		return render_response('profile.html',inNetwork=inNetwork,profile_user=profile_user,booklist=booklist,movielist=movielist,gravatar_url=gravatar_url)
 	return redirect(url_for("invalid_profile"))
 	
@@ -430,7 +430,7 @@ def generate_gravatar(userID,size):
 		user = UserAccount.get_by_id(int(userID))
 		import hashlib
 		import urllib
-		gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(user.email).hexdigest() + "?s=" + size + "&d=" + urllib.quote(request.host_url,'') + "img%2Fnoimage.png"
+		gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(user.email).hexdigest() + "?s=" + size + "&d=" + urllib.quote(request.host_url,'') + "static%2Fimg%2Fnoimage.png"
 	except:
 		return False
 	return redirect(gravatar_url)
