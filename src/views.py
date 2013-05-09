@@ -418,8 +418,22 @@ def profile(userID):
 		# author as secondary, and item_subtype as tertiary
 		movielist.sort(key=lambda item: item["item_subtype"])
 		movielist.sort(key=lambda item: item["title"].lower())
-		return render_response('profile.html',inNetwork=inNetwork,profile_user=profile_user,booklist=booklist,movielist=movielist)
+		import hashlib
+		import urllib
+		gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(profile_user.email).hexdigest() + "?s=150&d=" + urllib.quote(request.host_url,'') + "img%2Fnoimage.png"
+		return render_response('profile.html',inNetwork=inNetwork,profile_user=profile_user,booklist=booklist,movielist=movielist,gravatar_url=gravatar_url)
 	return redirect(url_for("invalid_profile"))
+	
+def generate_gravatar(userID,size):
+	try:
+		int(userID)
+		user = UserAccount.get_by_id(int(userID))
+		import hashlib
+		import urllib
+		gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(user.email).hexdigest() + "?s=" + size + "&d=" + urllib.quote(request.host_url,'') + "img%2Fnoimage.png"
+	except:
+		return False
+	return redirect(gravatar_url)
 
 def book_info(OLKey):
 	# Pass book object to template

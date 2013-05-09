@@ -80,6 +80,10 @@ app.add_url_rule('/book/<OLKey>',view_func=views.book_info)
 app.add_url_rule('/movie/<RTKey>',view_func=views.movie_info)
 
 ######################## Internal calls (to be called by ajax) ##########################
+
+# Gets gravatar link
+app.add_url_rule('/gravatar/<userID>/<size>',view_func=views.generate_gravatar)
+
 # Get book list
 #	Returns:
 #		JSON object with the following info about each book the user owns

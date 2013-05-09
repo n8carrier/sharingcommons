@@ -60,7 +60,7 @@
 	}
 	
 	function hide_requestSent() {
-		$("#undoMessage").hide();
+		$("#requestSent").modal('hide');
 		return false;
 	}
 	
@@ -93,6 +93,11 @@
 {% endif %}
 
 <div class="row">
+	<div class="span2">
+		<div class="well">
+			<img src="{{ gravatar_url }}" style="text-align:center"/>
+		</div>
+	</div>
 	<div class="span6">
 		<h3>User Profile</h3>
 		<table class="infoTable">
@@ -113,7 +118,7 @@
 		</table>
 	</div>
 	{% if not inNetwork %}
-		<div class="span2 offset4">
+		<div class="span2 offset2">
 			<br>
 			<a class="btn btn-inverse {% if not user.is_authenticated() %}disabled tooltip-button{% endif %}"
 			{% if not user.is_authenticated() %}data-toggle="tooltip" 
