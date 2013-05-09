@@ -1,7 +1,7 @@
 
 {% extends "maintemplate.html" %}
 
-{% block title %}{% if item.item_type == "book" %}Book - {{ item.title }}{% elif item.item_type == "movie"%}Movie - {{ movie.title }}{% endif %}{% endblock %}
+{% block title %}{% if item.item_type == "book" %}Book - {{ item.title }}{% elif item.item_type == "movie"%}Movie - {{ item.title }}{% endif %}{% endblock %}
 
 {% block style %}
 
@@ -161,25 +161,25 @@
 			{% elif item.item_type == "movie" %}
 				<tr>
 					<td class="infoLabel">Title:</td>
-					<td>{{ movie.title }}</td>
+					<td>{{ item.title }}</td>
 				</tr>
-				{% if movie.year %}
+				{% if item.year != 9999 %}
 					<tr>
 						<td class="infoLabel">Year:</td>
-						<td>{{ movie.year }}</td>
+						<td>{{ item.year }}</td>
 					</tr>
 				{% endif %}
 				<tr>
 					<td class="infoLabel">Genre:</td>
-					<td>{{ movie.genre }}</td>
+					<td>{{ item.genre }}</td>
 				</tr>
 				<tr>
 					<td class="infoLabel">Rating:</td>
-					<td>{{ movie.rating }}</td>
+					<td>{{ item.rating }}</td>
 				</tr>
 				<tr>
 					<td class="infoLabel">Details:</td>
-					<td><a href="{{ movie.direct_link }}">View movie on Rotten Tomatoes</a></td>
+					<td><a href="{{ item.direct_link }}">View movie on Rotten Tomatoes</a></td>
 			{% endif %}
 		</table>
 		

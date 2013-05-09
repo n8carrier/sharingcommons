@@ -448,9 +448,12 @@ def book_info(OLKey):
 	# Find any current loans or borrow of this book
 	
 	# Check if user owns book and pass itemCopy object
-	itemCopy = ItemCopy.query(ItemCopy.item==itemBook.key,ItemCopy.owner==current_user().key).fetch()
-	if itemCopy:
-		bookCopy = itemCopy[0]
+	if current_user().is_authenticated():
+		itemCopy = ItemCopy.query(ItemCopy.item==itemBook.key,ItemCopy.owner==current_user().key).fetch()
+		if itemCopy:
+			bookCopy = itemCopy[0]
+		else:
+			bookCopy = None
 	else:
 		bookCopy = None
 	return render_response('itemdetail.html',item=book,itemCopy=bookCopy)
@@ -459,9 +462,12 @@ def movie_info(RTKey):
 	itemMovie = Item.get_by_key("movie",RTKey)
 	movie = itemMovie.to_dict()
 	# Check if user owns book and pass itemCopy object
-	itemCopy = ItemCopy.query(ItemCopy.item==itemMovie.key,ItemCopy.owner==current_user().key).fetch()
-	if itemCopy:
-		movieCopy = itemCopy[0]
+	if current_user().is_authenticated():
+		itemCopy = ItemCopy.query(ItemCopy.item==itemMovie.key,ItemCopy.owner==current_user().key).fetch()
+		if itemCopy:
+			movieCopy = itemCopy[0]
+		else:
+			movieCopy = None
 	else:
 		movieCopy = None
 	return render_response('itemdetail.html', item=movie, itemCopy=movieCopy)

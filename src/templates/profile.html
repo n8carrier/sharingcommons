@@ -165,7 +165,10 @@
 				{% for item in booklist %}
 					<tr>
 						<td><i class="icon-{% if item.item_subtype == 'book' %}book{% elif item.item_subtype == 'ebook' %}tablet{% elif item.item_subtype == 'audiobook' %}volume-down{% endif %} icon-large" title="{% if item.item_subtype == 'book' %}Book{% elif item.item_subtype == 'ebook' %}eBook{% elif item.item_subtype == 'audiobook' %}Audiobook{% endif %}"></i></td>
-						<td>{{ item.title }}</td>
+						<td><a href="/book/{{ item.item_key }}" 
+							class="item-title tooltip-button" 
+							data-toggle="tooltip" data-placement="right" 
+							title="View book details">{{item.title}}</a></td>
 						<td>{{ item.author }}</td>
 						<td><div class="star-rating" data-score="{{ item.star_rating }}"></td>
 						{% if inNetwork %}
@@ -226,8 +229,11 @@
 				{% for item in movielist %}
 					<tr>
 						<td><i class="icon-facetime-video icon-large" {% if item.item_subtype == 'bluray' %}style="color:blue"{% endif %} title="{% if item.item_subtype == 'dvd' %}DVD{% elif item.item_subtype == 'bluray' %}Blu-ray{% endif %}"></i></td>
-						<td>{{ item.title }}</td>
-						<td>{% if item.year %}{{ item.year }}{% endif %}</td>
+						<td><a href="/movie/{{ item.item_key }}" 
+							class="item-title tooltip-button" 
+							data-toggle="tooltip" data-placement="right" 
+							title="View movie details">{{item.title}}</a></td>
+						<td>{% if item.year != 9999 %}{{ item.year }}{% endif %}</td>
 						<td>{{ item.genre }}</td>
 						<td>{{ item.rating }}</td>
 						<td><div class="star-rating" data-score="{{ item.star_rating }}"></td>
