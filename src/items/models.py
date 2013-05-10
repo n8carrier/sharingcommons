@@ -92,9 +92,22 @@ class Item(ndb.Model):
 					json_response = response.content
 					data = json.loads(json_response)
 					for book in data['docs']:
-						curItem = Item(item_key=None)
-						curItem.item_type = "book"
-						curItem.item_key = book['key']
+						if cache:
+							# Check to see if Item is already in the database; if so, update that copy
+							checkItem = Item.query(Item.item_key==book['key']).get()
+							if checkItem:
+								curItem = checkItem
+								createNew = False
+							else:
+								createNew = True
+						else:
+							createNew = True
+							
+						if createNew:
+							curItem = Item(item_key=None)
+							curItem.item_type = "book"
+							curItem.item_key = book['key']
+							
 						if 'title' in book:
 							curItem.title = book['title']
 						else:
@@ -113,7 +126,7 @@ class Item(ndb.Model):
 							curItem.thumbnail_link = ""
 					
 						curItem.last_update = datetime.now()
-						if cache == True:
+						if cache:
 							curItem.put()
 						itemlist.append(curItem.to_dict())
 						counter += 1
@@ -121,19 +134,34 @@ class Item(ndb.Model):
 				pass
 		elif item_type == 'movie':
 			query = value
-			apikey = "merwdck55zye5swrkrqcqhf8"
+			apikey = "f4dr8ebyf9pmh4wskegrs3vt"
+			logging.info("RT API Key, updated 5/10")
 			if not RT_Key:
 				url = "http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=" + apikey + "&q=" + query + "&page_limit=50"
 				response = urlfetch.fetch(url=url, deadline=10)
 				try:
+					logging.debug("RT Status Code: %s" %response.status_code)
 					if response.status_code == 200:
 						json_response = response.content
 						data = json.loads(json_response)
 						for movie in data['movies']:
-							# Build itemlist of movies
-							curItem = Item(item_key=None)
-							curItem.item_type = "movie"
-							curItem.item_key = movie['id']
+							if cache:
+								# Check to see if Item is already in the database; if so, update that copy
+								checkItem = Item.query(Item.item_key==movie['id']).get()
+								if checkItem:
+									curItem = checkItem
+									createNew = False
+								else:
+									createNew = True
+							else:
+								createNew = True
+								
+							if createNew:
+								# Build itemlist of movies
+								curItem = Item(item_key=None)
+								curItem.item_type = "movie"
+								curItem.item_key = movie['id']
+							
 							curItem.title = movie['title']
 							if isinstance(movie.get('year',9999),(int,long)):
 								curItem.year = movie.get('year',9999)
@@ -144,7 +172,7 @@ class Item(ndb.Model):
 							curItem.thumbnail_link = movie['posters'].get('thumbnail','')
 							curItem.direct_link = movie['links'].get('alternate','')
 							# To get genre, open detail page (but only do it when caching since it will be slow with many movies)
-							if cache == True:
+							if cache:
 								url = movie['links']['self'] + "?apikey=" + apikey
 								response_detail = urlfetch.fetch(url=url, deadline=10)
 								try:
@@ -157,7 +185,7 @@ class Item(ndb.Model):
 								except:
 									curItem.genre = ""
 								curItem.last_update = datetime.now()
-								if cache == True:
+								if cache:
 									curItem.put()
 							itemlist.append(curItem.to_dict())
 				except:
@@ -170,9 +198,22 @@ class Item(ndb.Model):
 					if response_detail.status_code == 200:
 						json_response_detail = response_detail.content
 						movie = json.loads(json_response_detail)
-						curItem = Item(item_key=None)
-						curItem.item_type = "movie"
-						curItem.item_key = value
+						if cache:
+							# Check to see if Item is already in the database; if so, update that copy
+							checkItem = Item.query(Item.item_key==value).get()
+							if checkItem:
+								curItem = checkItem
+								createNew = False
+							else:
+								createNew = True
+						else:
+							createNew = True
+							
+						if createNew:
+							curItem = Item(item_key=None)
+							curItem.item_type = "movie"
+							curItem.item_key = value
+							
 						curItem.title = movie['title']
 						if isinstance(movie.get('year',9999),(int,long)):
 							curItem.year = movie.get('year',9999)
@@ -186,7 +227,7 @@ class Item(ndb.Model):
 						for i in range(1, len(movie['genres'])):
 							curItem.genre += ", " + movie['genres'][i]
 						curItem.last_update = datetime.now()
-						if cache == True:
+						if cache:
 								curItem.put()
 						itemlist.append(curItem.to_dict())
 				except:

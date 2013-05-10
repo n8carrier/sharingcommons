@@ -190,13 +190,13 @@ def network():
 def discover():
 	# Start by creating a list of items (as dicts) within the user's library
 	# This is necessary prep to be able to show that the item is in the user's library
-	librarylist = []
+	librarylist = {}
 	useraccount = current_user()
 	for copy in useraccount.get_library():
 		item = Item.query(Item.key == copy.item).get().to_dict()
 		item["item_subtype"] = copy.item_subtype
 		item["escapedtitle"] = re.escape(item["title"])
-		librarylist.append(item)
+		librarylist[(item["item_key"],item["item_subtype"])] = item
 	
 	# Create a list of all items (as dicts) in the user's network
 	user = current_user()
@@ -296,7 +296,7 @@ def search():
 			itemlist = Item.search_by_attribute(item_type,searchterm,attr)
 			for item in itemlist:
 				item["inLibrary"] = []
-				item["inNetwork"] = "False"
+				item["inNetwork"] = []
 		
 		else:
 			user = current_user()
