@@ -69,6 +69,7 @@ class Item(ndb.Model):
 	
 	@classmethod
 	def search_by_attribute(self, item_type, value, attribute = None, cache = False, RT_Key = False):
+		from src import requests
 		itemlist = []
 		if item_type == 'book':
 			# Search with 'attribute = None' when searching for an OLID
@@ -85,13 +86,12 @@ class Item(ndb.Model):
 				logging.debug("Item.search_by_attribute() was called with an invalid attribute: %s" %attribute)
 				return itemlist
 			url = "http://openlibrary.org/search.json?" + query
-			response = urlfetch.fetch(url=url, deadline=10)
+			response = requests.get(url)
 			counter = 0
 			try:
 				if response.status_code == 200:
-					json_response = response.content
-					data = json.loads(json_response)
-					for book in data['docs']:
+					json_response = response.json()
+					for book in json_response['docs']:
 						if cache:
 							# Check to see if Item is already in the database; if so, update that copy
 							checkItem = Item.query(Item.item_key==book['key']).get()
@@ -109,7 +109,10 @@ class Item(ndb.Model):
 							curItem.item_key = book['key']
 							
 						if 'title' in book:
-							curItem.title = book['title']
+							if 'subtitle' in book:
+								curItem.title = book['title'] + ": " + book['subtitle']
+							else:
+								curItem.title = book['title']
 						else:
 							curItem.title = ""
 					
@@ -138,13 +141,12 @@ class Item(ndb.Model):
 			logging.info("RT API Key, updated 5/10")
 			if not RT_Key:
 				url = "http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=" + apikey + "&q=" + query + "&page_limit=50"
-				response = urlfetch.fetch(url=url, deadline=10)
+				response = requests.get(url)
 				try:
-					logging.debug("RT Status Code: %s" %response.status_code)
+					logging.info("RT Status Code: %s" %response.status_code)
 					if response.status_code == 200:
-						json_response = response.content
-						data = json.loads(json_response)
-						for movie in data['movies']:
+						json_response = response.json()
+						for movie in json_response['movies']:
 							if cache:
 								# Check to see if Item is already in the database; if so, update that copy
 								checkItem = Item.query(Item.item_key==movie['id']).get()
@@ -174,14 +176,13 @@ class Item(ndb.Model):
 							# To get genre, open detail page (but only do it when caching since it will be slow with many movies)
 							if cache:
 								url = movie['links']['self'] + "?apikey=" + apikey
-								response_detail = urlfetch.fetch(url=url, deadline=10)
+								response_detail = requests.get(url)
 								try:
 									if response_detail.status_code == 200:
-										json_response_detail = response_detail.content
-										data =  json.loads(json_response_detail)
-										curItem.genre = data['genres'][0]
-										for i in range(1, len(data['genres'])):
-											curItem.genre += ", " + data['genres'][i]
+										movie = response_detail.json()
+										curItem.genre = movie['genres'][0]
+										for i in range(1, len(movie['genres'])):
+											curItem.genre += ", " + movie['genres'][i]
 								except:
 									curItem.genre = ""
 								curItem.last_update = datetime.now()
@@ -193,11 +194,10 @@ class Item(ndb.Model):
 			else:
 				# Searching for a specific Rotten Tomatoes key (Rotten Tomatoes does not send you to the direct movie link with a search query, so it's necessary to access it directly)
 				url = "http://api.rottentomatoes.com/api/public/v1.0/movies/" + value + ".json?apikey=" + apikey
-				response_detail = urlfetch.fetch(url)
+				response_detail = requests.get(url)
 				try:
 					if response_detail.status_code == 200:
-						json_response_detail = response_detail.content
-						movie = json.loads(json_response_detail)
+						movie = response_detail.json()
 						if cache:
 							# Check to see if Item is already in the database; if so, update that copy
 							checkItem = Item.query(Item.item_key==value).get()

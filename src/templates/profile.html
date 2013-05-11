@@ -157,9 +157,9 @@
 				{% if booklist|length < 1 %}
 				<tr>
 					{% if profile_user.get_id() == user.get_id() %}
-					<td colspan='4'>You don't have any books in your library. To add books, use the search field inside the header. Once you've added books, they'll show up here.</td>
+					<td colspan='5'>You don't have any books in your library. To add books, use the search field inside the header. Once you've added books, they'll show up here.</td>
 					{% else %}
-					<td colspan='4'>{{ profile_user.name }} has not added any books yet.</td>
+					<td colspan='5'>{{ profile_user.name }} has not added any books yet.</td>
 					{% endif %}
 				</tr>
 				{% endif %}
@@ -221,9 +221,9 @@
 				{% if movielist|length < 1 %}
 				<tr>
 					{% if profile_user.get_id() == user.get_id() %}
-					<td colspan='6'>You don't have any movies in your library. To add movies, use the search field inside the header. Once you've added movies, they'll show up here.</td>
+					<td colspan='7'>You don't have any movies in your library. To add movies, use the search field inside the header. Once you've added movies, they'll show up here.</td>
 					{% else %}
-					<td colspan='6'>{{ profile_user.name }} has not added any movies yet.</td>
+					<td colspan='7'>{{ profile_user.name }} has not added any movies yet.</td>
 					{% endif %}
 				</tr>
 				{% endif %}
