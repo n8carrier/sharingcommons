@@ -163,7 +163,7 @@ app.add_url_rule('/return_item/<itemCopyID>', view_func=views.return_item)
 #		newDueDate: the new date the book will be due.  Must be in the format year-month-day
 #	returns:
 #		JSON object with a message: success or the reason for the failure
-app.add_url_rule('/change_due_date/<itemCopyID>/<newDueDate>', view_func=views.change_due_date)
+app.add_url_rule('/change_due_date/<itemCopyID>/<newDueDate>', view_func=views.change_due_date,methods=['GET'])
 
 # Get all the notifications that the current user has recieved
 #	returns:

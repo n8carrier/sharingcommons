@@ -37,8 +37,21 @@
 		
 		$('.lending-due-date').datepicker()
 			.on('changeDate', function(ev){
-			// Loop through datepickers to find the one that changed
-				alert(ev.date.valueOf());
+			// Update due date
+			var itemCopyID = $(this).attr('itemCopyID');
+			var itemCopyName = $("#lend" + $(this).attr('id').substring(2)).text();
+			var due_date_day = ev.date.getDate();
+			var due_date_month = ev.date.getMonth() + 1;
+			var due_date_year = ev.date.getFullYear();
+			new_due_date = ("000" + due_date_year.toString()).substr(-4) + "-" + ("0" + due_date_month.toString()).substr(-2) + "-" + ("0" + due_date_day.toString()).substr(-2)
+			$.ajax({
+				url: "/change_due_date/" + itemCopyID + "/" + new_due_date,
+				type: 'GET',
+				success: function(data) {
+					$("#item_name").text(itemCopyName);
+					$("#due_date_msg").show();
+				}
+			});
 		});
 	});
 	
@@ -140,6 +153,11 @@
 		
 		return false;
 	}
+	
+	function hide_message() {
+		$("#due_date_msg").hide();
+		return false;
+	}
 
 
 </script>
@@ -162,6 +180,13 @@
 			<a class="btn btn-inverse" id="connectModalSend" onclick="sendRequest()" data-dismiss="modal">Send Request</a>
 			<a class="btn" id="connectModalCancel" data-dismiss="modal" onclick="window.location='/'">Cancel</a>
 		  </div>
+		</div>
+		
+		<div class="span6 offset3" style="position: absolute; top: 60px;">
+			<div id="due_date_msg" class="alert" style="display: none;">
+				<a class="close" onclick="hide_message()">&times;</a>
+				You have successfully updated the due date for <span id="item_name"></span>.
+			</div>
 		</div>
 
 		<div class="row">
@@ -290,15 +315,14 @@
 					<tbody>
 						{% for item in user.get_lent_items() %}
 							<tr {% if loop.index > 5 %}style="display: none;"{% endif %}>
-								<td>
+								<td id="lend{{ loop.index }}">
 									{{ item.display() }}
 								</td>
 								<td>
-									{% if not item.manual_borrower_name %}{{ item.get_borrower() }}{% else %}{{ item.manual_borrower_name }}{% endif %}
+									{% if not item.manual_borrower_name %}{{ item.get_borrower().name }}{% else %}{{ item.manual_borrower_name }}{% endif %}
 								</td>
 								<td style="text-align:center;">
-									{{ item.due_date.strftime('%m/%d/%Y') }}
-									<!--<input class="datepicker lending-due-date span2" id="dp{{ loop.index }}" size="16" type="text" value="{{ item.due_date.strftime('%m/%d/%Y') }}" style="margin-bottom:-10px">-->
+									<input class="datepicker lending-due-date span2" id="dp{{ loop.index }}" itemCopyID="{{ item.key.id() }}" size="16" type="text" value="{{ item.due_date.strftime('%m/%d/%Y') }}" style="margin-bottom:-10px">
 								</td>
 								<td style="text-align:center;">
 									<a class="btn btn-inverse tooltip-button" 

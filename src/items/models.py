@@ -257,7 +257,7 @@ class ItemCopy(ndb.Model):
 		
 	def get_borrower(self):
 		borrower = UserAccount.get_by_id(self.borrower.id())
-		return borrower.name
+		return borrower
 
 	def display(self):
 		item = Item.query(Item.key == self.item).get()
@@ -280,7 +280,6 @@ class ItemCopy(ndb.Model):
 		self.manual_borrower_email = None
 
 	def update_due_date(self, date):
-		import datetime
 		self.due_date = date
 
 	def get_due_date(self):

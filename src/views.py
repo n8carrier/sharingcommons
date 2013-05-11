@@ -11,7 +11,7 @@ from accounts import login as login_account, logout as logout_account, join as j
 from accounts.models import UserAccount
 from activity.models import Action
 from google.appengine.api import mail
-from datetime import date,timedelta
+from datetime import date,timedelta,datetime
 import re
 import filters
 

@@ -381,13 +381,7 @@ class UserAccount(ndb.Model):
 		A list of ItemCopy objects of all the the items the user is currently lending
 		"""
 		from src.items.models import ItemCopy
-		itemList = ItemCopy.query(ItemCopy.owner==self.key,ItemCopy.borrower!=None).fetch()
-		# Remove manually lent items (items being lended to the user's self)
-		lentItems = []
-		for item in itemList:
-			if not item.manual_borrower_name:
-				lentItems.append(item)
-		return lentItems
+		return ItemCopy.query(ItemCopy.owner==self.key,ItemCopy.borrower!=None).fetch()
 
 	def get_borrowed_items(self):
 		"""Get all the items that the user is currently borrowing from anther user
@@ -396,7 +390,14 @@ class UserAccount(ndb.Model):
 		A list of ItemCopy objects of all the the items the user is currently borrowing
 		"""
 		from src.items.models import ItemCopy
-		return ItemCopy.query(ItemCopy.borrower==self.key).fetch()
+		itemList = ItemCopy.query(ItemCopy.borrower==self.key).fetch()
+		# Remove manually lent items (items being lended to the user's self)
+		# They appear here because the borrower and lender is set to the user's self
+		borrowedItems = []
+		for item in itemList:
+			if not item.manual_borrower_name:
+				borrowedItems.append(item)
+		return borrowedItems
 
 	def return_item(self, itemCopyID):
 		"""Return the given item to it's owner
@@ -438,7 +439,7 @@ class UserAccount(ndb.Model):
 		from src.items.models import ItemCopy
 		from src.activity.models import DueDateExtension
 		itemcopy = ItemCopy.get_by_id(int(itemCopyID))
-		new_date = datetime.datetime.strptime(newDueDate, '%Y-%m-%d')
+		new_date = datetime.strptime(newDueDate, '%Y-%m-%d') + timedelta(days=1) #For some reason the datepickers are returning one day prior to the date selected, so this is a workaround to compensate
 
 		if(itemcopy == None):
 			return "Invalid item ID"
@@ -447,7 +448,6 @@ class UserAccount(ndb.Model):
 			itemcopy.put()
 			return "Due date successfully updated"
 		elif (itemcopy.borrower == self.key):
-			import datetime
 			notification = DueDateExtension(useraccount=itemcopy.owner,item=itemcopy.key,due_date=new_date)
 			notification.put()
 			return "Request sent to owner"
