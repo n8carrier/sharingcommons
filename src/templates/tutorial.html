@@ -146,13 +146,14 @@
 									<input type="text" id="display_name" name="displayName" value="{{ user.name }}" style="vertical-align:baseline" />
 									<span id="displayNameHelp" class="help-inline" style="display: none;">Must have at least one letter or number.</span> 
 								</div>
-								<p>Additional info available to connections:</p>
+								<p>Profile content available to connections only:</p>
 								<div class="control-group">
 									<textarea name="additionalInfo" id="additional_info" style="width:400px;height:125px;"
 									placeholder="Enter any additional info you would like to have visible to your contacts, such as your contact info, address, or favorite food."
 									>{{ user.info }}</textarea>
 									<span id="additionalInfoHelp" class="help-inline" style="display: none;">Info cannot exceed 2000 characters.</span> 
 								</div>
+								<p>Additional profile content can be added through the <a href="/settings">Settings</a> page.</p>
 							</fieldset>
 						</form>
 						<a class="btn btn-inverse" onclick="submit();" style="margin-bottom:25px;">

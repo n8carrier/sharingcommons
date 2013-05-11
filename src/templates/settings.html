@@ -82,6 +82,7 @@
 		// Check only if it has been changed from the user's ID
 		$("#custom_url").val($("#custom_url").val().toLowerCase())
 		if($("#custom_url").val() != "{{ user.get_id() }}") {
+			$("#custom_url").attr("name","customURL");
 			var reName = /^\d*[a-zA-Z][a-zA-Z0-9]*$/;
 			if(!reName.test($("#custom_url").val())) {
 				validates = false;
@@ -95,6 +96,7 @@
 		} else {
 			$("#custom_url").parent().removeClass("error").addClass("success");
 			$("#customURLHelp").hide();
+			$("#custom_url").removeAttr("name");
 		}
 		
 		

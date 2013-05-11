@@ -92,13 +92,14 @@ class UserAccount(ndb.Model):
 		self.movie_privacy = movie_privacy
 		self.public_info = public_info
 		self.info = info
-		url_in_use = UserAccount.query(UserAccount.custom_url==custom_url,UserAccount.key!=self.key).get()
-		if url_in_use:
-			return False
-		else:
-			self.custom_url = custom_url
-			self.put()
-			return True
+		if custom_url:
+			url_in_use = UserAccount.query(UserAccount.custom_url==custom_url,UserAccount.key!=self.key).get()
+			if url_in_use:
+				return False
+			else:
+				self.custom_url = custom_url
+		self.put()
+		return True
 
 	def is_authenticated(self):
 		"""determine whether the UserAccount is authenticated
@@ -148,7 +149,13 @@ class UserAccount(ndb.Model):
 	def create_user(cls,g_user):
 		if UserAccount.get_by_email(g_user.email()):
 			return None
-		user = UserAccount(name=g_user.nickname(),email=g_user.email())
+		email = g_user.email()
+		nickname = g_user.nickname()
+		if nickname[:4] == "http" or nickname.__len__() > 25 or nickname.find("@") > 0:
+			name = email[:email.index("@")]
+		else:
+			name = nickname
+		user = UserAccount(name=name,email=email)
 		if user:
 			user.put()
 			return user
