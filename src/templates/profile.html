@@ -34,13 +34,44 @@
 		$(".tooltip-button").tooltip({trigger: "hover"});
 	});
 	
-	function borrow_item(itemCopyID, button) {
-		$.getJSON("/setup_item_borrow/" + {{ profile_user.get_id() }} + "/" + itemCopyID, function(data) {
-			$(button).attr("disabled", "");
-			$(button).attr("onclick", "");
-			$(button).html("Requested");
-			$(button).tooltip("destroy").attr("title", "Item has been requested").tooltip({trigger: "hover"});
+	function create_email_request(itemCopyID, lenderID, escapedTitle, lenderName) {
+		// Build new modal for sending a request email
+		var lenderEmail
+		$.ajax({
+			url: "/get_user_email/" + lenderID,
+			type: 'GET',
+			success: function(data) {
+				$("#emailModalBody").html('<div class="control-group"><label class="control-label span1" for="lenderEmail">To: </label><div class="controls"><input type="text" class="input-xlarge disabled tooltip-button" data-toggle="tooltip" data-placement="right" title="This user\'s email is not shown, but will be present in the user\'s reply" id="lenderEmail" value="' + data.email + '" disabled></div><div class="controls"><label class="control-label span1" for="senderEmail">From: </label><input class="input-xlarge disabled" id="senderEmail" type="text" value="{{ user.email }}" disabled></div><label class="control-label span1" for="emailBody">Message: </label><div class="controls"><textarea class="input-xlarge" id="emailBody" rows="10">' + lenderName + ',&#13;&#10;&#13;&#10;I\'m interested in borrowing your copy of "' + unescape(escapedTitle) + '". Is it available?&#13;&#10;&#13;&#10;Thanks!&#13;&#10;{{ user.name }}</textarea></div></div>');
+				$(".tooltip-button").tooltip({trigger: "hover"});
+				$("#emailModalFooter").html('<button class="btn btn-inverse" id="sendRequestButton" aria-hidden="true" onClick="send_request(\'' + itemCopyID + '\', \'' + lenderID + '\', \'' + escapedTitle + '\', \'' + lenderName +'\');">Send Request</button><button class="btn" data-dismiss="modal" onClick="reset_borrow_modal(true);" aria-hidden="true">Cancel</button>');
+				$("#emailModal").modal('show');
+			}
 		});
+	}
+	
+	function send_request(itemCopyID, lenderID, escapedTitle, lenderName) {
+		$("#sendRequestButton").attr("disabled","disabled");
+		var emailBodyText = $("#emailBody").text();
+		$.ajax({
+			url: "/request_to_borrow/" + lenderID + "/" + itemCopyID,
+			type: 'POST',
+			contentType: 'application/json; charset=utf-8',
+			data: emailBodyText,
+			dataType: 'text',
+			success: function(json) {
+				$("#emailModal").modal('hide');
+				$("#messageItem").text("'" + unescape(escapedTitle) + "'");
+				$("#messageUser").text(lenderName);
+				$("#message").show();
+			},
+			error: function(json) {
+			}
+		});
+	}
+	
+	function hide_message() {
+		$("#message").hide();
+		return false;
 	}
 	
 	function request_to_connect() {
@@ -182,7 +213,7 @@
 								{% if item.available %}
 								<a class="btn btn-inverse tooltip-button"
 									style="width:120px"
-									onclick="borrow_item('{{ item.copyID }}', this)"
+									onclick="create_email_request('{{ item.copyID }}', '{{ profile_user.get_id() }}', '{{ item.escapedtitle }}', '{{ profile_user.name }}')"
 									data-toggle="tooltip" 
 									data-placement="right"
 									title="Request to borrow item from {{ profile_user.name }}">
@@ -237,7 +268,7 @@
 						<td>{% if item.year != 9999 %}{{ item.year }}{% endif %}</td>
 						<td>{{ item.genre }}</td>
 						<td>{{ item.rating }}</td>
-						<td><div class="star-rating" data-score="{{ item.star_rating }}"></td>
+						<td><div class="star-rating" data-score="{{ item.star_rating }}"></div></td>
 						{% if inNetwork %}
 							<td style="text-align:center">
 							{% if profile_user.get_id() == user.get_id() %}
@@ -248,7 +279,7 @@
 								{% if item.available %}
 								<a class="btn btn-inverse tooltip-button"
 									style="width:120px"
-									onclick="borrow_item('{{ item.copyID }}', this)"
+									onclick="create_email_request('{{ item.copyID }}', '{{ profile_user.get_id() }}', '{{ item.escapedtitle }}', '{{ profile_user.name }}')"
 									data-toggle="tooltip" 
 									data-placement="right"
 									title="Request to borrow item from {{ profile_user.name }}">
@@ -269,5 +300,28 @@
 		</div>
 	</div>
 {% endif %}
+
+<!-- Modals and alerts -->
+<div class="row">
+	<div class="span12">
+		<div id="emailModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel" aria-hidden="true">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h3 id="emailModalLabel">Request to Borrow Item</h3>
+			</div>
+			<div class="modal-body" id="emailModalBody">
+			</div>
+			<div class="modal-footer" id="emailModalFooter">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+			</div>
+		</div>
+		<div class="span6 offset3" style="position: absolute; top: 60px;">
+			<div id="message" class="alert" style="display: none;">
+				<a class="close" onclick="hide_message()">&times;</a>
+				You have requested to borrow <span id="messageItem"></span> from <span id="messageUser"></span>.
+			</div>
+		</div>		
+	</div>
+</div>
 
 {% endblock %}

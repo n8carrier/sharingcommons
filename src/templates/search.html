@@ -53,8 +53,8 @@
 		}
 		
 		// Display appropriate rows on load
-		if ("{{subtype_specified}}"=="true") {
-			// User specifically requested at least one subtype, so forget their cookie setting and show in-network only and the appropriate subtypes
+		if ("{{subtype_specified}}"=="true" && "{{src}}"=="searchbar") {
+			// User specifically requested at least one subtype from the searchbar, so forget their cookie setting and show in-network only and the appropriate subtypes
 			$.removeCookie("{{ user.get_id() }}");
 			$("#show_out_of_network_items_checkbox").removeAttr("checked");
 			$("tr.notInNetwork").hide();
@@ -159,6 +159,7 @@
 			}
 			else {
 				// User wants out-of-network, show out-of-network and all subtypes and hide subtype filters
+				$("#filter-item-subtype").hide();
 				$("tr.notInNetwork").show();
 				if($("#radio-books").is(':checked')) {
 					$("tr.row-book").show();
@@ -168,7 +169,6 @@
 					$("tr.row-dvd").show();
 					$("tr.row-bluray").show();
 				}
-				$("#filter-item-subtype").hide();
 				msg_if_no_results();
 			}
 			
@@ -484,6 +484,7 @@
 		<h3>
 			
 			<input name="query" type="text" class="input-xxlarge search-query" placeholder="Enter Title, author, or ISBN..." value="{{ search }}">
+			<input type="hidden" id="src-search" name="src" value="search">
 			<button type="submit" class="btn">Search</button>
 			
 		</h3>

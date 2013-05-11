@@ -140,7 +140,7 @@
 				$(button).parent().parent().siblings(":nth-child(6)").show();
 				$(button).parent().parent().remove();
 				if($("#items_lending tr:visible").length == 1) {
-					$("#items_lending").html("<tr><td colspan='3'>You are not lending any books or movies.");
+					$("#items_lending").html("<tr><td>You are not lending any books or movies. To make your books or movies available to your network, search for each item in the searchbar.</td></tr>");
 				}
 				if($("#items_lending tbody tr:hidden").length == 0) {
 					$("#extraitems_lend").remove();
@@ -197,7 +197,7 @@
 				<table class="table table-striped table-bordered" id="pending_requests">
 					{% if user.pending_actions|length < 1 %}
 						<tr>
-							<td colspan="3">You have no pending requests.</td>
+							<td colspan="3">You have no pending requests. When you receive connection requests, borrow requests, or other requests, they will appear here.</td>
 						</tr>
 					{% else %}
 						{% for action in user.pending_actions %}
@@ -237,7 +237,7 @@
 				<table class="table table-striped table-bordered" id="items_borrowing">
 					{% if user.get_borrowed_items()|length < 1 %}
 						<tr>
-							<td colspan="3">You are not borrowing any books or movies.</td>
+							<td>You are not borrowing any books or movies. Browse items available in your network through the <a href="/discover">Discover</a> page, or search for specific items in the search bar.</td>
 						</tr>
 					{% else %}
 					<thead>
@@ -293,7 +293,7 @@
 				<table class="table table-striped table-bordered" id="items_lending">
 					{% if user.get_lent_items()|length < 1 %}
 						<tr>
-							<td colspan="3">You are not lending any books or movies.</td>
+							<td>You are not lending any books or movies. To make your books or movies available to your network, search for each item in the searchbar and add the items you own to your library.</td>
 						</tr>
 					{% else %}
 					<thead>

@@ -242,6 +242,7 @@ def search():
 	user_email = request.args.get('user_email')
 	searchterm = request.args.get('query')
 	attr = request.args.get('refineSearch')
+	src = request.args.get('src')
 	
 	# If searching for a user, redirect to profile
 	if user_email:
@@ -333,7 +334,7 @@ def search():
 					if (item["item_key"],item_subtype) in networkitemlist:
 						item["inNetwork"].append(item_subtype)
 				
-	return render_response('search.html', itemlist=itemlist, search=searchterm, attribute=attr, include_type=item_type, subtype_book=subtype_book, subtype_ebook=subtype_ebook, subtype_audiobook=subtype_audiobook, subtype_specified=subtype_specified)
+	return render_response('search.html', itemlist=itemlist, search=searchterm, attribute=attr, include_type=item_type, subtype_book=subtype_book, subtype_ebook=subtype_ebook, subtype_audiobook=subtype_audiobook, subtype_specified=subtype_specified, src=src)
 	
 def settings():
 	return render_response('settings.html')
