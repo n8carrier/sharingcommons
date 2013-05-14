@@ -14,6 +14,8 @@
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/maintemplate.css') }}"/>
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/bootswatch.css') }}"/>
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/datepicker.css') }}"/>
+	<link rel="shortcut icon" href="/static/img/favicon.ico"/>
+	<link rel="icon" href="/static/img/favicon.ico"/>
 	{% block style %}{% endblock %}
 
 	<script type="text/javascript">
@@ -272,10 +274,10 @@
 
 <body>
 	<div id="wrap">
-		<div class="navbar navbar-inverse navbar-fixed-top">
-			<div class="navbar-inner">
+		<div class="navbar navbar-inverse navbar-fixed-top" style="height:50px">
+			<div class="navbar-inner" style="height:50px">
 				<div class="container">
-					<a class="brand pull-left" href="{{ url_for('index') }}">Sharing Commons<sup style="font-size:10px;vertical-align:top;">BETA</sup></a>
+					<a class="brand pull-left" href="{{ url_for('index') }}"><img src="/static/img/sharingcommons-logo.png" style="height: 30px;display: inline-block;margin-bottom: 0px;margin-top: -4px;margin-right: 6px;">Sharing Commons<sup style="font-size:10px;vertical-align:top;">BETA</sup></a>
 					<button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse" style="float:left;">
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
