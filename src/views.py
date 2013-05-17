@@ -817,3 +817,23 @@ def manual_checkout(itemCopyID):
 		return jsonify({"result":"success"})
 	else:
 		return jsonify({"result":"error"})
+		
+def send_invitation_request():
+	if current_user().is_authenticated():
+		if request.method == 'POST':
+			import json
+			jsonString = request.data
+			jsonData = json.loads(jsonString)
+			
+			# Check email address
+			if not mail.is_email_valid(jsonData["emailTo"]):
+				return jsonify({"result":"invalidemail"})
+			# Send email
+			mail.send_mail(sender="Sharing Commons <admin@sharingcommons.com>",
+						to=jsonData["emailTo"],
+						reply_to=current_user().name + " <" + current_user().email + ">",
+						subject=jsonData["emailSubject"],
+						body=jsonData["emailBody"] + "\n\nJoin Sharing Commons and Connect with " + current_user().name + ": " + request.host_url + "?connect=" + str(current_user().get_id()),
+						html=jsonData["emailBody"] + "<br><br>Join Sharing Commons and Connect with " + current_user().name + ":<br><br><a href='" + request.host_url + "?connect=" + str(current_user().get_id()) + "' style='display: block; background: #4E9CAF; padding: 5px; width: 180px; text-align: center; border-radius: 5px; color: white; font-weight: bold;'>Join Sharing Commons</button>")
+			return jsonify({"result":"success"})
+		

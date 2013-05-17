@@ -82,6 +82,9 @@ app.add_url_rule('/gravatar/<userID>/<size>',view_func=views.generate_gravatar)
 
 ######################## Internal calls (to be called by ajax) ##########################
 
+# Send Invitation Email
+app.add_url_rule('/send_invitation_request', methods = ['GET', 'POST', 'DELETE'],view_func=views.send_invitation_request)
+
 # Star Rating
 app.add_url_rule('/star-rating/<item_subtype>/<item_key>/<star_rating>', methods = ['POST'], view_func=views.star_rating)
 
