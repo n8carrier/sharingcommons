@@ -20,6 +20,11 @@ class UserAccount(ndb.Model):
 	lending_length = ndb.StringProperty(default="14")
 	notification = ndb.StringProperty(default="email")
 	info = ndb.StringProperty(default="")
+	public_info = ndb.StringProperty(default="")
+	custom_url = ndb.StringProperty(required=False)
+	profile_privacy = ndb.IntegerProperty(default=0) #0=private;1=public
+	book_privacy = ndb.IntegerProperty(default=0) #0=private;1=public
+	movie_privacy = ndb.IntegerProperty(default=0) #0=private;1=public
 
 	connected_accounts = ndb.StructuredProperty(Connection,repeated=True)
 	
@@ -66,7 +71,7 @@ class UserAccount(ndb.Model):
 			connections.append(UserAccount.query(UserAccount.key==connection.user).get())
 		return connections
 	
-	def update(self,name,lending_length,notifications,info):
+	def update(self,name,lending_length,custom_url,profile_privacy,book_privacy,movie_privacy,public_info,info):
 		"""update the user's settings
 
 		Arguments:
@@ -76,13 +81,23 @@ class UserAccount(ndb.Model):
 		info - a string, additional information about the user that will be displayed to other users
 		
 		Return value:
-		True if successfull
+		True if successful
 		"""
 		# validate name
 		self.name = name
 		self.lending_length = lending_length
-		self.notification = notifications
+		#self.notification = notifications
+		self.profile_privacy = profile_privacy
+		self.book_privacy = book_privacy
+		self.movie_privacy = movie_privacy
+		self.public_info = public_info
 		self.info = info
+		if custom_url:
+			url_in_use = UserAccount.query(UserAccount.custom_url==custom_url,UserAccount.key!=self.key).get()
+			if url_in_use:
+				return False
+			else:
+				self.custom_url = custom_url
 		self.put()
 		return True
 
@@ -134,7 +149,13 @@ class UserAccount(ndb.Model):
 	def create_user(cls,g_user):
 		if UserAccount.get_by_email(g_user.email()):
 			return None
-		user = UserAccount(name=g_user.nickname(),email=g_user.email())
+		email = g_user.email()
+		nickname = g_user.nickname()
+		if nickname[:4] == "http" or nickname.__len__() > 25 or nickname.find("@") > 0:
+			name = email[:email.index("@")]
+		else:
+			name = nickname
+		user = UserAccount(name=name,email=email)
 		if user:
 			user.put()
 			return user
@@ -376,7 +397,14 @@ class UserAccount(ndb.Model):
 		A list of ItemCopy objects of all the the items the user is currently borrowing
 		"""
 		from src.items.models import ItemCopy
-		return ItemCopy.query(ItemCopy.borrower==self.key).fetch()
+		itemList = ItemCopy.query(ItemCopy.borrower==self.key).fetch()
+		# Remove manually lent items (items being lended to the user's self)
+		# They appear here because the borrower and lender is set to the user's self
+		borrowedItems = []
+		for item in itemList:
+			if not item.manual_borrower_name:
+				borrowedItems.append(item)
+		return borrowedItems
 
 	def return_item(self, itemCopyID):
 		"""Return the given item to it's owner
@@ -418,7 +446,7 @@ class UserAccount(ndb.Model):
 		from src.items.models import ItemCopy
 		from src.activity.models import DueDateExtension
 		itemcopy = ItemCopy.get_by_id(int(itemCopyID))
-		new_date = datetime.datetime.strptime(newDueDate, '%Y-%m-%d')
+		new_date = datetime.strptime(newDueDate, '%Y-%m-%d') + timedelta(days=1) #For some reason the datepickers are returning one day prior to the date selected, so this is a workaround to compensate
 
 		if(itemcopy == None):
 			return "Invalid item ID"
@@ -427,7 +455,6 @@ class UserAccount(ndb.Model):
 			itemcopy.put()
 			return "Due date successfully updated"
 		elif (itemcopy.borrower == self.key):
-			import datetime
 			notification = DueDateExtension(useraccount=itemcopy.owner,item=itemcopy.key,due_date=new_date)
 			notification.put()
 			return "Request sent to owner"

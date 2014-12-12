@@ -23,6 +23,7 @@
 
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui-1.10.2.custom.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.tablesorter.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.raty.js') }}"></script>
 
 <script type="text/javascript">
 	var lastRemoveLink;
@@ -114,6 +115,47 @@
 		$("#MyItemsTable").tablesorter({ sortList: [[1,0]] });
 	});
 	
+	// Star Ratings
+	$(".star-rating").raty({
+		half: true,
+		score: function() {
+			return $(this).attr('data-score');
+		},
+		click: function(score, evt) {
+			$.ajax({
+				url:"/star-rating/" + $(this).attr('subtype') + "/" + $(this).attr('item') + "/" + score,
+				type: 'POST',
+				success:function(data) {
+				}
+			});
+		}
+	});
+	
+	// Due dates
+	$('.lending-due-date').datepicker()
+		.on('changeDate', function(ev){
+		// Update due date
+		var itemCopyID = $(this).attr('itemCopyID');
+		var itemCopyName = $("#lend" + $(this).attr('id').substring(2)).text();
+		var due_date_day = ev.date.getDate();
+		var due_date_month = ev.date.getMonth() + 1;
+		var due_date_year = ev.date.getFullYear();
+		new_due_date = ("000" + due_date_year.toString()).substr(-4) + "-" + ("0" + due_date_month.toString()).substr(-2) + "-" + ("0" + due_date_day.toString()).substr(-2)
+		$.ajax({
+			url: "/change_due_date/" + itemCopyID + "/" + new_due_date,
+			type: 'GET',
+			success: function(data) {
+				$("#item_name").text(itemCopyName);
+				$("#due_date_msg").show();
+			}
+		});
+	});
+	
+	function hide_message() {
+		$("#due_date_msg").hide();
+		return false;
+	}
+	
 </script>
 
 {% endblock %}
@@ -134,18 +176,24 @@
 			<strong><a onclick="undo_remove()" class="alert-link">Undo</a></strong>
 		</div>
 	</div>
+	<div class="span6 offset3" style="position: absolute; top: 50px; right: 200px">
+		<div id="due_date_msg" class="alert" style="display: none;">
+			<a class="close" onclick="hide_message()">&times;</a>
+			You have successfully updated the due date for <span id="item_name"></span>.
+		</div>
+	</div>
   <div class="span12">
 	
     <div class="tabbable">
       <ul class="nav nav-tabs">
-        <li class="active"><a href="#MyItems" data-toggle="tab" id="my_items" onclick='add_hash("MyItems")'>My Books</a></li>
-        <li><a href="#LendedItems" data-toggle="tab" id="lended_items" onclick='add_hash("LendedItems")'>Lended Books</a></li>
-        <li><a href="#BorrowedItems" data-toggle="tab" id="borrowed_items" onclick='add_hash("BorrowedItems")'>Borrowed Books</a></li>
+        <li class="active"><a href="#MyItems" data-toggle="tab" id="my_items" onclick='add_hash("MyItems")'>My Library</a></li>
+        <li><a href="#LendedItems" data-toggle="tab" id="lended_items" onclick='add_hash("LendedItems")'>Lended Items</a></li>
+        <li><a href="#BorrowedItems" data-toggle="tab" id="borrowed_items" onclick='add_hash("BorrowedItems")'>Borrowed Items</a></li>
       </ul>
     </div>
       <div class="tab-content">
         <div class="tab-pane active" id="MyItems">
-          <h3 style="margin-top:-4px">Books I Own</h3>
+          <h3 style="margin-top:-4px">Books & Movies I Own</h3>
           <table class="table table-striped table-bordered" id="MyItemsTable">
             {% if itemlist|length < 1 %}
               <tr>
@@ -154,15 +202,18 @@
 				<tr>
 				  <th class="header" style="width:26px;text-align:center"></th>
 				  <th class="header">Title</th>
-				  <th class="header">Author/Director</th>
-				  <th class="header">Lend Status</th>
+				  <th class="header" style="width:120px;">Rate</th>
+				  <th class="header" style="width:120px;">Lend Status</th>
 				  <th class="header" style="width:100px"></th>
 				</tr>
 				{% for item in itemlist %}
 				  <tr>
-				    <td><i class="icon-{% if item.item_subtype == "book" %}book{% elif item.item_subtype == "ebook" %}tablet{% elif item.item_subtype == "audiobook" %}volume-down{% endif %} icon-large"></i></td>
-					<td>{{item.title}}</td>
-					<td>{{item.author_director}}</td>
+				    <td><i class="icon-{% if item.item_subtype == 'book' %}book{% elif item.item_subtype == 'ebook' %}tablet{% elif item.item_subtype == 'audiobook' %}volume-down{% elif item.item_subtype == 'dvd' or item.item_subtype == 'bluray' %}facetime-video{% endif %} icon-large"{% if item.item_subtype == "bluray" %} style="color:blue"{% endif %} title="{% if item.item_subtype == 'book' %}Book{% elif item.item_subtype == 'ebook' %}eBook{% elif item.item_subtype == 'audiobook' %}Audiobook{% elif item.item_subtype == 'dvd' %}DVD{% elif item.item_subtype == 'bluray' %}Blu-ray{% endif %}"></i></td>
+					<td><a href="/{% if item.item_type=='book'%}book{% elif item.item_type=='movie' %}movie{% endif %}/{{ item.item_key }}" 
+							class="item-title tooltip-button" 
+							data-toggle="tooltip" data-placement="right" 
+							title="View {% if item.item_type == 'book' %}book{% elif item.item_type == 'movie' %}movie{% endif %} details or manually check out item">{{item.title}}{% if item.item_type == 'book' %} ({{ item.author }}){% endif %}</a></td>
+					<td><div class="star-rating" id="star{{ itemlist.index(item) }}" data-score="{{ item.star_rating }}" subtype="{{ item.item_subtype }}" item="{{ item.item_key }}"></div>
 					<td>{% if item.available %}Available
 						{% else %}On Loan{% endif %}</td>
 					<td style="text-align:center"><a class="btn btn-small" onclick="remove_item('{{ item.item_subtype }}', '{{item.item_key}}', '{{ item.escapedtitle }}', this)"><i class="icon-remove"></i>&nbsp;&nbsp;Remove</a></td>
@@ -173,7 +224,7 @@
         </div>
         <div class="tab-pane" id="LendedItems">
 
-		<h3 style="margin-top:-4px">Books I'm Lending</h3>
+		<h3 style="margin-top:-4px">Books & Movies I'm Lending</h3>
 		<table class="table table-striped table-bordered" id="items_lending">
 			{% if user.get_lent_items()|length < 1 %}
 			<tr>
@@ -188,9 +239,11 @@
 				</tr>
 				{% for item in user.get_lent_items() %}
 				<tr>
-				  <td>{{ item.display() }}</td>
-				  <td>{{ item.get_borrower() }}</td>
-				  <td style="text-align:center;">{{ item.due_date }}</td>
+				  <td id="lend{{ loop.index }}">{{ item.display() }}</td>
+				  <td>{% if not item.manual_borrower_name %}{{ item.get_borrower().name }}{% else %}{{ item.manual_borrower_name }}{% endif %}</td>
+				  <td style="text-align:center;">
+					<input class="datepicker lending-due-date span2" id="dp{{ loop.index }}" itemCopyID="{{ item.key.id() }}" size="16" type="text" value="{{ item.due_date.strftime('%m/%d/%Y') }}" style="margin-bottom:-10px">
+				  </td>
 				  <td style="text-align:center;">
 				    <a class="btn btn-inverse tooltip-button" 
 									style="width:140px" 
@@ -205,7 +258,7 @@
 
         </div>
         <div class="tab-pane" id="BorrowedItems">
-          <h3 style="margin-top:-4px">Books I'm Borrowing</h3>
+          <h3 style="margin-top:-4px">Books & Movies I'm Borrowing</h3>
           <table class="table table-striped table-bordered" id="items_borrowing">
             {% if user.get_borrowed_items()|length < 1 %}
               <tr>
@@ -213,8 +266,8 @@
 			  </tr>
 			{% else %}
 				<tr>
-				  <th>Item Title</th>
-				  <th>Item Borrower</th>
+				  <th>Title</th>
+				  <th>Owner</th>
 				  <th style="text-align:center;width:200px">Due Date</th>
 				  <th style="text-align:center;width:200px"></th>
 				</tr>
@@ -222,7 +275,7 @@
 				<tr>
 				  <td>{{ item.display() }}</td>
 				  <td>{{ item.get_owner() }}</td>
-				  <td style="text-align:center">{{ item.due_date }}</td>
+				  <td style="text-align:center">{{ item.due_date.strftime('%m/%d/%Y') }}</td>
 				  <td style="text-align:center">
 					<a class="btn btn-inverse tooltip-button" 
 									style="width:140px" 

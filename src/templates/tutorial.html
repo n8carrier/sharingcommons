@@ -1,0 +1,175 @@
+{% extends "maintemplate.html" %}
+
+{% block title %}Sharing Commons: The Place to Share{% endblock %}
+
+{% block style %}
+
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/jquery-ui-1.10.2.custom.min.css') }}" />
+
+{% endblock %}
+
+{% block script %}
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui-1.10.2.custom.min.js') }}"></script>
+
+<script type="text/javascript">
+
+	function submit() {
+		if(validate()) {
+			$("#validationError").hide();
+			$.post("/update_user", $("#settingsForm").serialize())
+			.done(function(data) {
+				if(data.result=="success") {
+					$("#submitSuccess").show();
+					$("#submitError").hide();
+				} else {
+					$("#submitError").show();
+					$("#submitSuccess").hide();
+				}
+			}).fail(function() {
+				$("#submitError").show();
+				$("#submitSuccess").hide();
+			});
+		}
+		else {
+			$("#validationError").show();
+			$("#submitSuccess").hide();
+			$("#submitError").hide();
+		}
+		
+		return false;
+	}
+	
+	function validate() {
+		var validates = true;
+		
+		// Test that display name has at least one letter or number
+		var reName = /\w/;
+		if(!reName.test($("#display_name").val())) {
+			validates = false;
+			$("#display_name").parent().removeClass("success").addClass("error");
+			$("#displayNameHelp").show();
+		}
+		else {
+			$("#display_name").parent().removeClass("error").addClass("success");
+			$("#displayNameHelp").hide();
+		}
+		
+		// Test that the info does not exceed 2000 characters
+		if($("#additional_info").val().length > 2000) {
+			validates = false;
+			$("#additional_info").parent().removeClass("success").addClass("error");
+			$("#additionalInfoHelp").show();
+		}
+		else {
+			$("#additional_info").parent().removeClass("error").addClass("success");
+			$("#additionalInfoHelp").hide();
+		}
+		
+		return validates;
+	}
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+			<div class="row">
+				<div class="span6">
+
+					<h3>Welcome to the Sharing Commons!</h3>
+					<p>
+						Thanks for joining the Sharing Commons, The Place to Share<sup>TM</sup>. You'll find instructions here on how to get started. To return to this 
+						page at any time, click the <a href="/tutorial">Tutorial</a> link in the footer.
+					</p>
+					
+					<h3>Initial Setup</h3>
+					<p>
+						Your Sharing Commons connections will be able to see your display name and profile info. Update them here now, or at any time on the 
+						<a href="/settings">Settings</a> page, accessible through the gear icon in the header (additional settings require visiting the Settings 
+						page). You can view your own profile by clicking the gear icon and clicking on your email address.
+					<p>
+					
+					<h3>Building Your Library</h3>
+					<p>
+						To add books or movies to your library, search for the title or a keyword in the search bar in the header. Use the search bar dropdown 
+						to select whether you are adding a book or a movie. TIP: There's no need to specify the media format of the book or movie (i.e., eBook, 
+						Audiobook, DVD, etc.), because you will specify the media format in the search results page. When you're using the search bar to borrow 
+						you'll find it helpful to select the specific media format.
+					</p>
+					<p>
+						Once you initiate a search, you'll be taken to a search results page. Find the book or movie you are looking to add, click the 
+						"Add to Library" dropdown button (the caret next to the button), and choose the media format you would like to add. Clicking the main 
+						"Add to Library" button will add the top item from the list ("book" or "DVD"). Once you've added items to your library, you can make 
+						changes on the <a href="/library">Library</a> page, accessible through the header.
+					</p>
+					
+					<h3>Building Your Network</h3>
+					<p>
+						To connect with your friends on Sharing Commons, visit the <a href="/network">Network</a> page, accessible through the header. You'll 
+						find tabs that explain how to connect with friends by email, Facebook (coming soon), or by sharing a link. When a user clicks on your 
+						invitation link and requests to connect, you'll need to approve the connection through your Dashboard (the main page after 
+						logging in, also accessible by clicking "Sharing Commons" in the header). The Network page also provides links to view the profile of 
+						each of your connections
+					</p>
+					
+					<h3>Borrowing Items</h3>
+					<p>
+						To find items to borrow use either the search bar or the <a href="/discover">Discover</a> page, accessible through the header. With 
+						search you can look for specific items and with Discover you can browse all the items in your network. Once you find an item you'd 
+						like to borrow, click the "Request to Borrow" button (it will only be enabled if there are copies within your network) and choose the 
+						connection you'd like to borrow the item from. A request will be sent to your connection, but you'll be on your own to set up the 
+						real-life exchange. Be safe!
+					</p>
+					<p>
+						You can also browse each of your connections' books and movies individually by clicking through their profiles in the Network page. You 
+						can request to borrow directly from a connection's profile. To monitor items you are borrowing, visit your Dashboard or your Library.
+					</p>
+					
+					<h3>Lending Items</h3>
+					<p>
+						When your connections request to borrow something, you'll receive a notification through your Dashboard. Once you lend the item to them 
+						in person, update the status in the Dashboard. To monitor items you are lending, visit your Dashboard or your Library.
+					</p>
+					<br>
+				</div>
+				<div class="span1"></div>
+				<div class="span5">
+				<br>
+					<div class="well">
+						<h4>Update Display Name and Profile Info</h4>
+						<form id="settingsForm" onSubmit="javascript:return false;">
+							<fieldset>
+								<div class="control-group">
+									Display name to connections:&nbsp;
+									<input type="text" id="display_name" name="displayName" value="{{ user.name }}" style="vertical-align:baseline" />
+									<span id="displayNameHelp" class="help-inline" style="display: none;">Must have at least one letter or number.</span> 
+								</div>
+								<p>Profile content available to connections only:</p>
+								<div class="control-group">
+									<textarea name="additionalInfo" id="additional_info" style="width:400px;height:125px;"
+									placeholder="Enter any additional info you would like to have visible to your contacts, such as your contact info, address, or favorite food."
+									>{{ user.info }}</textarea>
+									<span id="additionalInfoHelp" class="help-inline" style="display: none;">Info cannot exceed 2000 characters.</span> 
+								</div>
+								<p>Additional profile content can be added through the <a href="/settings">Settings</a> page.</p>
+							</fieldset>
+						</form>
+						<a class="btn btn-inverse" onclick="submit();" style="margin-bottom:25px;">
+							Save Changes
+						</a>
+						<div id="validationError" class="alert alert-error" style="display:none;">
+							<strong>Settings not saved!</strong>&nbsp; Fix the errors and try again.
+						</div>
+						<div id="submitError" class="alert alert-error" style="display:none;">
+							<strong>Settings not saved!</strong>&nbsp; Something went wrong.
+						</div>
+						<div id="submitSuccess" class="alert alert-success" style="display:none;">
+							<strong>Settings saved.</strong>
+						</div>
+					</div>
+				</div>
+			</div>
+
+{% endblock %}

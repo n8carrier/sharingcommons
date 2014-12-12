@@ -13,10 +13,8 @@
 #
 # Warmup info: http://stackoverflow.com/questions/8235716/how-does-the-warmup-service-work-in-python-google-app-engine
 
-from flask import Flask
-from src import app, views, api
+from src import app, views
 from views import render_response
-import accounts.views
 
 # Warmup
 app.add_url_rule('/_ah/warmup',view_func=views.warmup)
@@ -38,7 +36,13 @@ app.add_url_rule('/discover',view_func=views.discover)
 app.add_url_rule('/search', view_func=views.search)
 
 # Settings
-app.add_url_rule('/settings',view_func=views.settings,methods=["GET","POST"])
+app.add_url_rule('/settings',view_func=views.settings)
+
+# Tutorial
+app.add_url_rule('/tutorial',view_func=views.tutorial)
+
+# Report a Bug
+app.add_url_rule('/reportbug',view_func=views.reportbug)
 
 # Login
 app.add_url_rule('/login',view_func=views.login,methods=["GET","POST"])
@@ -55,19 +59,35 @@ app.add_url_rule('/about',view_func=views.about)
 # Mobile App
 app.add_url_rule('/mobileapp',view_func=views.mobile_app)
 
+# Licenses
+app.add_url_rule('/licenses',view_func=views.licenses)
+
 # Logout
 app.add_url_rule('/logout',view_func=views.logout)
 
 # User Profile
 app.add_url_rule('/user/<userID>',view_func=views.profile)
 
-# Report a Bug
-app.add_url_rule('/reportbug',view_func=views.reportbug,methods=["GET","POST"])
+# Invalid User Profile
+app.add_url_rule('/invalid-profile',view_func=views.invalid_profile)
 
 # Book Info
-#app.add_url_rule('/book/<OLKey>',view_func=views.book_info)
+app.add_url_rule('/book/<OLKey>',view_func=views.book_info)
+
+# Movie Info
+app.add_url_rule('/movie/<RTKey>',view_func=views.movie_info)
+
+# Gets gravatar link
+app.add_url_rule('/gravatar/<userID>/<size>',view_func=views.generate_gravatar)
 
 ######################## Internal calls (to be called by ajax) ##########################
+
+# Send Invitation Email
+app.add_url_rule('/send_invitation_request', methods = ['GET', 'POST', 'DELETE'],view_func=views.send_invitation_request)
+
+# Star Rating
+app.add_url_rule('/star-rating/<item_subtype>/<item_key>/<star_rating>', methods = ['POST'], view_func=views.star_rating)
+
 # Get book list
 #	Returns:
 #		JSON object with the following info about each book the user owns
@@ -146,7 +166,7 @@ app.add_url_rule('/return_item/<itemCopyID>', view_func=views.return_item)
 #		newDueDate: the new date the book will be due.  Must be in the format year-month-day
 #	returns:
 #		JSON object with a message: success or the reason for the failure
-app.add_url_rule('/change_due_date/<itemCopyID>/<newDueDate>', view_func=views.change_due_date)
+app.add_url_rule('/change_due_date/<itemCopyID>/<newDueDate>', view_func=views.change_due_date,methods=['GET'])
 
 # Get all the notifications that the current user has recieved
 #	returns:
@@ -179,6 +199,20 @@ app.add_url_rule('/search/in_network/<item_key>',view_func=views.search_network)
 #		lenderID - id of the owner of the item
 #		bookCopyID - the id of the ItemCopy object being borrowed
 app.add_url_rule('/setup_item_borrow/<lenderID>/<itemCopyID>',view_func=views.setup_item_borrow_actions)
+
+# Starts process for current user to borrow book and sends email if successful
+#   parameters:
+#       lenderID - id of the owner of the item
+#       bookCopyID - the id of the ItemCopy object being borrowed
+#       emailBody - the body of the email, to be sent as a JSON
+app.add_url_rule('/request_to_borrow/<lenderID>/<itemCopyID>', methods = ['GET', 'POST', 'DELETE'], view_func=views.request_to_borrow)
+
+# Gets private email (first letter, some stars, the @, and the domain
+#   parameters:
+#        userID - the ID of the user for which the email address is being requested
+app.add_url_rule('/get_user_email/<userID>',view_func=views.get_user_email)
+
+app.add_url_rule('/manual_checkout/<itemCopyID>', methods = ['GET', 'POST', 'DELETE'], view_func=views.manual_checkout)
 
 ################################### Web service calls ###################################
 # Lookup a book from app

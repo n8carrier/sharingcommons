@@ -16,20 +16,29 @@
 
 	function submit() {
 		if(validate()) {
-			$("#validationError").hide();
+			$("#submitButton").removeAttr("onclick");
 			$("#submitButton").attr("disabled", "disabled");
+			$("#validationError").hide();
 			$.ajax({
-				url:"/reportbug",
+				url:"/post_issue",
 				type: 'POST',
 				data: $("#submissionForm").serialize(),
 				success: function(data) {
-					$("#submitSuccess").show();
-					$("#submitError").hide();
+					if(data.result=="201") {
+						$("#submitSuccess").show();
+						$("#submitError").hide();
+					} else {
+						$("#submitError").show();
+						$("#submitSuccess").hide();
+						$("#submitButton").removeAttr("disabled");
+						$("#submitButton").attr("onclick","submit();");
+					}
 				},
 				error: function() {
 					$("#submitError").show();
 					$("#submitSuccess").hide();
 					$("#submitButton").removeAttr("disabled");
+					$("#submitButton").attr("onclick","submit();");
 				}
 			});
 		}
@@ -77,7 +86,7 @@
 
 {% block content %}
 
-<form id="submissionForm" method="post" action="/reportbug" style="margin-bottom:0px">
+<form id="submissionForm" onSubmit="submit();" style="margin-bottom:0px">
 
 	<div class="row">
 		<div class="span4">
@@ -107,7 +116,7 @@
 				<select id="issueType" name="issueType" style="vertical-align:baseline">
 					<option selected="true" value="bug">Bug</option>
 					<option value="enhancement">Enhancement Request</option>
-					<option value="question">Question</option>
+					<option value="question">Comment/Question</option>
 				</select>
 			</div>
 			

@@ -39,11 +39,52 @@
 		return false;
 	}
 	
+	function sendEmail() {
+		$("#send-email-button").attr("disabled","disabled");
+		var composeSubject = "Invitation to Join Sharing Commons";
+		var composeTo = $("#EmailTo").val();
+		var composeBody = $("#EmailBody").val();
+		$.ajax({
+			url: "/send_invitation_request",
+			type: 'POST',
+			contentType: 'application/json; charset=utf-8',
+			data: JSON.stringify({emailSubject:composeSubject,emailTo:composeTo,emailBody:composeBody}),
+			dataType: 'json',
+			success: function(json) {
+				if(json.result=="success") {
+					// Show success alert
+					$("#sendError").hide();
+					$("#toError").hide();
+					$("#sendSuccess").show();
+				} else if(json.result=="invalidemail"){
+					// Show invalid email alert
+					$("#sendError").hide();
+					$("#sendSuccess").hide();
+					$("#toError").show();
+					$("#send-email-button").removeAttr("disabled");
+				} else {
+					// Show error alert
+					$("#sendSuccess").hide();
+					$("#toError").hide();
+					$("#sendError").show();
+					$("#send-email-button").removeAttr("disabled");
+				}
+			},
+			error: function(json) {
+				// Show error alert
+				$("#sendSuccess").hide();
+				$("#toError").hide();
+				$("#sendError").show();
+				$("#send-email-button").removeAttr("disabled");
+			}
+		});
+	}
+	
 	function gmailCompose() {
-		composeSubject = "Invitation to Join Sharing Commons"
-		composeTo = $("#EmailTo").val()
-		composeBody = $("#EmailBody").val()
-		composeJoinLink = "{{ request.host_url }}?connect={{ user.get_id() }}"
+		var composeSubject = "Invitation to Join Sharing Commons";
+		var composeTo = $("#EmailTo").val();
+		var composeBody = $("#EmailBody").val();
+		var composeJoinLink = "{{ request.host_url }}?connect={{ user.get_id() }}";
 		window.open("https://mail.google.com/mail/?compose=1&view=cm&fs=1&to=" 
 			+ encodeURIComponent(composeTo) 
 			+ "&su=" + encodeURIComponent(composeSubject) 
@@ -66,7 +107,7 @@
 		if(window.location.hash){
 			if(window.location.hash == "#Connections") $("#Connections_tab").click();
 			else if (window.location.hash == "#Facebook") $("#Facebook_tab").click();
-			else if (window.location.hash == "#Gmail") $("#Gmail_tab").click();
+			else if (window.location.hash == "#Email") $("#Email_tab").click();
 			else if (window.location.hash == "#Link") $("#Link_tab").click();
 		}
 	})
@@ -97,7 +138,7 @@
       <ul class="nav nav-tabs span2" style="height: 300px;">
         <li class="active"><a href="#Connections" data-toggle="tab" id="Connections_tab" onclick='add_hash("Connections")'>My Connections</a></li>
         <li><a href="#Facebook" data-toggle="tab" id="Facebook_tab" onclick='add_hash("Facebook")'>Invite by Facebook</a></li>
-        <li><a href="#Gmail" data-toggle="tab" id="Gmail_tab" onclick='add_hash("Gmail")'>Invite by Gmail</a></li>
+        <li><a href="#Email" data-toggle="tab" id="Email_tab" onclick='add_hash("Email")'>Invite by Email</a></li>
         <li><a href="#Link" data-toggle="tab" id="Link_tab" onclick='add_hash("Link")'>Invite by Link</a></li>
       </ul>
       <div class="tab-content span9">
@@ -130,11 +171,11 @@
           <h3 style="margin-top:-4px">Connect with your Facebook Friends</h3>
           <p>Facebook connections are not yet supported. We apologize for the inconvenience. Please check back later.</p>
         </div>
-        <div class="tab-pane" id="Gmail">
-          <h3 style="margin-top:-4px">Invite your Friends by Gmail</h3>
+        <div class="tab-pane" id="Email">
+          <h3 style="margin-top:-4px">Invite your Friends by Email</h3>
           <div class="row-fluid">
             <div class="span9">
-              <p>Send your friends an email invitation to join Sharing Commons and automatically connect with you. Clicking the "Send with Gmail" button will open Gmail Compose in a new window with your message included. The email will include your Sharing Commons invitation link following your message.</p>
+              <p>Send your friends an email invitation to join Sharing Commons and automatically connect with you. Click the "Send Email" button to automatically send the email, or the "Edit & Send with Gmail" to open Gmail Compose in a new window with your message included. The email will include your Sharing Commons invitation link following your message.</p>
             </div>
           </div>
           <br>
@@ -153,12 +194,22 @@
             <div class="span8">
               <textarea class="input-xxlarge" id="EmailBody" rows="10">Hey friend!
 
-I've discovered an awesome new app, called Sharing Commons, that lets you build a library network between friends. You can input the books you own and find books within your friends' libraries. You can request to borrow books, check them out through the app, and receive notifications when they're due. I've added books from my personal library already and want to connect so we can share books. I hope you join!
+I've discovered an awesome new app, called Sharing Commons, that lets you build a library network between friends. You can input the books & movies you own and find books & movies within your friends' libraries. You can request to borrow items, check them out through the app, and receive notifications when they're due. I've added some books & movies from my personal library already and want to connect so we can share. I hope you join!
 
 - {{ user.name }}</textarea>
               <br>
               <br>
-              <a class="btn btn-inverse" onClick="gmailCompose()">Send with Gmail</a>
+              <a class="btn btn-inverse" id="send-email-button" onClick="sendEmail()">Send Email</a>&nbsp;&nbsp;<a class="btn btn-danger" onClick="gmailCompose()">Edit & Send with Gmail</a>
+				<br><br>
+			  <div id="sendError" class="alert alert-error" style="display:none;">
+				<strong>Error ocurred.</strong>&nbsp; Email not sent. Please try again later or try sending with Gmail.
+			  </div>
+			  <div id="sendSuccess" class="alert alert-success" style="display:none;">
+				<strong>Email sent.</strong>
+			  </div>
+			  <div id="toError" class="alert alert-success" style="display:none;">
+				<strong>Invalid "To" Field.</strong>&nbsp; Please fix and try again, otherwise try sending with Gmail.
+			  </div>
             </div>
           </div>
         </div>
